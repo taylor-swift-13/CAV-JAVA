@@ -1,0 +1,3 @@
+*/*.class
+!ESC*.out
+!RAC*.out

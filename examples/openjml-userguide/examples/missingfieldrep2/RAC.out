@@ -1,0 +1,7 @@
+Demo.java:2: warning: JML model field does not have a representation: modelField
+  //@ model public int modelField;
+                       ^
+Demo.java:6: warning: JML ignoring statement because model field does not have a representation: Demo.modelField
+     //@ show d.modelField;
+               ^
+2 warnings

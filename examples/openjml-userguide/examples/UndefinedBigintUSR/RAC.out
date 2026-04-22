@@ -1,0 +1,3 @@
+Demo.java:5: verify: JML undefined unsigned right shift on negative bigint value
+  //@ model public static \bigint test(\bigint i) { return i >>> 1; }
+                                                             ^

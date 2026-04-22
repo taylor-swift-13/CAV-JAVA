@@ -1,0 +1,7 @@
+Demo.java:10: verify: Show statement expression k has value ( - 1 )
+  //@ show k;
+           ^
+Demo.java:12: verify: The prover cannot establish an assertion (UndefinedLemmaPrecondition) in method m
+  //@ use mod2lemma( (k+1) );
+      ^
+2 verification failures

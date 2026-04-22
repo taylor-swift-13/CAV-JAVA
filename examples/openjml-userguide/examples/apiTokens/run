@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+X=0
+( "$INSTALL/openjml-compile" Run.java 2>&1 | diff - ESC.out ) || X=1
+( "$INSTALL/openjml-run" Run "public class A { }" 2>&1 | diff - ESC1.out ) || X=1
+
+exit $X
+

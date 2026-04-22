@@ -1,0 +1,4 @@
+Demo.java:6: verify: The prover cannot establish an assertion (PossiblyLargeShift) in method test
+    return 1 << i;
+             ^
+1 verification failure

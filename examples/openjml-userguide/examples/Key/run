@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+X=0
+( "$INSTALL/openjml" --esc Demo.java 2>&1 | diff - ESC.out ) || X=1
+( "$INSTALL/openjml" --esc --keys=A Demo.java 2>&1 | diff - ESC1.out ) || X=1
+
+exit $X
+

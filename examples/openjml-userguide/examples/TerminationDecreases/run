@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+"$INSTALL/openjml" --esc Demo.java 2>&1 | diff - ESC.out
+if [ $? != 0 ]; then exit 1; fi
+"$INSTALL/openjml" --rac --rac-compile-to-java-assert Demo.java
+if [ $? != 0 ]; then exit 1; fi
+"$INSTALL/openjml-java" -ea Demo 2>&1 |  diff - RAC.out
+if [ $? != 0 ]; then exit 1; fi

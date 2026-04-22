@@ -1,0 +1,375 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../../images/favicon.ico" rel="shortcut icon">
+
+<title>JML Tutorial - Exercises - Specifying Constructors</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="https://www.openjml.org/documentation/features.shtml">Features</a></li>
+	<li  class="active"><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li  ><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">JML Tutorial - Exercises - Specifying Constructors</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="specifying-constructors-exercises-key">Specifying Constructors Exercises Key:</h2>
+<h3 id="specifying-constructors-tutorial"><a href="../Constructors.html">Specifying Constructors Tutorial</a></h3>
+
+<h3 id="question-1"><strong>Question 1</strong></h3>
+<p><strong>(a) Determine the specifications needed to verify the program below.</strong></p>
+<pre><code class="language-Java">public class Student {
+	
+	//@ spec_public
+	private String firstName;
+	//@ spec_public
+	private String lastName;
+	//@ spec_public
+	private int grade;
+	//@ spec_public
+	private double GPA;
+	//@ spec_public
+	private long id;
+	//@ spec_public
+	private static long count = 0;
+
+	public Student(String firstName, String lastName, int grade, double GPA) { 
+		//@ assume count+1 &lt; Integer.MAX_VALUE;
+		count ++;
+		
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.grade = grade;
+		this.GPA = GPA;
+		this.id = count;
+		
+	}
+	
+	//@ requires count &lt; Integer.MAX_VALUE-1;
+	public void createStudents() {
+		Student s1 = new Student("John", "Doe", 12, 3.7);
+		Student s2 = new Student("Jane", "Doe", 11, 2.5);
+		//@ assert s1.id &lt; s2.id;
+	}
+}
+</code></pre>
+<p><strong>Note:</strong> <code class="language-dafny highlighter-rouge"><span class="n">spec_public</span></code> will be discussed in the <a href="../Visibility.html">“Visibility”</a> tutorial, but for now just understand that <code class="language-dafny highlighter-rouge"><span class="n">spec_public</span></code> is used when we have private variables that we want to use in our JML specifications so that we don’t have any visibility errors.</p>
+
+<p><strong>Asnwer and Explanation:</strong>
+Recall what you have read in the tutorial “Specifying Constructors,” when dealing with constructors we need to use the following syntax: <code class="language-dafny highlighter-rouge"><span class="n">public</span> <span class="n">normal_behavior</span></code>. <code class="language-dafny highlighter-rouge"><span class="n">normal_behavior</span></code> essentially says that the constructor runs without throwing exceptions. Similar to method specifications, the <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code> modifier can only be used if the method default <code class="language-dafny highlighter-rouge"><span class="n">assigns</span> <span class="err">\</span><span class="n">nothing</span></code>. However, in this case we see that the constructor <code class="language-dafny highlighter-rouge"><span class="n">Student</span><span class="p">()</span></code> is incrementing the global static variable <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> by one each time a new Student object is made. This <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> variable is then used as the id of the Student object being created.</p>
+
+<p>Additionally, we know that when specifying constructors (like all other methods) we still need to include any preconditions and postconditions to verify the method. We might want to specify that the first and last name cannot be empty Strings, that the grade is in the range of 1-12 (first through senior), and that GPA is between 0.0 and 4.0 - also that we ensure that is not NaN. Also, since we’re incrementing <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> by one in our constructor we need to take care of potential overflow errors, so we should also include that <code class="language-dafny highlighter-rouge"><span class="n">count</span> <span class="o">&lt;</span> <span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code>.</p>
+
+<p>If all of these preconditions are met we can ensure that <code class="language-dafny highlighter-rouge"><span class="kr">this</span><span class="o">.</span><span class="n">variable</span> <span class="o">=</span> <span class="n">variable</span></code>, except for <code class="language-dafny highlighter-rouge"><span class="n">id</span></code> which should be <code class="language-dafny highlighter-rouge"><span class="kr">this</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">count</span></code>. Note, however, that since we are dealing with Strings we could also write our postconditions in the format of <code class="language-dafny highlighter-rouge"><span class="n">variable</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="kr">this</span><span class="o">.</span><span class="n">variable</span><span class="p">)</span></code>. Additionally, we can ensure that the <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> will always be equal to it’s pre-state value plus one. So let’s add all this together and write the following to verify the function.</p>
+<pre><code class="language-Java">public class Student {
+	
+	//@ spec_public
+	private String firstName;
+	//@ spec_public
+	private String lastName;
+	//@ spec_public
+	private int grade;
+	//@ spec_public
+	private double GPA;
+	//@ spec_public
+	private long id;
+	//@ spec_public
+	private static long count = 0;
+
+	//@ public normal_behavior
+	//@ 	requires firstName != "";
+	//@		requires lastName != "";
+	//@ 	requires 1 &lt;= grade &lt;= 12;
+	//@ 	requires 0 &lt;= GPA &lt;= 4.0 &amp;&amp; !Double.isNaN(GPA);
+	//@ 	requires count &lt; Integer.MAX_VALUE;
+	//@ 	assigns count;
+	//@ 	ensures this.firstName == firstName;
+	//@		ensures this.lastName == lastName;
+	//@ 	ensures this.grade == grade;
+	//@ 	ensures this.GPA == GPA;
+	//@ 	ensures this.id == count;
+	//@ 	ensures count == \old(count) + 1;
+	public Student(String firstName, String lastName, int grade, double GPA) { 
+		//@ assume count+1 &lt; Integer.MAX_VALUE;
+		count ++;
+		
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.grade = grade;
+		this.GPA = GPA;
+		this.id = count;
+		
+	}
+	
+	//@ requires count &lt; Integer.MAX_VALUE-1;
+	public void createStudents() {
+		Student s1 = new Student("John", "Doe", 12, 3.7);
+		Student s2 = new Student("Jane", "Doe", 11, 2.5);
+		//@ assert s1.id &lt; s2.id;
+	}
+}
+</code></pre>
+<p><strong>(b) Explain why the program can assert s1.id &lt; s2.id in the createStudents() function.</strong></p>
+
+<p><strong>Asnwer and Explanation:</strong>
+The function <code class="language-dafny highlighter-rouge"><span class="n">createStudents</span><span class="p">()</span></code> can assert <code class="language-dafny highlighter-rouge"><span class="n">s1</span><span class="o">.</span><span class="n">id</span> <span class="o">&lt;</span> <span class="n">s2</span><span class="o">.</span><span class="n">id</span></code> since when it creates <code class="language-dafny highlighter-rouge"><span class="n">s1</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">s2</span></code> it calls the constructor <code class="language-dafny highlighter-rouge"><span class="n">Student</span><span class="p">()</span></code> - which is not <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code>. <code class="language-dafny highlighter-rouge"><span class="n">Student</span><span class="p">()</span></code> is not <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code> because it assigns a value to <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> which is not a non-static field of Student. This <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> variable is then set as the value of the student’s <code class="language-dafny highlighter-rouge"><span class="n">id</span></code>. So when <code class="language-dafny highlighter-rouge"><span class="n">s1</span></code> is created, <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> = <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> + 1 = (0) + 1 = 1 , so <code class="language-dafny highlighter-rouge"><span class="n">s1</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">1</span></code>. When <code class="language-dafny highlighter-rouge"><span class="n">s2</span></code> is created <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> + 1 = 1 + 1 = 2, so <code class="language-dafny highlighter-rouge"><span class="n">s2</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="mi">2</span></code>. Therefore, we can <code class="language-dafny highlighter-rouge"><span class="kr">assert</span></code> that <code class="language-dafny highlighter-rouge"><span class="n">s1</span><span class="o">.</span><span class="n">id</span></code> will be less than <code class="language-dafny highlighter-rouge"><span class="n">s2</span><span class="o">.</span><span class="n">id</span></code> for this reason. Note, however, that this assertion can only be made if we include that <code class="language-dafny highlighter-rouge"><span class="n">Student</span><span class="p">()</span></code> assigns <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> and that <code class="language-dafny highlighter-rouge"><span class="kr">this</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">count</span></code>, and <code class="language-dafny highlighter-rouge"><span class="n">count</span> <span class="o">=</span> <span class="err">\</span><span class="kr">old</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span></code>, otherwise, this assertion would fail to verify.</p>
+
+<p><strong>Learning Objective:</strong> 
+The goal of this exercise is to see if the student understands how to use constructor specification syntax. We want the student to understand how it’s very similar to what they have been doing up until this point, but there are just a few differences (i.e. normal_behavior). Additionally, the exercise addresses the difference between <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code> and non-pure functions, and shows the student that when we are modifying something other than the non-static fields - the function is not <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code>. Furthermore, part (b) checks to see if the student understands how assertions are still heavily dependent on other specifications. If we don’t include all the specifications needed surrounding the <code class="language-dafny highlighter-rouge"><span class="n">count</span></code> variable, the assert in the <code class="language-dafny highlighter-rouge"><span class="n">createStudents</span><span class="p">()</span></code> function cannot be verified. The exercise is verbose in that checks that the student understands past tutorials and combines a lot of different topics the student should be familiar with now.</p>
+
+<h3 id="question-2"><strong>Question 2</strong></h3>
+<p><strong>Determine the strongest specifications needed to verify the program.</strong></p>
+<pre><code class="language-Java">public class Book {
+
+	//@ spec_public
+	private String title;
+	//@ spec_public
+	private int pages;
+	//@ spec_public
+	private String author;
+	//@ spec_public
+	private String publication; //mm-dd-yy
+	//@ spec_public
+	private static int TBABooks = 0; 
+
+	public Book(String title, int pages, String author, String publication) {
+		this.title = title;
+		this.pages = pages;
+		this.author = author;
+		this.publication = publication;		
+	}
+	
+	public Book(String publication) {
+		//@ assume 0 &lt; TBABooks+1 &lt; Integer.MAX_VALUE;
+		TBABooks++;
+		this.title = "TBA";
+		this.pages = 0;
+		this.author = "TBA";
+		this.publication = publication;
+	}
+
+	public void createBooks() {
+		Book b1 = new Book("TBA"); 
+		Book b2 = new Book("1984", 328, "George Orwell", "06-08-49");
+		Book b3 = new Book("The Great Gatsby", 208, "F. Scott Fitzgerald", "04-10-25");
+		Book b4 = new Book("TBA");				
+	}
+}
+</code></pre>
+<p><strong>Asnwer and Explanation:</strong>
+Let’s take a look at the program above. The class <code class="language-dafny highlighter-rouge"><span class="n">Book</span></code> has four non-static fields: <code class="language-dafny highlighter-rouge"><span class="n">title</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">pages</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">author</span></code>, and <code class="language-dafny highlighter-rouge"><span class="n">publication</span></code>. There is also a static int variable <code class="language-dafny highlighter-rouge"><span class="n">TBABooks</span></code> which is initialized to zero. The first constructor of Book takes in four variables which the non-static fields will be set to. The second constructor of Book takes in only one variable <code class="language-dafny highlighter-rouge"><span class="n">String</span> <span class="n">publication</span></code>; within <code class="language-dafny highlighter-rouge"><span class="n">Book</span><span class="p">(</span><span class="n">String</span> <span class="n">publication</span><span class="p">)</span></code> the static int <code class="language-dafny highlighter-rouge"><span class="n">TBABooks</span></code> is incremented by one, and the remaining non-static fields are initialized. Finally, the <code class="language-dafny highlighter-rouge"><span class="n">createBooks</span><span class="p">()</span></code> function simply calls the constructors and creates some objects of Book.</p>
+
+<p>Let’s determine the specifications for <code class="language-dafny highlighter-rouge"><span class="n">Book</span><span class="p">(</span><span class="n">String</span> <span class="n">title</span><span class="p">,</span> <span class="kt">int</span> <span class="n">pages</span><span class="p">,</span> <span class="n">String</span> <span class="n">author</span><span class="p">,</span> <span class="n">String</span> <span class="n">publication</span><span class="p">)</span></code>. Firstly, since we’re dealing with a constructor we know that we need to include the header <code class="language-dafny highlighter-rouge"><span class="n">public</span> <span class="n">normal_behavior</span></code>. Now let’s determine any preconditions we might need; we want to make sure our String variables aren’t empty, that <code class="language-dafny highlighter-rouge"><span class="n">pages</span></code> is between zero and Integer.MAX_VALUE (to avoid overflow). Given these preconditions we can ensure that <code class="language-dafny highlighter-rouge"><span class="kr">this</span><span class="o">.</span><span class="n">variable</span> <span class="o">=</span> <span class="n">variable</span></code>. Additionally, since this first Book constructor is not modifying any memory locations we can say that it is <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code>. So we can write the following:</p>
+<pre><code class="language-Java">public class Book {
+
+	//@ spec_public
+	private String title;
+	//@ spec_public
+	private int pages;
+	//@ spec_public
+	private String author;
+	//@ spec_public
+	private String publication; //mm-dd-yy
+	//@ spec_public
+	private static int TBABooks = 0; 
+
+	//@ public normal_behavior
+	//@ 	requires title != "";
+	//@ 	requires 0 &lt; pages &lt; Integer.MAX_VALUE;
+	//@ 	requires author != "";
+	//@ 	requires publication != "";
+	//@ 	ensures this.title == title;
+	//@ 	ensures this.pages == pages;
+	//@ 	ensures this.author == author;
+	//@ 	ensures this.publication == publication;
+	//@ pure
+	public Book(String title, int pages, String author, String publication) {
+		this.title = title;
+		this.pages = pages;
+		this.author = author;
+		this.publication = publication;		
+	}
+	
+	public Book(String publication) {
+		//@ assume 0 &lt; TBABooks+1 &lt; Integer.MAX_VALUE;
+		TBABooks++;
+		this.title = "TBA";
+		this.pages = 0;
+		this.author = "TBA";
+		this.publication = publication;
+	}
+
+	public void createBooks() {
+		Book b1 = new Book("TBA"); 
+		Book b2 = new Book("1984", 328, "George Orwell", "06-08-49");
+		Book b3 = new Book("The Great Gatsby", 208, "F. Scott Fitzgerald", "04-10-25");
+		Book b4 = new Book("TBA");				
+	}
+}
+</code></pre>
+<p>Now, let’s tackle the second Book constructor. Same as always we can include <code class="language-dafny highlighter-rouge"><span class="n">public</span> <span class="n">normal_behavior</span></code> and start including any preconditions we might need. We want to require that if this Book constructor is being called, then <code class="language-dafny highlighter-rouge"><span class="n">publication</span> <span class="o">==</span> <span class="s2">"TBA"</span></code>. Essentially, this constructor is creating a Book object for a book that is not yet released so we require that the publication be TBA (to be announced). Additionally, the constructor still set’s the fields of Book, but it is not setting it to any values passed in so we can ensure that this.variable will equal the same thing every time. However, notice that within this constructor <code class="language-dafny highlighter-rouge"><span class="n">TBABooks</span></code> is being incremented so we have to specify this by saying <code class="language-dafny highlighter-rouge"><span class="n">assigns</span> <span class="n">TBABooks</span></code> since this memory location is being modified. As such we know this constructor is not <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code>, so we can write the following:</p>
+<pre><code class="language-Java">public class Book {
+
+	//@ spec_public
+	private String title;
+	//@ spec_public
+	private int pages;
+	//@ spec_public
+	private String author;
+	//@ spec_public
+	private String publication; //mm-dd-yy
+	//@ spec_public
+	private static int TBABooks = 0; 
+
+	//@ public normal_behavior
+	//@ 	requires title != "";
+	//@ 	requires 0 &lt; pages &lt; Integer.MAX_VALUE;
+	//@ 	requires author != "";
+	//@ 	requires publication != "";
+	//@ 	ensures this.title == title;
+	//@ 	ensures this.pages == pages;
+	//@ 	ensures this.author == author;
+	//@ 	ensures this.publication == publication;
+	//@ pure
+	public Book(String title, int pages, String author, String publication) {
+		this.title = title;
+		this.pages = pages;
+		this.author = author;
+		this.publication = publication;		
+	}
+	
+	//@ public normal_behavior
+	//@ 	requires publication == "TBA";
+	//@ 	assigns TBABooks;
+	//@ 	ensures this.title == title;
+	//@ 	ensures this.pages == pages;
+	//@ 	ensures this.author == author;
+	//@ 	ensures this.publication == publication;
+	//@ 	ensures TBABooks == \old(TBABooks) + 1;
+	public Book(String publication) {
+		//@ assume 0 &lt; TBABooks+1 &lt; Integer.MAX_VALUE;
+		TBABooks++;
+		this.title = "TBA";
+		this.pages = 0;
+		this.author = "TBA";
+		this.publication = publication;
+	}
+
+	public void createBooks() {
+		Book b1 = new Book("TBA"); 
+		Book b2 = new Book("1984", 328, "George Orwell", "06-08-49");
+		Book b3 = new Book("The Great Gatsby", 208, "F. Scott Fitzgerald", "04-10-25");
+		Book b4 = new Book("TBA");				
+	}
+}
+</code></pre>
+<p><strong>Learning Objective:</strong>
+The goal of this exercise is to show the student more exercises that uses the <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code> modifier in practice. In the program we have two constructors that might initially seem very similar, but once we break it down we see all the subtle differences and how their specifications need to reflect their uniqueness. The student should be able to recognize that the first constructor is <code class="language-dafny highlighter-rouge"><span class="n">pure</span></code> and the second is not due to it incrementing <code class="language-dafny highlighter-rouge"><span class="n">TBABooks</span></code>.</p>
+
+<h3 id="resources"><strong>Resources:</strong></h3>
+<ul>
+  <li><a href="SpecifyingConstructorsEx.html">Specifying Constructors Exercises</a></li>
+  <li><a href="Student.java">Question 1 Java</a></li>
+  <li><a href="Book.java">Question 2 Java</a></li>
+  <li><a href="exercises.html">All exercises</a></li>
+</ul>
+
+  </div>
+
+</article>
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

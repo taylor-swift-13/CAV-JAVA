@@ -1,0 +1,7 @@
+Demo.java:3: verify: The prover cannot establish an assertion (TerminationNonNegative: Demo.java:5:) in method test
+  //@ measured_by i-5;
+                   ^
+Demo.java:5: verify: Associated declaration: Demo.java:3:
+    return i <= 0 ? 0 : test(i-1);
+                            ^
+2 verification failures

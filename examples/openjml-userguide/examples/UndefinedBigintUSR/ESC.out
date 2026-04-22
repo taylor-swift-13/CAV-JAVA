@@ -1,0 +1,4 @@
+Demo.java:5: verify: The prover cannot establish an assertion (UndefinedBigintUSR) in method test
+  //@ model public static \bigint test(\bigint i) { return i >>> 1; }
+                                                             ^
+1 verification failure

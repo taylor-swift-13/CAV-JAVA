@@ -1,0 +1,621 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../images/favicon.ico" rel="shortcut icon">
+
+<title>Checks | OpenJML</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li class="active"><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="features.shtml.html">Features</a></li>
+	<li><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <link rel="stylesheet" href="../bower_components/bootstrap-vertical-tabs/bootstrap.vertical-tabs.min.css">
+
+
+  <head>
+    <link href="https://www.openjml.org/documentation/style.css" rel="STYLESHEET" type="text/css" />
+    <meta name="description" content="OpenJML, formal methods tool for Java and the Java Modeling Language (JML)" />
+    <link rel="SHORTCUT ICON" href="https://www.openjml.org/documentation/favicon.ico"/>
+
+    <!-- customize the page title -->
+    <title>OpenJML User Guide and Reference</title>
+    <!-- end customized page title -->
+    </head>
+
+<body>
+  
+  
+<div id="rest">  
+
+<div id="banner">
+<img class="center" src="jml-logo-small64.png" alt="JML Logo" />
+
+ <h1><a name="top">OpenJML
+     (<span style="color:#006000">J</span><span style="color:#a00000">M</span><span style="color:#000090">L</span>)
+      </a>
+    </h1>
+</div>
+
+
+<div id="content">
+
+
+
+<h1>OpenJML Checks</h1>
+
+<p>
+These tables list the various checks that OpenJML performs on a Java program.
+<BR><a href="checks.shtml.html#Java">Java language checks</a>
+<BR><a href="checks.shtml.html#Assertions">JML assertions</a>
+<BR><a href="checks.shtml.html#Assumptions">JML assumptions</a>
+<P>
+<H3>Java Language Checks</H3>
+These are program errors that would result in Java runtime exceptions.
+<table border="1">
+<TR>
+  <td>OpenJML Key<BR>Java Exception</BR></td>
+  <td>Description</td>
+  <td>Comments</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Assert</code><BR>AssertionError</BR></td>
+  <td>Explicit Java assert statement</td>
+  <td>For RAC, the JML check is performed when <code>-ea</code> is enabled at runtime</td>
+</tr>
+<tr>
+  <td bgcolor=#FFFF44><code>PossiblyBadArrayAssignment</code><BR>ArrayStoreException</BR></td>
+  <td>Runtime assignment of an object as an array element, where the runtime class of the object is not a subtype of the dynamic class of the array elements</td>
+  <td>Implemented for ESC; RAC results in only the Java error</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyBadCast</code><BR>ClassCastException</BR></td>
+  <td>In Java expressions, checks that the target type of a cast is legitimate</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyDivideByZero</code><BR>ArithmeticException</BR></td>
+  <td>In Java expressions, checks that a Division or Mod operation has a non-zero divisor</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNegativeSize</code><BR>NegativeArraySizeException</BR></td>
+  <td>In Java array creation expressions, the size may not be negative</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNegativeIndex</code><BR>ArrayIndexOutOfBoundsException</BR></td>
+  <td>In Java array reference expressions, the index may not be negative</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullUnbox</code><BR>NullPointerException</BR></td>
+  <td>A value being unboxed must not be null</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullValue</code><BR>NullPointerException</BR></td>
+  <td>Illegal null value in Java expressions: switch expression, synchronized statement, throw statement</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullDeReference</code><BR>NullPointerException</BR></td>
+  <td>Null dereference in Java expressions: o may not be null in o.f, o.m(), o[i]</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyTooLargeIndex</code><BR>ArrayIndexOutOfBoundsException</BR></td>
+  <td>In Java array reference expressions, the index must be less than the length of the array</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyLargeShift</code></td>
+  <td>In Java shift expressions (<code>a &lt;&lt; b</code>, <code>a &gt;&gt; b</code>, <code>a &gt;&gt;&gt; b</code>), only the lower 5 bits (for 32-bit operations) of the shift value (<code>b</code>) are used.
+  That is, <code>a &lt;&lt; 32</code> is equivalent to no shift, not to a shift of all the bits of a 32-bit value. Though values of
+  <code>b</code> larger than 31 are not illegal, they can be confusing. OpenJML warns if the value of the right-hand-side is greater or equal to the number of bits in the promoted type of the left-hand-side. </td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#FF4444>TBD<BR></BR></td>
+  <td>Other possibilities: EmptyStackException, EnumConstantNotPresentException,
+  NoSuchElementException,
+  IndexOutOfBoundsException,
+  StringIndexOutOfBoundsException,
+  UnmodifiableSetException,
+  InputMismatchException,
+  ConcurrentModificationException (when multi-threaded analysis is supported)
+    </td>
+  <td>Possible</td>
+</tr>
+</table>
+
+<H3>JML Checks</H3>
+These are assertions that can be expressed in JML and are checked by OpenJML.
+<table border="1">
+<TR>
+  <td>OpenJML Key</td>
+  <td>Description</td>
+  <td>Comments</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Accessible</code></td>
+  <td>Violation of an accessible clause</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>ArithmeticCastRange</code></td>
+  <td>An arithmetic cast causes loss in precision, in safe math mode</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>ArithmeticOperationRange</code></td>
+  <td>An arithmetic operation results in an out-of-range value, in safe math mode</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Assert</code></td>log-release-tests
+  <td>Explicit JML assert statement</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Assignable</code></td>
+  <td>Assignable clauses must be satisfied at each assignment statement or return from a called method</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Callable</code></td>
+  <td>A callable clause must be satisfied</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>CompletePreconditions</code></td>
+  <td>The preconditions of a method must cover all possible cases</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Constraint</code></td>
+  <td>A constraint clause must be true at a normal or exception termination of a method (but not a constructor)</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>DisjointPreconditions</code></td>
+  <td>The preconditions of a method must be pairwise disjoint</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>ExceptionalPostcondition</code></td>
+  <td>Exceptional postconditions must be true when a method ends with an exception</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>ExceptionList</code></td>
+  <td>An expression was thrown whose type is not in the signals_only specification</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>IllegalArgument</code></td>
+  <td>An argument of a JML expression is illegal</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Initially</code></td>
+  <td>An initially clause must be at a normal or exceptional termination of a constructor (but not a method)</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Invariant</code></td>
+  <td>Class invariants must be true when a method ends either normally or with an exception</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>InvariantEntrance</code></td>
+  <td>Class invariants must be true at the beginning of a callee when a method is called</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>InvariantExceptionExit</code></td>
+  <td>Class invariants must be true in exception exits of a method</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>InvariantExit</code></td>
+  <td>Class invariants must be true at the end of a method</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyLargeShift</code><BR>NullPointerException</BR></td>
+  <td>The shift amount in a left shift operation is legative or larger than the number of bits in the lhs type</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>LoopDecreases</code></td>
+  <td>A JML loop variant value must decrease from the beginning of a loop body to the end of the loop body</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>LoopDecreasesNonNegative</code></td>
+  <td>A JML loop variant value must be zero or positive at the beginning of a loop, at the beginning of each loop body, and when the loop condition tests false (but not necessarily on a break from the loop)</td>
+  <td></td>
+</tr>
+<tr>5
+  <td bgcolor=#44FF44><code>LoopInvariant</code></td>
+  <td>A JML loop invariant must be true at the end of a loop body</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>LoopInvariantAfterLoop</code></td>
+  <td>A JML loop invariant must be true at a normal exit of a loop</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>LoopInvariantBeforeLoop</code></td>
+  <td>A JML loop invariant must be true before the loop is started</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>NullArgument</code></td>
+  <td>An argument is null where non-null is required</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>NullField</code></td>
+  <td>A non-null field is assigned a null value</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>NullFormal</code></td>
+  <td>An argument is null where non-null is required</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullAssignment</code></td>
+  <td>The value assigned to a variable or field declared NonNull must not be null</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullDereference</code></td>
+  <td>The receiver expression in a dot-dereference must not be null`</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullInitialization</code></td>
+  <td>The initializing expression for a declaration of a variable that is declared NonNull must not be null</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>PossiblyNullReturn</code></td>
+  <td>The return value from a method is null where it is expected to be non-null</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Postcondition</code></td>
+  <td>Normal postconditions must be true at non-exceptional termination of a method</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Precondition</code></td>
+  <td>The precondition of a called method must be true</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Reachable</code></td>
+  <td>A JML reachable statement must be be able to be executed</td>
+  <td>Only checked with --check-feasibility</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Readable-if</code></td>
+  <td>A JML readable clause must be true when the corresponding field is read</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>StaticInit</code></td>
+  <td>Static invariants and non-nullness of static fields must hold at the end of static initialization</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>TerminationDecreases</code></td>
+  <td>A termination metric must decrease on recursive calls</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>TerminationNonNegative</code></td>
+  <td>A termination metric must not become negative</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Unreachable</code></td>
+  <td>A JML unreachable statement must not be able to be executed (equivalent to 'assert false')</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedPrecondition</code></td>
+  <td>Calling a method whose composite precondition is not true is not allowed in a JML expression.
+  The composite precondition is the disjunction of all relevant (visible and normal???) specification cases.</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Writable-if</code></td>
+  <td>A JML writable clause must be true when the corresponding field is assigned</td>
+  <td></td>
+</tr>
+</table>
+
+MethodAxiom
+AssumeCheck
+
+<H3>Undefined JML expressions</H3>
+JML expressions must be well-defined, which includes not exiting with exceptions.
+<table border="1">
+<TR>
+  <td>OpenJML Key<BR>Java Exception</BR></td>
+  <td>Description</td>
+  <td>Comments</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Choose</code></td>
+  <td>A \choose expression is undefined</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>ChooseX</code></td>
+  <td>A \choosex expression is undefined</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedBadCast</code><BR>ClassCastException</BR></td>
+  <td>An illegal reference casst, within a JML expression</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedBigintUSR</code></td>
+  <td>The argument of an unsigned right-shift of a bigint value must be non-negative</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedLemmaPrecondition</code></td>
+  <td>The precondition of a lemma call in a 'use' statement must be true</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedNegativeIndex</code><BR>ArrayIndexOutOfBoundsException</BR></td>
+  <td>In JML array reference expressions, the index may not be negative</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedNegativeSize</code><BR>NegativeArraySizeException</BR></td>
+  <td>In JML array creation expressions, the size may not be negative</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedNullReference</code><BR>NullPointerException</BR></td>
+  <td>Null dereference in JML expressions: o may not be null in o.f, o.m(), o[i]</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedNullUnbox</code><BR>NullPointerException</BR></td>
+  <td>In a JML expression, an unboxing operation must have a non-null argument</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedNullValue</code><BR>NullPointerException</BR></td>
+  <td>In a JML expression, a switchx expression must have a non-null argument</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedTooLargeIndex</code><BR>ArrayIndexOutOfBoundsException</BR></td>
+  <td>In JML array reference expressions, the index must be less than the length of the array</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedDivideByZero</code><BR>ArithmeticException</BR></td>
+  <td>Division or Mod operations with a divisor of zero are not permitted in JML expressions</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>UndefinedBadCast</code><BR>ClassCastException</BR></td>
+  <td>A cast to an illegal type is not allowed in a JML expression</td>
+  <td></td>
+</tr>
+<!-- FIXME
+<tr>
+  <td bgcolor=#44FF44><code>TBD</code><BR>AssertionError</BR></td>
+  <td>Explicit Java assert statement</td>
+  <td>TBD: comment on when enabled</td>
+</tr>
+-->
+</table>
+
+
+<H3>JML Assumptions</H3>
+These are assumptions that are explicit or implied by JML and are inserted into the program by OpenJML.
+Runtime-assertion compilation can be configured to check these assumptions as assertions.
+<table border="1">
+<TR>
+  <td>OpenJML Key</td>
+  <td>Description</td>
+  <td>Comments</td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Assume</code></td>
+  <td>Explicit JML assume statement</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Axiom</code></td>
+  <td>Axioms declared in classes are assumed to be true at the beginning of a method (and assumed to be always true, though not subsequently checked)</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>InvariantEntranceAssumed</code></td>
+  <td>An invariant is assumed to be true at the beginning of a called method</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>InvariantExitAssumed</code></td>
+  <td>An invariant is assumed to be true by the caller after exit from a called method</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>LoopInvariantAssumption</code></td>
+  <td>A loop invariant is assumed to be true at the beginning of a loop body</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>NullField</code></td>
+  <td>A non-null field must have a non-null value if checked by RAC</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44><code>Precondition</code></td>
+  <td>At the beginning of a method, it is assumed that at least one precondition is true</td>
+  <td></td>
+</tr>
+
+
+<tr>
+  <td bgcolor=#44FF44>TBD</td>
+  <td>Exceptional postconditions must be true when a method ends with an exception</td>
+  <td></td>
+</tr>
+<tr>
+  <td bgcolor=#44FF44>TBD</td>
+  <td>Exceptional postconditions must be true when a method ends with an exception</td>
+  <td></td>
+</tr>
+</table>
+
+ImplicitAssume
+ArgumentValue
+Assignment
+ReceiverValue
+BlockEquation
+BranchCondition
+BranchThen
+BranchElse
+Case
+Havoc
+Invariant
+
+InvariantReenterCaller
+InvariantEntrance
+InvariantExit
+InvariantLeaveCaller
+
+CatchCondition
+SwitchValue
+ArrayInit
+Lbl
+
+Return
+Synthetic
+
+
+LoopCondition
+
+
+<p class="note">
+      
+      Last modified  MODDATE.
+  </p>
+  
+  </div>
+  </div>
+
+<p class="title">Valid</p>
+<p><a href="http://validator.w3.org/check/referer">XHTML 1.0</a></p>
+<p><a href="http://jigsaw.w3.org/css-validator/check/referer">CSS2</a></p>
+
+  </body>
+
+</html>
+
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

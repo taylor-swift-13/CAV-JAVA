@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+rm -rf *.class actual
+( "$INSTALL/openjml" --rac --rac-missing-model-field-rep=fail Demo.java ) >& actual
+diff actual RAC.out && rm -rf actual

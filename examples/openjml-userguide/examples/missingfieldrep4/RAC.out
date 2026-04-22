@@ -1,0 +1,4 @@
+Demo.java:2: error: JML model field does not have a representation: modelField
+  //@ model public int modelField;
+                       ^
+1 error

@@ -1,0 +1,4 @@
+Demo.java:12: verify: The prover cannot establish an assertion (LoopDecreasesNonNegative) in method m
+    //@ loop_decreases -i; // Becomes negative
+        ^
+1 verification failure

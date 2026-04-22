@@ -1,0 +1,7 @@
+Demo.java:7: verify: The prover cannot establish an assertion (Callable: Demo.java:6:) in method main: Demo.test1() is not callable
+  public static void main(String ... args ) { test1(); }
+                                                   ^
+Demo.java:6: verify: Associated declaration: Demo.java:7:
+  //@ callable test2;
+      ^
+2 verification failures

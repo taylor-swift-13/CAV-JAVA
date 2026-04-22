@@ -1,0 +1,4 @@
+Demo.java:4: verify: The prover cannot establish an assertion (PossiblyBadArrayAssignment) in method test
+    o[0] = "abc";
+         ^
+1 verification failure

@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+
+X=0
+( "$INSTALL/openjml-compile" Run.java Listener.java 2>&1 | diff - ESC.out ) || X=1
+( "$INSTALL/openjml-run" Run 2>&1 | sed -e 's|[[].*/examples|[.../examples|' 2>&1 | diff - ESC1.out ) || X=1
+
+exit $X
+

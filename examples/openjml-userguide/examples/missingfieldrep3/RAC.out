@@ -1,0 +1,5 @@
+Demo.java:2: warning: JML substituting zero-equivalent representation because model field does not have a representation: modelField
+  //@ model public int modelField;
+                       ^
+1 warning
+LABEL JMLSHOW_1 = 0

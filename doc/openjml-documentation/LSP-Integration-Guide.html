@@ -1,0 +1,2344 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../images/favicon.ico" rel="shortcut icon">
+
+<title>OpenJML LSP Integration Guide</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li class="active"><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="features.shtml.html">Features</a></li>
+	<li><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <h2 id="openjml-language-server-integration-guide">OpenJML Language Server Integration Guide</h2>
+
+<p>David R. Cok – April 2026 (cf. https://github.com/OpenJML/OpenJML)</p>
+
+<p>This document describes how to connect an LSP client to the OpenJML language server.
+It covers the server’s capabilities, configuration, wire protocol, and known limitations.
+The intended audience is a developer integrating the server into an editor, IDE, or
+build tool. Note that some such integrations are available as companion projects to this one
+in the OpenJML github project; as of this writing these are VSCode and Eclipse.</p>
+
+<hr />
+
+<h3 id="overview">Overview</h3>
+
+<p>The OpenJML language server provides Java Modeling Language (JML) checking for Java
+source files.  The OpenJML tool is built on OpenJDK, so this server is also an
+OpenJDK language server, with JML capability included.</p>
+
+<p>Besides conventional LSP services (e.g., syntax coloring),
+the server enables some OpenJML capabilities. These are the same capabilities that
+are available in the OpenJML command-line tool.</p>
+
+<ul>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code></strong> — JML type-checking. Fast; runs on every edit or save. Reports syntax
+errors, type errors, and JML annotation errors as LSP diagnostics.</p>
+  </li>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code></strong> — Extended Static Checking. Slower; invokes an SMT solver to prove or
+disprove JML specifications such as method postconditions and invariants. Reports verification failures as LSP
+diagnostics and updates per-method status badges (code lenses).</p>
+  </li>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">rac</span></code></strong> — Compile Java code with JML assertions as .class files with runtime checks (“Runtime-Assertion-Checking”).</p>
+  </li>
+</ul>
+
+<p>The language server links in OpenJML and they run together in a single JVM process, using separate, concurrent threads for long-running processes.
+The server process may spawn one or more subprocesses to execute SMT proof checks.
+Any diagnostics, perhaps accumulated,
+are sent to the client using a <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">publishDiagnostics</span></code> notification.</p>
+
+<hr />
+
+<h3 id="starting-the-server">Starting the Server</h3>
+
+<h4 id="transport">Transport</h4>
+
+<p>The server communicates with the client exclusively over <strong>stdio</strong> (JSON-RPC on stdin/
+stdout). There is no TCP socket or named-pipe option.</p>
+
+<p>Stdout (except for JSON-RPC communications) and stderr from the server and openjml are redirected to a log file by the launcher script, so Java
+stack traces and internal debug messages go there, not to the client.
+In the development mode, the log is <code class="language-dafny highlighter-rouge"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">-</span><span class="n">debug</span><span class="o">.</span><span class="n">log</span></code>, truncated on each restart.
+In a release installation the log is <code class="language-dafny highlighter-rouge"><span class="err">~</span><span class="o">/.</span><span class="n">openjml</span><span class="o">/</span><span class="n">logs</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">-&lt;</span><span class="n">pid</span><span class="o">&gt;.</span><span class="n">log</span></code>, unique per server instance.
+Either default can be overridden by setting <code class="language-dafny highlighter-rouge"><span class="n">OPENJML_LSP_LOG</span></code> before starting the server. The server also, on startup,
+deletes old logs that are not in current use.</p>
+
+<h4 id="launcher-script">Launcher Script</h4>
+
+<p>The server is started by the <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span></code> bash script in the installation root:</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span>
+</code></pre></div></div>
+
+<p>No arguments are required or supported on the command line; all configuration is passed
+through LSP initialization options or <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code> or environment variables.
+The script may not be moved because it expects other installed components to be in specific relative locations
+with respect to the script itself.</p>
+
+<p>The server is released as part of an OpenJML release and
+requires an installation of OpenJML to operate.</p>
+
+<p>The script expects one of two layouts:</p>
+
+<ul>
+  <li><strong>Release layout</strong> (<code class="language-dafny highlighter-rouge"><span class="n">jdk</span><span class="o">/</span></code> sibling directory present): uses <code class="language-dafny highlighter-rouge"><span class="n">jdk</span><span class="o">/</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">.</span><span class="n">jar</span></code>,
+and <code class="language-dafny highlighter-rouge"><span class="n">lsp</span><span class="o">/</span><span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">lsp4j</span><span class="o">-*.</span><span class="n">jar</span></code> relative to the installation directory. A public OpenJML release,
+unzipped into some empty directory, will have the correct layout.</li>
+  <li><strong>Development layout</strong> (sibling <code class="language-dafny highlighter-rouge"><span class="n">OpenJMLsrc</span><span class="o">/</span></code> folder): uses the build output from
+<code class="language-dafny highlighter-rouge"><span class="n">OpenJMLsrc</span><span class="o">/</span><span class="n">build</span><span class="cm">/*/jdk</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">build</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">.</span><span class="n">jar</span></code> from the <code class="language-dafny highlighter-rouge"><span class="n">OpenJMLlsp</span></code> directory.
+An OpenJML development environment, as described in the OpenJML wiki pages, has this layout.</li>
+</ul>
+
+<p>FIXME: double-check all the above paths</p>
+
+<h4 id="required-files">Required Files</h4>
+
+<table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span></code></td>
+      <td>Server launcher script</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">lsp</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">.</span><span class="n">jar</span></code></td>
+      <td>Server logic</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">lsp</span><span class="o">/</span><span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">lsp4j</span><span class="o">-</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">0</span><span class="o">.</span><span class="n">jar</span></code></td>
+      <td>LSP4J protocol library</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">lsp</span><span class="o">/</span><span class="n">org</span><span class="o">.</span><span class="n">eclipse</span><span class="o">.</span><span class="n">lsp4j</span><span class="o">.</span><span class="n">jsonrpc</span><span class="o">-</span><span class="mf">1.0</span><span class="o">.</span><span class="mi">0</span><span class="o">.</span><span class="n">jar</span></code></td>
+      <td>JSON-RPC transport</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">jdk</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">java</span></code></td>
+      <td>JDK used to run the server (bundled with OpenJML)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="environment-variables">Environment Variables</h4>
+
+<p>The launcher sets these if not already present in the environment:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Default</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OPENJML_INSTALL</span></code></td>
+      <td>Directory containing <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span></code> script</td>
+      <td>Root of the OpenJML installation</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OPENJML_SPECS</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="n">OPENJML_INSTALL</span><span class="o">/</span><span class="n">specs</span></code></td>
+      <td>Path to bundled JML specification files</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OPENJML_SOLVERS</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="n">OPENJML_INSTALL</span></code></td>
+      <td>Directory containing SMT solver binaries</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The default values of the environment variables are sufficient in nearly all circumstances.
+A client may override any of these before spawning the server process.</p>
+
+<h4 id="eclipse-only-server-path-system-property">Eclipse-only: Server Path System Property</h4>
+
+<p>The Eclipse plugin resolves the <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span></code> launcher path in this order:</p>
+
+<ol>
+  <li>The Java system property <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">lsp</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">path</span></code> — intended for the test harness
+and development setups where modifying workspace preferences is inconvenient.</li>
+  <li>The value stored in the OpenJML Preferences page (<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">lspServerPath</span></code>).</li>
+  <li><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span></code> on <code class="language-dafny highlighter-rouge"><span class="n">PATH</span></code> (last resort).</li>
+</ol>
+
+<p>To use option 1, pass <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">Dopenjml</span><span class="o">.</span><span class="n">lsp</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">path</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="kr">to</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span></code> in the Eclipse
+JVM arguments (e.g., in <code class="language-dafny highlighter-rouge"><span class="n">eclipse</span><span class="o">.</span><span class="n">ini</span></code> or a launch configuration).</p>
+
+<h4 id="jvm-notes">JVM Notes</h4>
+
+<p>The server’s JVM requires several –add-exports flags to expose OpenJDK compiler internals (com.sun.tools.javac.<em>, org.jmlspecs.openjml.</em>) to the unnamed   <br />
+module. Gson does not require any flags: it is unconditionally exported from jdk.compiler via its module-info.java. All required flags are set automatically by the launcher script via $OPENJML_EXPORTS; client<br />
+integrators do not need to set them.</p>
+
+<p>Do <strong>not</strong> put a separate Gson jar on the classpath; that creates a split-package that the JVM
+will refuse to load.</p>
+
+<hr />
+
+<h3 id="lsp-handshake">LSP Handshake</h3>
+
+<h4 id="initialize-request"><code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> Request</h4>
+
+<p>The server reads configuration from <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code> in the <code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> request.
+The value is deserialized directly as an <code class="language-dafny highlighter-rouge"><span class="n">OpenJMLSettings</span></code> object (no enclosing key).</p>
+
+<p>Example:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"initializationOptions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"specsPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/Specs/specs"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"checkTriggerOn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"edit"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"escTriggerOn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"manual"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>See the <a href="LSP-Integration-Guide.html#configuration">Configuration</a> section for all recognized fields.</p>
+
+<h4 id="initialize-response-servercapabilities"><code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> Response (ServerCapabilities)</h4>
+
+<p>The server advertises the following capabilities:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Capability</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocumentSync</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="mi">2</span></code> (Incremental) by default; <code class="language-dafny highlighter-rouge"><span class="mi">1</span></code> (Full) when <code class="language-dafny highlighter-rouge"><span class="n">incrementalSync</span></code> is <code class="language-dafny highlighter-rouge"><span class="kc">false</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">hoverProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">codeLensProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">{</span> <span class="s2">"resolveProvider"</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">completionProvider</span></code></td>
+      <td>trigger characters: <code class="language-dafny highlighter-rouge"><span class="err">\</span></code>, <code class="language-dafny highlighter-rouge"><span class="err">@</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">documentSymbolProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">foldingRangeProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspaceSymbolProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">definitionProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">declarationProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">referencesProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">documentHighlightProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code> — returns the ranges of all occurrences of the symbol under the cursor in the current file; the client performs the visual highlighting</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">renameProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">{</span> <span class="s2">"prepareProvider"</span><span class="o">:</span> <span class="kc">true</span> <span class="p">}</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">signatureHelpProvider</span></code></td>
+      <td>trigger characters: <code class="language-dafny highlighter-rouge"><span class="p">(</span></code>, <code class="language-dafny highlighter-rouge"><span class="p">,</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">semanticTokensProvider</span></code></td>
+      <td>full-file; see legend in response</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">inlayHintProvider</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">{</span> <span class="s2">"resolveProvider"</span><span class="o">:</span> <span class="kc">false</span> <span class="p">}</span></code> — shows inferred types of <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code>-declared locals</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">textDocumentSync</span><span class="o">:</span> <span class="n">Incremental</span></code> (default) means the client sends only the changed
+ranges on each <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didChange</span></code> notification; the server applies them
+internally and passes the reconstructed full text to OpenJML.  Setting
+<code class="language-dafny highlighter-rouge"><span class="n">incrementalSync</span><span class="o">:</span> <span class="kc">false</span></code> reverts to <code class="language-dafny highlighter-rouge"><span class="n">Full</span></code> (client sends entire file each time).</p>
+
+<hr />
+
+<h3 id="configuration">Configuration</h3>
+
+<p>Settings arrive via two channels:</p>
+
+<ol>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code></strong> in the <code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> request — values applied once at
+startup. The JSON object is deserialized directly as an <code class="language-dafny highlighter-rouge"><span class="n">OpenJMLSettings</span></code> object.</p>
+  </li>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code></strong> — runtime updates. The notification’s
+<code class="language-dafny highlighter-rouge"><span class="n">settings</span></code> object must have an <code class="language-dafny highlighter-rouge"><span class="s2">"openjml"</span></code> key; the value is an <code class="language-dafny highlighter-rouge"><span class="n">OpenJMLSettings</span></code>-
+shaped JSON object. Only non-null fields overwrite the current settings, so partial
+updates are safe.</p>
+  </li>
+</ol>
+
+<p>Example <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code> payload:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"settings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"openjml"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"specsPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/Specs/specs"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"checkTriggerOn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"save"</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h4 id="global-settings-reference">Global Settings Reference</h4>
+
+<p>These fields apply to the server as a whole (default settings used when no per-project
+settings match a given file):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">specsPath</span></code></td>
+      <td>string</td>
+      <td>env <code class="language-dafny highlighter-rouge"><span class="n">OPENJML_SPECS</span></code></td>
+      <td>Path to JML specification files, passed as <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">specs</span><span class="o">-</span><span class="n">path</span></code></td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code></td>
+      <td>string</td>
+      <td>none</td>
+      <td>Source root(s) for cross-file references (see note on effective sourcepath below)</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">classPath</span></code></td>
+      <td>string</td>
+      <td>none</td>
+      <td>Classpath for pre-compiled dependencies, passed as <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">classpath</span></code>; also used as a sourcepath fallback (see note)</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">checkTriggerOn</span></code></td>
+      <td>string</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"edit"</span></code></td>
+      <td>When to run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code>: <code class="language-dafny highlighter-rouge"><span class="s2">"edit"</span></code>, <code class="language-dafny highlighter-rouge"><span class="s2">"save"</span></code>, or <code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span></code></td>
+      <td>string</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code></td>
+      <td>When to run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code>: <code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code>, <code class="language-dafny highlighter-rouge"><span class="s2">"save"</span></code>, or <code class="language-dafny highlighter-rouge"><span class="s2">"edit"</span></code> (see note)</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">incrementalSync</span></code></td>
+      <td>boolean</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">true</span></code></td>
+      <td>When <code class="language-dafny highlighter-rouge"><span class="kc">true</span></code>, advertise <code class="language-dafny highlighter-rouge"><span class="n">Incremental</span></code> sync and apply ranged edits internally; when <code class="language-dafny highlighter-rouge"><span class="kc">false</span></code>, revert to <code class="language-dafny highlighter-rouge"><span class="n">Full</span></code> sync</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code></td>
+      <td>string</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"full"</span></code></td>
+      <td>Java-capability mode: <code class="language-dafny highlighter-rouge"><span class="s2">"full"</span></code> enables all Java+JML capabilities; <code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code> suppresses capabilities that duplicate a co-present Java language server (e.g. JDT, Red Hat Java). See note below.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">client</span></code></td>
+      <td>string</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"generic"</span></code></td>
+      <td>Known-client hint for default tuning. Values: <code class="language-dafny highlighter-rouge"><span class="s2">"generic"</span></code> (no assumptions), <code class="language-dafny highlighter-rouge"><span class="s2">"eclipse-jdt"</span></code>, <code class="language-dafny highlighter-rouge"><span class="s2">"vscode-java"</span></code>, <code class="language-dafny highlighter-rouge"><span class="s2">"intellij"</span></code>. When set to a known Java-capable client, <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> defaults to <code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code> unless explicitly overridden.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">escThreads</span></code></td>
+      <td>integer</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="mi">5</span></code></td>
+      <td>Size of the shared ESC thread pool; bounds how many concurrent ESC tasks (and SMT solver subprocesses) may run simultaneously</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">syntaxColoringScope</span></code></td>
+      <td>string</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"preserve Java coloring"</span></code></td>
+      <td>Which tokens the semantic-token response covers. <code class="language-dafny highlighter-rouge"><span class="s2">"preserve Java coloring"</span></code> — only JML-specific tokens are emitted (use when a co-present Java LS handles Java tokens). <code class="language-dafny highlighter-rouge"><span class="s2">"overwrite Java coloring"</span></code> — all tokens (Java + JML) are emitted by the OpenJML server.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">escEngine</span></code></td>
+      <td>string</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"subprocess"</span></code></td>
+      <td>ESC execution mode. <code class="language-dafny highlighter-rouge"><span class="s2">"subprocess"</span></code> — z3 runs as a separate process (default, most isolation). <code class="language-dafny highlighter-rouge"><span class="s2">"concurrent"</span></code> — ESC runs concurrently in-process via <code class="language-dafny highlighter-rouge"><span class="n">doESC</span></code>. <code class="language-dafny highlighter-rouge"><span class="s2">"fresh"</span></code> — each ESC call spawns a fresh IAPI context (maximum isolation, slower).</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">projects</span></code></td>
+      <td>array</td>
+      <td>none</td>
+      <td>Per-project configuration objects; see <a href="LSP-Integration-Guide.html#multi-project-support">Multi-Project Support</a> below.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="language-dafny highlighter-rouge"><span class="kc">null</span></code> or absent fields leave the current value unchanged.</p>
+
+<h4 id="multi-project-support">Multi-Project Support</h4>
+
+<p>The server supports multiple independent projects within a single workspace.  Each
+project is a separate compilation domain with its own source folders, classpath, specs
+path, and properties file.  A file belongs to the project whose <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code> contains
+its path as a prefix.</p>
+
+<p>Per-project settings are conveyed in a <strong><code class="language-dafny highlighter-rouge"><span class="n">projects</span></code></strong> array inside the top-level
+<code class="language-dafny highlighter-rouge"><span class="n">OpenJMLSettings</span></code> object (either in <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code> or <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code>).
+Each element is a <code class="language-dafny highlighter-rouge"><span class="n">ProjectConfig</span></code> object:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">id</span></code></td>
+      <td>string</td>
+      <td>Unique project identifier (alphanumeric, no path separators, no whitespace, non-empty). Used as the lookup key in command arguments. The Eclipse plugin uses the Eclipse project name (<code class="language-dafny highlighter-rouge"><span class="n">IProject</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span></code>).</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code></td>
+      <td>list</td>
+      <td>This project’s own source folder paths (not including dependency sources). Used to map a file URI to its owning project.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code></td>
+      <td>string</td>
+      <td>Path-separator-separated list of source roots, including own source folders <strong>and</strong> transitive dependency source folders. Passed as <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">sourcepath</span></code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">classPath</span></code></td>
+      <td>string</td>
+      <td>Path-separator-separated list of compiled dependency output directories and any additional user classpath entries. Passed as <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">classpath</span></code>.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">specsPath</span></code></td>
+      <td>string</td>
+      <td>OpenJML specs path for this project (<code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">specs</span><span class="o">-</span><span class="n">path</span></code>). If absent, the global <code class="language-dafny highlighter-rouge"><span class="n">specsPath</span></code> is used.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">propertiesFile</span></code></td>
+      <td>string</td>
+      <td>Path to a user-supplied OpenJML <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">properties</span></code> file. May be null.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">generatedPropertiesFile</span></code></td>
+      <td>string</td>
+      <td>Path to a <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">properties</span></code> file generated from the IDE preferences page. May be null.</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">outputDir</span></code></td>
+      <td>string</td>
+      <td>Directory for RAC-compiled <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="kr">class</span></code> files (<code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">d</span></code>). Defaults to the IDE project’s build output folder.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Example:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"settings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"openjml"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"projects"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MyLibrary"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"rootPaths"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"/workspace/MyLibrary/src"</span><span class="p">],</span><span class="w">
+          </span><span class="nl">"sourcePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/MyLibrary/src"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"classPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/deps/commons.jar"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"specsPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/Specs/specs"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"outputDir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/MyLibrary/bin"</span><span class="w">
+        </span><span class="p">},</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+          </span><span class="nl">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"MyApp"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"rootPaths"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"/workspace/MyApp/src"</span><span class="p">],</span><span class="w">
+          </span><span class="nl">"sourcePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/MyApp/src:/workspace/MyLibrary/src"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"classPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/MyLibrary/bin:/workspace/deps/commons.jar"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"specsPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/path/to/Specs/specs"</span><span class="p">,</span><span class="w">
+          </span><span class="nl">"outputDir"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/workspace/MyApp/bin"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>When a project list is configured:</p>
+<ul>
+  <li>The server maps each incoming file URI to the project whose <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code> contains
+the file’s path.  If no project matches, global settings are used.</li>
+  <li>File-watcher events are scoped to the union of all projects’ <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code>.</li>
+  <li>Commands that name a <code class="language-dafny highlighter-rouge"><span class="n">projectId</span></code> are dispatched using that project’s settings.</li>
+</ul>
+
+<p>A single-project client (e.g. VS Code) does not need to use <code class="language-dafny highlighter-rouge"><span class="n">projects</span></code> at all —
+the global <code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">classPath</span></code>, etc. settings are used for all files.</p>
+
+<h4 id="notes-on-settings">Notes on Settings</h4>
+
+<p><strong>Note on <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">client</span></code>:</strong> OpenJML’s LSP server implements capabilities that
+overlap with those of full Java language servers (JDT, Red Hat Java, etc.).  By default
+all capabilities are active (<code class="language-dafny highlighter-rouge"><span class="n">javaMode</span><span class="o">:</span> <span class="s2">"full"</span></code>).  If another Java LS is active for the
+same workspace, clients can avoid duplicate hints, signature help, etc. by setting
+<code class="language-dafny highlighter-rouge"><span class="n">javaMode</span><span class="o">:</span> <span class="s2">"jml-only"</span></code> or by naming the client (<code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"eclipse-jdt"</span></code>).</p>
+
+<p>Integrators building a plugin that co-exists with a known Java LS should set <code class="language-dafny highlighter-rouge"><span class="n">client</span></code>
+in <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code> — the server then applies the appropriate defaults
+automatically.  For example, the OpenJMLUI Eclipse plugin sets <code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"eclipse-jdt"</span></code>
+so that Java-overlapping features are suppressed by default, with no configuration
+required from the end user.</p>
+
+<p><strong>Note on effective <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">sourcepath</span></code>:</strong> The server does not pass <code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code> directly
+to OpenJML. It constructs an effective sourcepath by joining (in order, omitting
+empty parts): a temp directory holding any in-memory file content; the workspace
+folder roots reported at <code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> time (only when <code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code> is absent, to
+avoid duplicate-class issues); the user-supplied <code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code> (when present, this
+is used alone — workspace folders are excluded); and <code class="language-dafny highlighter-rouge"><span class="n">classPath</span></code> as a final fallback
+when <code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code> is absent. <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">specs</span><span class="o">-</span><span class="n">path</span></code> and <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">classpath</span></code> are passed through
+unchanged.</p>
+
+<p><strong>Note on <code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span><span class="o">:</span> <span class="s2">"edit"</span></code>:</strong> The server implements this mode (ESC is debounced
+and re-run on every keystroke), but it is expensive and no known client UI exposes it
+as an option. Client integrators may choose to omit it from their settings UI.</p>
+
+<p>When <code class="language-dafny highlighter-rouge"><span class="n">specsPath</span></code> is null or empty, the server falls back to the <code class="language-dafny highlighter-rouge"><span class="n">OPENJML_SPECS</span></code>
+environment variable set by the launcher. If that is also unset, OpenJML derives
+the specs path from <code class="language-dafny highlighter-rouge"><span class="n">OPENJML_INSTALL</span></code>; for standard installations the variable
+should therefore be left unset.</p>
+
+<p>The SMT solvers path is not configurable at runtime. It is fixed at JVM startup
+from <code class="language-dafny highlighter-rouge"><span class="n">OPENJML_SOLVERS</span></code> (set by the launcher script), falling back to
+<code class="language-dafny highlighter-rouge"><span class="n">OPENJML_INSTALL</span></code>. Client integrators cannot override it via <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code>
+or <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code>; set <code class="language-dafny highlighter-rouge"><span class="n">OPENJML_SOLVERS</span></code> before launching the
+server if a non-default location is required.</p>
+
+<hr />
+
+<h3 id="document-synchronization">Document Synchronization</h3>
+
+<p>Sync kind is <strong>Incremental</strong> (<code class="language-dafny highlighter-rouge"><span class="n">TextDocumentSyncKind</span><span class="o">.</span><span class="n">Incremental</span></code>) by default.
+Each <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didChange</span></code> notification carries a list of ranged edits; the
+server applies them in the order given (each range refers to the document state
+after all preceding changes in the same event) and reconstructs the full text
+before passing it to OpenJML.  Set <code class="language-dafny highlighter-rouge"><span class="n">incrementalSync</span><span class="o">:</span> <span class="kc">false</span></code> in
+<code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code> to revert to <strong>Full</strong> sync, where every notification
+must contain the complete document text in <code class="language-dafny highlighter-rouge"><span class="n">contentChanges</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span></code>.</p>
+
+<h4 id="textdocumentdidopen"><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didOpen</span></code></h4>
+
+<ul>
+  <li>Stores the document content.</li>
+  <li>Runs <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> immediately (no debounce).</li>
+  <li>Does <strong>not</strong> run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> or <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">rac</span></code> automatically on open.</li>
+</ul>
+
+<h4 id="textdocumentdidchange"><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didChange</span></code></h4>
+
+<ul>
+  <li>Stores the updated content.</li>
+  <li><strong>Marks the file dirty</strong> (adds the URI to an internal dirty-URI set). While a file is
+marked dirty, multi-file check or ESC invocations (e.g. <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">checkJML</span></code> or
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEsc</span></code> on a directory) use the in-memory content for this file instead of
+reading it from disk. This ensures that unsaved edits are included in context-aware
+cross-file checks even before the file is saved.</li>
+  <li>If <code class="language-dafny highlighter-rouge"><span class="n">checkTriggerOn</span></code> is <code class="language-dafny highlighter-rouge"><span class="s2">"edit"</span></code>: schedules <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> with a 500 ms debounce.
+A new change before 500 ms resets the timer.</li>
+  <li>If <code class="language-dafny highlighter-rouge"><span class="n">checkTriggerOn</span></code> is <code class="language-dafny highlighter-rouge"><span class="s2">"save"</span></code> or <code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code>: no <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> is triggered by change.</li>
+  <li>If <code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span></code> is <code class="language-dafny highlighter-rouge"><span class="s2">"edit"</span></code>: schedules <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> with a 2000 ms debounce.
+A new change before 2000 ms resets the timer.</li>
+  <li><code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> on change is expensive and not recommended for large files.</li>
+</ul>
+
+<h4 id="textdocumentdidsave"><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didSave</span></code></h4>
+
+<ul>
+  <li><strong>Clears the dirty mark</strong> for the URI (removes it from the dirty-URI set). After save,
+the file’s in-memory content matches the disk, so subsequent multi-file checks read
+the file from disk directly and no longer need to mock it from memory.</li>
+  <li>Cancels any pending debounced check or ESC.</li>
+  <li>Runs <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> immediately using the saved (in-memory) content.</li>
+  <li>Runs <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> if <code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span></code> not <code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code>. Because the LSP protocol does not carry
+a save reason, the server cannot distinguish manual saves from auto-saves and fires
+on every <code class="language-dafny highlighter-rouge"><span class="n">didSave</span></code>. Users who save frequently (e.g. Eclipse auto-save-on-compile,
+or VS Code <code class="language-dafny highlighter-rouge"><span class="n">files</span><span class="o">.</span><span class="n">autoSave</span><span class="o">:</span> <span class="n">afterDelay</span></code>) should use <code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span><span class="o">:</span> <span class="s2">"manual"</span></code> to
+avoid unwanted ESC runs.</li>
+</ul>
+
+<h4 id="textdocumentdidclose"><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didClose</span></code></h4>
+
+<ul>
+  <li><strong>Clears the dirty mark</strong> for the URI (removes it from the dirty-URI set).</li>
+  <li>Cancels all pending debounced and running checks for the URI.</li>
+  <li>Removes stored content and per-method ESC status.</li>
+  <li>Retains cached diagnostics; the client’s Problems panel continues to show them until a fresh check updates or clears them.</li>
+</ul>
+
+<hr />
+
+<h3 id="diagnostics">Diagnostics</h3>
+
+<h4 id="publication">Publication</h4>
+
+<p>Diagnostics are sent via <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">publishDiagnostics</span></code>. Parsing/typechecking diagnostics and
+verification diagnostics
+are maintained separately per URI and merged before each publication.</p>
+
+<p>The merging policy is:</p>
+
+<ul>
+  <li>When <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> runs it subsumes <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> (ESC performs all the same type and
+annotation checks), so an ESC result replaces the <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> diagnostics entirely,
+eliminating duplication. An ESC result will replace older ESC results. ESC results
+can also be cleared using the ‘Clear markers’ command.</li>
+  <li>When <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> runs after a previous ESC (e.g. triggered by an edit), it replaces
+check-level diagnostics but retains ESC verification failures (postcondition
+violations, assertion failures). Those may be stale after the edit, but remain
+useful until a fresh ESC run either confirms or clears them.</li>
+</ul>
+
+<p>ESC verification failures are identified by the <code class="language-dafny highlighter-rouge"><span class="n">data</span></code> field of the LSP <code class="language-dafny highlighter-rouge"><span class="n">Diagnostic</span></code>
+object: the server sets <code class="language-dafny highlighter-rouge"><span class="n">data</span></code> to <code class="language-dafny highlighter-rouge"><span class="s2">"esc-verification"</span></code> on any diagnostic produced
+from a proof obligation failure.</p>
+
+<h4 id="diagnostic-format">Diagnostic Format</h4>
+
+<p>Each diagnostic has the following fields (LSP <code class="language-dafny highlighter-rouge"><span class="n">Diagnostic</span></code> type):</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">range</span><span class="o">.</span><span class="n">start</span><span class="o">/</span><span class="n">end</span></code></td>
+      <td>Zero-based line number and zero-based character offset within the line (UTF-16 code units, per the LSP <code class="language-dafny highlighter-rouge"><span class="n">Position</span></code> type)</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">severity</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="mi">1</span></code> (Error) or <code class="language-dafny highlighter-rouge"><span class="mi">2</span></code> (Warning)</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">source</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"openjml.check"</span></code> for <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> results; <code class="language-dafny highlighter-rouge"><span class="s2">"openjml.esc"</span></code> for <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> results</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">message</span></code></td>
+      <td>Human-readable error or warning text from OpenJML</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">code</span></code></td>
+      <td>OpenJML diagnostic code string (e.g., <code class="language-dafny highlighter-rouge"><span class="s2">"jml.message"</span></code>)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h4 id="openjml-exit-codes">OpenJML Exit Codes</h4>
+
+<p>These exit codes are logged to stderr and influence how the server interprets results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Code</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>Success — no parse, type, or verification errors (warnings may still be present)</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Syntax or type errors</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Bad command-line arguments (typically indicates an invalid setting)</td>
+    </tr>
+    <tr>
+      <td>3 or 4</td>
+      <td>Catastrophic error — resource exhaustion (e.g. out of memory), significant misconfiguration, or internal bug</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>ESC verification failures (postcondition or assertion violations)</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h3 id="implemented-lsp-features">Implemented LSP Features</h3>
+
+<h4 id="hover--textdocumenthover">Hover — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">hover</span></code></h4>
+
+<p>Two cases are handled:</p>
+
+<ol>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="kr">var</span></code> declaration</strong> — if the cursor is on the <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code> keyword or the variable name
+of a <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code>-declared local, the server returns the inferred type as a plain-text
+string of the form <code class="language-dafny highlighter-rouge"><span class="o">:</span> <span class="n">TypeName</span></code> (e.g. <code class="language-dafny highlighter-rouge"><span class="o">:</span> <span class="kt">int</span></code>, <code class="language-dafny highlighter-rouge"><span class="o">:</span> <span class="n">String</span></code>).  Type names are
+shortened by stripping <code class="language-dafny highlighter-rouge"><span class="n">java</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">org</span><span class="o">.</span><span class="n">jmlspecs</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span><span class="n">internal</span><span class="o">.</span></code> (JML built-in
+types appear as <code class="language-dafny highlighter-rouge"><span class="err">\</span><span class="n">bigint</span></code>, <code>\real</code>, etc.), and the containing file’s own package
+prefix.  This hover is always active regardless of <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code>.</p>
+  </li>
+  <li>
+    <p><strong>Method body / JML spec</strong> — if the cursor is anywhere else inside a method, the
+server returns the JML specification lines (consecutive <code class="language-dafny highlighter-rouge"><span class="c1">//@ ...</span></code> comment lines)
+immediately preceding the method declaration, formatted as a Markdown code block.</p>
+  </li>
+</ol>
+
+<p>Returns null if none of the above conditions are met (e.g. cursor is outside any
+method, or the method has no JML annotations).</p>
+
+<h4 id="inlay-hints--textdocumentinlayhint">Inlay Hints — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">inlayHint</span></code></h4>
+
+<p>Returns <code class="language-dafny highlighter-rouge"><span class="n">InlayHint</span></code> objects of kind <code class="language-dafny highlighter-rouge"><span class="n">Type</span></code> for <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code>-declared local variables,
+showing the inferred type immediately after the variable name in the form <code class="language-dafny highlighter-rouge"><span class="o">:</span> <span class="n">TypeName</span></code>.
+Type names are shortened identically to the hover case above.</p>
+
+<p><strong><code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> interaction:</strong></p>
+<ul>
+  <li><code class="language-dafny highlighter-rouge"><span class="s2">"full"</span></code> (default): hints are returned for all <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code>-declared variables.</li>
+  <li><code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code>: hints for plain Java <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code> declarations are suppressed (a co-present
+Java LS such as JDT or Red Hat Java already provides those).  Hints for JML
+<code class="language-dafny highlighter-rouge"><span class="kr">ghost</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">model</span></code> <code class="language-dafny highlighter-rouge"><span class="kr">var</span></code> declarations are always emitted regardless of <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code>,
+because no other language server is aware of them.</li>
+</ul>
+
+<p><strong>Client notes:</strong></p>
+<ul>
+  <li>Standard LSP clients (VS Code, Neovim, Helix, etc.) display these as inline
+annotations natively.</li>
+  <li><strong>VS Code with vscode-java</strong>: <code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"vscode-java"</span></code> defaults <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> to
+<code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code>, so only JML ghost/model var hints are shown (vscode-java handles
+Java vars itself).</li>
+  <li><strong>IntelliJ</strong>: IntelliJ has its own built-in Java type inference display.  Whether
+LSP inlay hints from OpenJML are also shown depends on the LSP plugin in use;
+<code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"intellij"</span></code> defaults to <code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code> as a conservative default.</li>
+  <li><strong>Eclipse with OpenJMLUI</strong>: LSP4E does not route <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">inlayHint</span></code> responses
+to the JDT Java editor.  The OpenJMLUI plugin works around this via a direct call
+from a code mining provider, but <code class="language-dafny highlighter-rouge"><span class="n">LineContentCodeMining</span></code> does not visually render
+in the JDT Java editor from external providers.  The inferred type is accessible
+instead via the hover described above.  <code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"eclipse-jdt"</span></code> defaults to
+<code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code>.</li>
+</ul>
+
+<h4 id="code-lens-refresh--workspacecodelensrefresh-server--client">Code Lens Refresh — <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">codeLens</span><span class="o">/</span><span class="n">refresh</span></code> (server → client)</h4>
+
+<p>Sent by the server whenever per-method ESC status changes — for example when ESC
+begins (status → CHECKING), completes (status → Verified / Not verified), or is
+cancelled. The client should respond by re-requesting <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeLens</span></code> for
+any open documents of interest.</p>
+
+<h4 id="log-message--windowlogmessage-server--client">Log Message — <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code> (server → client)</h4>
+
+<p>Sent by the server for verbose operational messages such as CheckRunner timing lines
+and internal warnings. Notifications are type 4 (Log) and are typically routed to an
+output panel rather than shown as dialogs. Clients that declare
+<code class="language-dafny highlighter-rouge"><span class="n">supportsActionMessages</span><span class="o">:</span> <span class="kc">true</span></code> in <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code> still receive
+<code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code> for purely informational output; advisory and error messages that
+warrant a dialog are routed through <code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="o">/</span><span class="n">openjml</span><span class="o">/</span><span class="n">actionMessage</span></code> instead (see below).</p>
+
+<h4 id="show-message-request--windowshowmessagerequest-server--client">Show Message Request — <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">showMessageRequest</span></code> (server → client)</h4>
+
+<p>The server uses <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">showMessageRequest</span></code> as a general mechanism to present the
+user with a question and wait for a response before proceeding.  Clients should
+support this notification for any server feature, not only the ones listed below.</p>
+
+<p>If the client does not support <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">showMessageRequest</span></code> (returns <code class="language-dafny highlighter-rouge"><span class="kc">null</span></code>), the
+server treats the response as if the user chose the default (affirmative) action and
+continues.  Clients that ignore the request will therefore see the operation proceed
+without user confirmation.</p>
+
+<p><strong>Current uses:</strong></p>
+
+<ul>
+  <li><strong>Rename pre-flight</strong> — sent during <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">rename</span></code> when the file has
+outstanding type-check errors.  The server asks whether to proceed with the rename
+despite errors.  If the user selects No, the rename is aborted and an empty
+<code class="language-dafny highlighter-rouge"><span class="n">WorkspaceEdit</span></code> is returned.</li>
+</ul>
+
+<h4 id="code-lens--textdocumentcodelens">Code Lens — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeLens</span></code></h4>
+
+<p>Returns one code lens per detected method in the document. Each lens shows the current
+ESC verification status for that method together with an inline action button. The label
+format is:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>Label</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Not run or Unknown</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="err">—</span> <span class="err">▶</span> <span class="n">Run</span> <span class="n">ESC</span></code></td>
+    </tr>
+    <tr>
+      <td>In progress</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="err">⧗</span> <span class="n">Checking</span><span class="err">…</span> <span class="err">✕</span> <span class="n">Cancel</span></code></td>
+    </tr>
+    <tr>
+      <td>Verified</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="err">✓</span> <span class="n">Verified</span> <span class="err">↺</span> <span class="n">Re</span><span class="o">-</span><span class="n">run</span></code></td>
+    </tr>
+    <tr>
+      <td>Infeasible precondition</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="n">Infeasible</span> <span class="err">↺</span> <span class="n">Re</span><span class="o">-</span><span class="n">run</span></code></td>
+    </tr>
+    <tr>
+      <td>Not verified</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="err">✗</span> <span class="n">Not</span> <span class="n">verified</span> <span class="p">(</span><span class="n">N</span> <span class="n">issue</span><span class="p">(</span><span class="n">s</span><span class="p">))</span> <span class="err">↺</span> <span class="n">Re</span><span class="o">-</span><span class="n">run</span></code></td>
+    </tr>
+    <tr>
+      <td>Skipped</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="n">Skipped</span> <span class="err">▶</span> <span class="n">Run</span> <span class="n">ESC</span></code></td>
+    </tr>
+    <tr>
+      <td>Solver timeout</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="n">Timeout</span> <span class="err">↺</span> <span class="n">Re</span><span class="o">-</span><span class="n">run</span></code></td>
+    </tr>
+    <tr>
+      <td>Cancelled</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="n">Cancelled</span> <span class="err">▶</span> <span class="n">Run</span> <span class="n">ESC</span></code></td>
+    </tr>
+    <tr>
+      <td>Type/check error</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="n">Check</span> <span class="n">error</span> <span class="err">↺</span> <span class="n">Re</span><span class="o">-</span><span class="n">run</span></code></td>
+    </tr>
+    <tr>
+      <td>Check error in deps</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">OpenJML</span><span class="o">:</span> <span class="n">Check</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">other</span> <span class="n">files</span> <span class="err">↺</span> <span class="n">Re</span><span class="o">-</span><span class="n">run</span></code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Each code lens embeds the command <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscForMethod</span></code> with arguments
+<code class="language-dafny highlighter-rouge"><span class="p">[</span><span class="n">uri</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">]</span></code>, where <code class="language-dafny highlighter-rouge"><span class="n">name</span></code> is a string that is unique across all methods in
+the project, including methods of anonymous and local classes. A client that supports code lens
+execution can invoke (or cancel) ESC on a single method by sending
+<code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">executeCommand</span></code> with this command and argument.</p>
+
+<p>The command is always <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscForMethod</span></code> regardless of the current status; when
+the method is already CHECKING the server aborts the in-flight proof (via
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">abortCurrentProof</span></code> semantics) instead of starting a new one, so a single
+command handles both Run and Cancel without VS Code treating a command change as a new
+lens and showing duplicates.  Aborting the current proof does not stop a whole-file or
+project ESC run from continuing to the next method.</p>
+
+<p>The server sends a <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">codeLens</span><span class="o">/</span><span class="n">refresh</span></code> notification whenever method ESC status
+changes (including when a check moves from CHECKING to a final state). A client should
+re-query <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeLens</span></code> on receiving this notification.</p>
+
+<h4 id="completion--textdocumentcompletion">Completion — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">completion</span></code></h4>
+
+<p>Provides JML keyword and backslash-token completions inside JML annotations
+(<code class="language-dafny highlighter-rouge"><span class="c1">//@ ...</span></code> and <code class="language-dafny highlighter-rouge"><span class="cm">/*@ ... */</span></code>). Trigger characters are <code class="language-dafny highlighter-rouge"><span class="err">\</span></code> and <code class="language-dafny highlighter-rouge"><span class="err">@</span></code>.</p>
+
+<p>Two categories of items are offered:</p>
+
+<ul>
+  <li><strong>JML keywords</strong> — clause and modifier names (<code class="language-dafny highlighter-rouge"><span class="kr">requires</span></code>, <code class="language-dafny highlighter-rouge"><span class="kr">ensures</span></code>, <code class="language-dafny highlighter-rouge"><span class="kr">ghost</span></code>,
+<code class="language-dafny highlighter-rouge"><span class="kr">invariant</span></code>, etc.) — offered when the cursor is inside a JML annotation and the
+partial word does not start with <code class="language-dafny highlighter-rouge"><span class="err">\</span></code>.</li>
+  <li><strong>Backslash tokens</strong> — built-in JML expressions (<code class="language-dafny highlighter-rouge"><span class="err">\</span><span class="n">result</span></code>, <code class="language-dafny highlighter-rouge"><span class="err">\</span><span class="kr">old</span></code>, <code class="language-dafny highlighter-rouge"><span class="err">\</span><span class="kr">forall</span></code>,
+<code class="language-dafny highlighter-rouge"><span class="err">\</span><span class="n">nothing</span></code>, etc.) — offered when the partial word starts with <code class="language-dafny highlighter-rouge"><span class="err">\</span></code>.</li>
+</ul>
+
+<p>Completions are only offered when the cursor is inside a JML annotation context;
+positions in regular Java code return an empty list.</p>
+
+<h4 id="document-symbols--textdocumentdocumentsymbol">Document Symbols — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">documentSymbol</span></code></h4>
+
+<p>Returns a hierarchical symbol tree for the document. When <code class="language-dafny highlighter-rouge"><span class="n">useIntegratedOutline</span></code> is
+<code class="language-dafny highlighter-rouge"><span class="kc">true</span></code> (the default), all Java and JML symbols are returned together — classes,
+methods, fields, and JML ghost/model declarations — giving an integrated view.
+When <code class="language-dafny highlighter-rouge"><span class="kc">false</span></code>, only JML-specific symbols are returned, intended to complement a
+competing Java outline provider.</p>
+
+<p>The handler waits for any in-flight <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> to complete before returning, so the
+outline reflects the current source rather than a stale AST. For <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> spec files,
+symbols are looked up under the companion <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> URI.</p>
+
+<h4 id="folding-ranges--textdocumentfoldingrange">Folding Ranges — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">foldingRange</span></code></h4>
+
+<p>Returns folding ranges for JML annotation blocks (consecutive <code class="language-dafny highlighter-rouge"><span class="c1">//@ ...</span></code> or <code class="language-dafny highlighter-rouge"><span class="cm">/*@ ... */</span></code>
+comment sequences that span multiple lines) and Java text blocks (<code class="language-dafny highlighter-rouge"><span class="s2">""" ... """</span></code>).
+The implementation is a pure character scan — no AST is required — so folding is
+available immediately, even before the first <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> run.  Java structural folds
+(class bodies, method bodies, imports) are provided by the client’s own Java language
+support, not by this server.</p>
+
+<p>If the document has not yet been opened (content not in memory), the server reads it
+from disk.</p>
+
+<p><strong>Eclipse plugin note:</strong> The OpenJMLUI Eclipse plugin does not use this LSP request for
+its folding support.  LSP4E’s folding reconciling strategy requires projection (fold
+annotation) support to be enabled on the editor before the reconciler is installed, and
+there is no suitable extension point to guarantee that ordering for either the JDT Java
+editor or the Generic Editor.  Instead, the plugin installs <code class="language-dafny highlighter-rouge"><span class="n">JmlFoldingManager</span></code> directly
+on each editor’s <code class="language-dafny highlighter-rouge"><span class="n">ProjectionViewer</span></code> via a part listener, running the same character-scan
+algorithm locally without a server round-trip.  For <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> files, <code class="language-dafny highlighter-rouge"><span class="n">JmlFoldingManager</span></code>
+folds (JML annotation blocks) coexist with JDT’s built-in structural folds (methods,
+imports, Javadoc) in the same <code class="language-dafny highlighter-rouge"><span class="n">ProjectionAnnotationModel</span></code> without interfering.  For
+<code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> files opened in the Generic Editor, <code class="language-dafny highlighter-rouge"><span class="n">JmlFoldingManager</span></code> provides all folding.
+Other clients that do not have this constraint can use <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">foldingRange</span></code>
+normally.</p>
+
+<p><strong>Implications for generic clients:</strong> None. Generic clients use <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">foldingRange</span></code>
+through the standard LSP protocol. The Eclipse plugin’s local algorithm is a workaround
+for LSP4E’s projection-ordering constraint and does not represent a UX difference from
+what generic clients receive via the server.</p>
+
+<h4 id="semantic-tokens--textdocumentsemantictokensfull">Semantic Tokens — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">full</span></code></h4>
+
+<p>Returns full-file semantic token data.  The server’s token legend (returned in
+<code class="language-dafny highlighter-rouge"><span class="n">ServerCapabilities</span><span class="o">.</span><span class="n">semanticTokensProvider</span><span class="o">.</span><span class="n">legend</span></code>) is:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Index</th>
+      <th>Token type</th>
+      <th>Used for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td><code>namespace</code></td>
+      <td>Package names</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><code>class</code></td>
+      <td>Class declarations and references</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>interface</code></td>
+      <td>Interface declarations and references</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>enum</code></td>
+      <td>Enum type declarations and references</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>struct</code></td>
+      <td>Record declarations and references</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>typeParameter</code></td>
+      <td>Generic type parameters (<code>&lt;T&gt;</code>)</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>type</code></td>
+      <td>Primitive types (<code>int</code>, <code>boolean</code>, …) and JML built-in types (<code>\bigint</code>, <code>\real</code>, <code>\locset</code>, …)</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>parameter</code></td>
+      <td>Method and constructor parameters</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>variable</code></td>
+      <td>Local variables</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>property</code></td>
+      <td>Fields (instance and static)</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td><code>enumMember</code></td>
+      <td>Enum constants</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td><code>method</code></td>
+      <td>Method declarations and call sites</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td><code>function</code></td>
+      <td>JML backslash expressions (<code>\result</code>, <code>\old</code>, <code>\forall</code>, <code>\nothing</code>, <code>\fresh</code>, …)</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td><code>macro</code></td>
+      <td>Reserved — declared in legend but not currently emitted (potentially used for some JML backslash tokens)</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td><code>keyword</code></td>
+      <td>JML structural and behavioral keywords (<code>requires</code>, <code>ensures</code>, <code>invariant</code>, <code>ghost</code>, <code>model</code>, <code>also</code>, <code>behavior</code>, …); Java keywords (<code>return</code>, <code>if</code>, <code>for</code>, <code>new</code>, <code>instanceof</code>, <code>null</code>, <code>true</code> …) in full mode</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td><code>modifier</code></td>
+      <td>JML modifier annotations: <code>pure</code>, <code>spec_public</code>, <code>spec_protected</code>, <code>nullable</code>, <code>non_null</code>, <code>helper</code>, <code>strictly_pure</code>, …</td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td><code>decorator</code></td>
+      <td>Java and JML annotations (<code>@Override</code>, <code>@NonNull</code>, …)</td>
+    </tr>
+    <tr>
+      <td>17</td>
+      <td><code>comment</code></td>
+      <td>Reserved — declared in legend but not emitted (JML comment delimiters <code>//@&nbsp;</code> and <code>/*@ */</code> do not appear in the AST)</td>
+    </tr>
+    <tr>
+      <td>18</td>
+      <td><code>string</code></td>
+      <td>String literals and text blocks</td>
+    </tr>
+    <tr>
+      <td>19</td>
+      <td><code>number</code></td>
+      <td>Numeric and character literals</td>
+    </tr>
+    <tr>
+      <td>20</td>
+      <td><code>operator</code></td>
+      <td>Java binary, unary, and assignment operators; JML-specific operators (<code>==&gt;</code>, <code>&lt;==</code>, <code>&lt;==&gt;</code>, <code>&lt;:</code>, …)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>All 21 token types are declared in the legend even if not currently emitted (e.g. <code class="language-dafny highlighter-rouge"><span class="n">macro</span></code>,
+<code class="language-dafny highlighter-rouge"><span class="n">comment</span></code>), so that clients have a stable index-to-name mapping and themes can
+pre-configure colors for the full vocabulary.</p>
+
+<p>The token modifiers legend is:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Index</th>
+      <th>Modifier</th>
+      <th>Bit mask</th>
+      <th>Applied to</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td><code>declaration</code></td>
+      <td>1</td>
+      <td>Declaration sites of symbols</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><code>definition</code></td>
+      <td>2</td>
+      <td>Reserved</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>readonly</code></td>
+      <td>4</td>
+      <td><code>final</code> fields and local variables</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>static</code></td>
+      <td>8</td>
+      <td><code>static</code> fields and methods</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>deprecated</code></td>
+      <td>16</td>
+      <td>Symbols annotated <code>@Deprecated</code></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>abstract</code></td>
+      <td>32</td>
+      <td>Abstract classes and methods</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td><code>async</code></td>
+      <td>64</td>
+      <td>Reserved</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>modification</code></td>
+      <td>128</td>
+      <td>Reserved</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>documentation</code></td>
+      <td>256</td>
+      <td>Reserved</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>defaultLibrary</code></td>
+      <td>512</td>
+      <td>Standard-library symbols</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>All token type names and modifier names are drawn from the LSP standard semantic token
+vocabulary, so clients that follow the specification will have default theme colors for
+them without requiring JML-specific configuration.</p>
+
+<h5 id="operating-modes">Operating modes</h5>
+
+<p><strong>Token scope</strong> is controlled by the <code class="language-dafny highlighter-rouge"><span class="n">syntaxColoringScope</span></code> setting:</p>
+
+<ul>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="s2">"preserve Java coloring"</span></code></strong> (default) — only JML constructs are emitted: JML clause
+keywords, JML modifier keywords, JML backslash expressions, annotations and modifiers on
+Java declarations that carry JML annotation tokens, and all Java constructs appearing
+<em>inside</em> JML contexts (e.g., identifiers, operators, and literals inside <code class="language-dafny highlighter-rouge"><span class="kr">requires</span></code>
+or <code class="language-dafny highlighter-rouge"><span class="kr">ensures</span></code> expressions and inside model method bodies).  Java constructs outside JML
+context are not emitted, leaving them to a co-present Java extension.</p>
+  </li>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="s2">"overwrite Java coloring"</span></code></strong> — all Java and JML constructs are highlighted.  Use when
+no other Java semantic token provider is installed.</p>
+  </li>
+</ul>
+
+<p><strong>LSP capability scope</strong> is controlled separately by the <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> setting (see
+<a href="LSP-Integration-Guide.html#configuration">Configuration</a> and the inlay hints section).  <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> determines which
+LSP capabilities are advertised (hover, inlay hints, completions, etc.) and is independent
+of <code class="language-dafny highlighter-rouge"><span class="n">syntaxColoringScope</span></code>.</p>
+
+<h5 id="coloring-strategies">Coloring strategies</h5>
+
+<p>Two strategies are available via the <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">syntaxColoringStrategy</span></code> setting:</p>
+
+<ul>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="s2">"ast"</span></code></strong> (default) — AST-based coloring when a <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> result is cached.
+Uses the attributed AST to emit tokens for genuine JML nodes only (no false positives
+for Java identifiers that share a name with a JML keyword).  Falls back to regex
+before the first <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> completes.</p>
+  </li>
+  <li>
+    <p><strong><code class="language-dafny highlighter-rouge"><span class="s2">"regex"</span></code></strong> — always uses regex-based line scanning (instant, no AST required, but
+may color Java identifiers that happen to match JML keyword names).</p>
+  </li>
+</ul>
+
+<p>The AST strategy uses <code class="language-dafny highlighter-rouge"><span class="n">cu</span><span class="o">.</span><span class="n">lineMap</span></code> (populated during lexing, always present after
+a <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> pass) for O(1) character-offset → line:column conversion.</p>
+
+<p>Non-VS Code clients should use this standard request. See
+<a href="LSP-Integration-Guide.html#openjmlgetsemantictokens"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">getSemanticTokens</span></code></a> for the VS Code-specific
+alternative.</p>
+
+<p><strong>Implications for generic clients:</strong> None for the standard semantic token request.
+Generic clients receive JML semantic tokens via <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">full</span></code>
+through the normal LSP negotiation path. The Eclipse plugin’s <code class="language-dafny highlighter-rouge"><span class="n">JmlColorizer</span></code> is a
+workaround for JDT’s presentation layer intercepting LSP4E’s token delivery for <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code>
+files, and for LSP4E’s semantic token reconciler not re-firing after <code class="language-dafny highlighter-rouge"><span class="n">publishDiagnostics</span></code>.
+A generic client with proper semantic token support gets the equivalent result through
+the standard path. One potential improvement: the server could send
+<code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">refresh</span></code> after each <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> completes, signaling
+well-behaved clients to re-request tokens without needing a client-side workaround.
+This is not yet implemented.</p>
+
+<h4 id="go-to-definition--textdocumentdefinition">Go to Definition — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">definition</span></code></h4>
+
+<p>Resolves the declaration of the identifier under the cursor. Works for identifiers
+in both regular Java code and JML clauses (<code class="language-dafny highlighter-rouge"><span class="c1">//@ requires</span></code>, <code class="language-dafny highlighter-rouge"><span class="c1">//@ ensures</span></code>, etc.).
+Requires a cached AST from a prior <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> run for the document.</p>
+
+<h4 id="go-to-declaration--textdocumentdeclaration">Go to Declaration — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">declaration</span></code></h4>
+
+<p>For Java and JML identifiers, declaration and definition are the same location.
+Delegates to the same logic as <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">definition</span></code>.</p>
+
+<h4 id="find-references--textdocumentreferences">Find References — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">references</span></code></h4>
+
+<p>Finds all references to the symbol under the cursor across every AST currently in
+the cache (i.e., all files that have been opened and checked in the current session).
+Symbol identity is used for matching, which is correct within a single OpenJML
+compilation context.</p>
+
+<p>Note: the search is limited to files whose ASTs are cached. Files that have not been
+opened or checked since the server started are not searched.</p>
+
+<h4 id="rename--textdocumentrename--textdocumentpreparerename">Rename — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">rename</span></code> / <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">prepareRename</span></code></h4>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">prepareRename</span></code> validates that the cursor is on a renameable symbol (a valid Java
+identifier character) and signals that rename is supported. It returns
+<code class="language-dafny highlighter-rouge"><span class="n">defaultBehavior</span><span class="o">:</span> <span class="kc">true</span></code> so the client infers the rename range from the identifier
+word boundary.</p>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">rename</span></code> validates the new name, finds all references across cached ASTs, applies
+the edits in memory, then validates the result by running <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> on the modified
+content and comparing the before and after diagnostic sets. The comparison is non-trivial: it
+must account for cases where the new name shadows — or no longer shadows — another
+identifier, silently changing the meaning of existing references without necessarily
+producing new errors. If the rename is judged unsafe, or the new name is syntactically
+invalid, a descriptive error is returned rather than applying the edits.</p>
+
+<h4 id="signature-help--textdocumentsignaturehelp">Signature Help — <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">signatureHelp</span></code></h4>
+
+<p>Triggered when the cursor is inside a method call argument list. The server scans
+backward from the cursor position to find the enclosing <code class="language-dafny highlighter-rouge"><span class="p">(</span></code> and counts commas to
+determine the active parameter index. It then looks up the matching method declaration
+in the cached AST and returns a <code class="language-dafny highlighter-rouge"><span class="n">SignatureHelp</span></code> response containing one
+<code class="language-dafny highlighter-rouge"><span class="n">SignatureInformation</span></code> entry with labelled <code class="language-dafny highlighter-rouge"><span class="n">ParameterInformation</span></code> items.</p>
+
+<p>Trigger characters: <code class="language-dafny highlighter-rouge"><span class="p">(</span></code> and <code class="language-dafny highlighter-rouge"><span class="p">,</span></code>.</p>
+
+<p>If the source file has not yet been type-checked (no AST cached), an empty
+<code class="language-dafny highlighter-rouge"><span class="n">SignatureHelp</span></code> is returned gracefully. Only the first matching overload is returned;
+overload resolution across multiple signatures is not yet supported.</p>
+
+<p><strong>Method lookup scope and known limitations</strong></p>
+
+<p>The server searches for method declarations only within the current file’s
+<code class="language-dafny highlighter-rouge"><span class="n">JmlCompilationUnit</span></code> and its sibling <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> specs file (if any). This covers:</p>
+
+<ul>
+  <li>Regular Java methods declared in the same source file.</li>
+  <li>JML model methods (<code class="language-dafny highlighter-rouge"><span class="c1">//@ model public int foo(int x);</span></code>) declared in the same
+file or in the companion <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> file.</li>
+  <li>Accessor methods synthesised for JML model fields
+(<code class="language-dafny highlighter-rouge"><span class="c1">//@ model public int size;</span></code>), stored in <code class="language-dafny highlighter-rouge"><span class="n">typeSpecs</span><span class="o">.</span><span class="n">modelFieldMethods</span></code>.</li>
+</ul>
+
+<p><strong>Cross-class calls are not supported.</strong> When the receiver of a call is an
+object of another class (e.g. <code class="language-dafny highlighter-rouge"><span class="n">list</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">(</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">Collections</span><span class="o">.</span><span class="n">max</span><span class="p">(</span></code>), the server
+cannot resolve the receiver type and returns an empty result. Full cross-class
+support would require resolving the receiver expression using OpenJML’s
+<code class="language-dafny highlighter-rouge"><span class="n">Resolve</span></code>/<code class="language-dafny highlighter-rouge"><span class="n">Symtab</span></code> infrastructure. Eclipse’s own JDT parameter hints
+(<code class="language-dafny highlighter-rouge"><span class="n">Ctrl</span><span class="o">+</span><span class="n">Shift</span><span class="o">+</span><span class="n">Space</span></code>) handle cross-class calls for Java code.</p>
+
+<p><strong>Eclipse behavior in <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> files.</strong> Eclipse’s JDT Java editor suppresses
+LSP4E’s automatic <code class="language-dafny highlighter-rouge"><span class="p">(</span></code> / <code class="language-dafny highlighter-rouge"><span class="p">,</span></code> trigger inside comment partitions
+(<code class="language-dafny highlighter-rouge"><span class="err">__</span><span class="n">java_singleline_comment</span></code>, <code class="language-dafny highlighter-rouge"><span class="err">__</span><span class="n">java_multiline_comment</span></code>).  The OpenJML Eclipse
+plugin works around this by installing <code class="language-dafny highlighter-rouge"><span class="n">JmlAutoEditStrategy</span></code> on every <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code>
+editor when it is first activated.  This strategy intercepts <code class="language-dafny highlighter-rouge"><span class="p">(</span></code> and <code class="language-dafny highlighter-rouge"><span class="p">,</span></code>
+keystrokes inside JML regions (lines beginning with <code class="language-dafny highlighter-rouge"><span class="c1">//@</span></code> or inside open <code class="language-dafny highlighter-rouge"><span class="cm">/*@</span></code>
+blocks) and sends a <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">signatureHelp</span></code> request directly, displaying the
+result in a popup adjacent to the cursor.  This restores automatic popup behavior
+for JML annotations such as <code class="language-dafny highlighter-rouge"><span class="c1">//@ assert m(</span></code> or <code class="language-dafny highlighter-rouge"><span class="cm">/*@ requires foo(bar,</span></code>.</p>
+
+<p>If the popup does not appear automatically (for example, outside a recognized JML
+region), the user can invoke the <code class="language-dafny highlighter-rouge"><span class="n">Jml</span> <span class="n">Parameter</span> <span class="n">Hints</span></code>
+Eclipse command directly by binding a key combination to it in the Eclipse key
+preferences.</p>
+
+<p>Standalone <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> files are opened in the Generic Editor where LSP4E’s standard
+trigger characters fire normally without any workaround.</p>
+
+<p><strong>Implications for generic clients:</strong> Standard LSP clients honor <code class="language-dafny highlighter-rouge"><span class="p">(</span></code> and <code class="language-dafny highlighter-rouge"><span class="p">,</span></code> as
+trigger characters in all editing contexts, including inside comment-like regions,
+so the workaround above is not needed.  JDT’s comment partition suppression is an
+Eclipse-specific limitation; no server-side change is required.</p>
+
+<h4 id="workspace-symbols--workspacesymbol">Workspace Symbols — <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code></h4>
+
+<p>Returns declarations from the AST cache whose simple name contains the query string
+(case-insensitive substring match). An empty query returns all indexed declarations.
+Without a project filter, all indexed projects are searched.</p>
+
+<p><strong>Project-filtered query encoding:</strong> To restrict results to a single project without
+using a custom command, encode the project root into the query string as
+<code class="language-dafny highlighter-rouge"><span class="s2">"&lt;projectRoot&gt;\n&lt;identifier&gt;"</span></code> (project path, a newline character, then the actual
+search term). The server detects the newline and limits the search to that project’s
+nav section. Generic clients that search all projects should pass a plain query string.
+For multi-project clients, prefer <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">symbolsForProject</span></code>, which takes an explicit
+project ID and avoids the encoding convention.</p>
+
+<h4 id="configuration--workspacedidchangeconfiguration">Configuration — <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code></h4>
+
+<p>Handled as described in the <a href="LSP-Integration-Guide.html#configuration">Configuration</a> section.</p>
+
+<h4 id="workspacedidchangewatchedfiles"><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeWatchedFiles</span></code></h4>
+
+<p>The server registers two file watchers during <code class="language-dafny highlighter-rouge"><span class="n">initialized</span><span class="p">()</span></code> via
+<code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">/</span><span class="n">registerCapability</span></code>, using a single registration ID so they can be
+atomically unregistered and re-registered when workspace roots change:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Glob</th>
+      <th>Events subscribed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="o">*</span><span class="err">*/</span><span class="o">*.</span><span class="n">jml</span></code></td>
+      <td>Created, Changed, Deleted</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="o">*</span><span class="err">*/</span><span class="o">*.</span><span class="n">java</span></code></td>
+      <td>Created, Deleted only — Changed events are <strong>not</strong> subscribed</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong><code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> events</strong> — if the file is currently open in the editor, the event
+is ignored (the <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">did</span><span class="o">*</span></code> path handles it).  Otherwise:</p>
+
+<ul>
+  <li><strong>Created or Changed</strong>: the server reads the updated <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> content from
+disk, locates the companion <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> file from the spec’s package/class
+declaration, and schedules a <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> on the companion.  If the companion
+<code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> is open in the editor with unsaved (dirty) content, that dirty
+content is used for the check rather than the on-disk version.</li>
+  <li><strong>Deleted</strong>: the <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> AST cache entry and the companion <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> AST cache
+entry are both removed, diagnostics for the companion <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> are cleared,
+and the navigation cache is marked dirty.  No client action is needed: the
+nav cache is refreshed automatically before the next navigation operation
+(Go to Definition, Find References, etc.) or can be expedited with
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">indexProject</span></code>.</li>
+</ul>
+
+<p><strong><code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> events</strong> — if the file is currently open in the editor, the event
+is ignored.  Otherwise:</p>
+
+<ul>
+  <li><strong>Created</strong>: the navigation cache is marked dirty.  The new file is <strong>not</strong>
+immediately indexed; it is covered by the next project check, which is
+triggered automatically by the next navigation operation (Go to Definition,
+Find References, etc.) or explicitly via <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">indexProject</span></code>.</li>
+  <li><strong>Deleted</strong>: the AST cache entry and diagnostics for the file are cleared.</li>
+  <li><strong>Changed</strong>: not subscribed; the client does not send Changed events for
+<code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> files.  The user opens the file to trigger a re-check.</li>
+</ul>
+
+<p><strong>Root filtering</strong> — events are filtered in the handler regardless of the
+glob scope.  When per-project settings are configured (via the <code class="language-dafny highlighter-rouge"><span class="n">projects</span></code>
+array), only events for files under the union of all projects’ <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code>
+are processed; others are silently dropped.  When no per-project settings are
+configured, the filter falls back to the global <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code> setting; if that
+is also absent, all events are processed.</p>
+
+<p><strong>Watcher re-registration</strong> — when the effective workspace roots change
+(because <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code> delivers an updated <code class="language-dafny highlighter-rouge"><span class="n">projects</span></code>
+array, or because <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeWorkspaceFolders</span></code> fires), the server
+unregisters the current watchers and immediately re-registers them with the
+same globs.  The brief gap between unregister and re-register is harmless
+because all events are root-filtered in the handler anyway.</p>
+
+<hr />
+
+<h3 id="custom-commands--workspaceexecutecommand">Custom Commands — <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">executeCommand</span></code></h3>
+
+<p>Commands are dispatched via <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">executeCommand</span></code>.</p>
+
+<h4 id="argument-format">Argument format</h4>
+
+<p>All commands use the same argument layout:</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="n">projectId</span>   <span class="o">--</span> <span class="n">registered</span> <span class="n">project</span> <span class="n">name</span><span class="p">,</span> <span class="n">or</span> <span class="s2">""</span> <span class="kr">for</span> <span class="n">global</span><span class="o">/</span><span class="n">single</span><span class="o">-</span><span class="n">project</span> <span class="n">settings</span>
+<span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="o">+</span><span class="p">]</span>             <span class="o">--</span> <span class="n">command</span><span class="o">-</span><span class="n">specific</span> <span class="n">paths</span> <span class="o">/</span> <span class="n">URIs</span>
+</code></pre></div></div>
+
+<p>Path configuration (<code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">classPath</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">specsPath</span></code>, etc.) is sent once at
+initialization via <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code> and updated via
+<code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code>; it is not repeated in command arguments.
+The command arguments may contain other OpenJML command-line arguments, which,
+along with file paths, as just passed along to the <code class="language-dafny highlighter-rouge"><span class="n">openjml</span></code> tool. Clients have 
+the option of writing all OpenJML options as properties in a <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">properties</span></code> file
+and passing <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">properties</span></code> <code class="language-dafny highlighter-rouge"><span class="o">&lt;</span><span class="n">filepath</span><span class="o">&gt;</span></code> (as two arguments).</p>
+
+<h4 id="openjmlcheckjml"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">checkJML</span></code></h4>
+
+<p>Run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> on one or more files or directories.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.checkJML"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path1&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path2&gt;"</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">path1</span><span class="o">..</span><span class="n">N</span></code> are file-system paths (files or directories). All <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> files under a
+directory are checked recursively.</p>
+
+<h4 id="openjmlrunesc"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEsc</span></code></h4>
+
+<p>Run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> on one or more files or directories.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.runEsc"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path1&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path2&gt;"</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>Cancels any currently running ESC for the same URIs. Marks all methods as CHECKING
+immediately. As each method’s proof finishes, its code lens is updated in real time
+(via <code class="language-dafny highlighter-rouge"><span class="n">IProofResultListener</span></code>) so the user sees individual methods flip from
+⧗ Checking… to their final state rather than all updating at once. Accumulated
+diagnostics are also published progressively per file. A final pass after the run
+reconciles any remaining state.</p>
+
+<p>A path that starts with <code class="language-dafny highlighter-rouge"><span class="n">file</span><span class="o">:</span><span class="c1">//</span></code> is treated as a document URI and checked against
+in-memory content rather than the on-disk file.</p>
+
+<h4 id="openjmlrunescformethod"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscForMethod</span></code></h4>
+
+<p>Run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> on a single named method. Marks only the target method as CHECKING;
+other methods’ statuses are left unchanged. On completion, only that method’s
+diagnostics and code lens are updated; other methods are unaffected.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.runEscForMethod"</span>
+<span class="n">arguments</span> <span class="p">(</span><span class="n">standard</span><span class="p">)</span><span class="o">:</span>   <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">,</span> <span class="s2">"&lt;file-uri&gt;"</span><span class="p">,</span> <span class="s2">"&lt;method-fqn&gt;"</span><span class="p">]</span>
+<span class="n">arguments</span> <span class="p">(</span><span class="n">code</span><span class="o">-</span><span class="n">lens</span><span class="p">)</span><span class="o">:</span>  <span class="p">[</span><span class="s2">"&lt;file-uri&gt;"</span><span class="p">,</span> <span class="s2">"&lt;method-fqn&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><strong>Standard format</strong>: three elements where <code class="language-dafny highlighter-rouge"><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></code> is the project ID (or <code class="language-dafny highlighter-rouge"><span class="s2">""</span></code>),
+<code class="language-dafny highlighter-rouge"><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span></code> is the file URI, and <code class="language-dafny highlighter-rouge"><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span></code> is the method FQN.</p>
+
+<p><strong>Code-lens format</strong>: exactly two elements where the first starts with <code class="language-dafny highlighter-rouge"><span class="n">file</span><span class="o">:</span><span class="c1">//</span></code>.
+This is the format emitted directly by <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeLens</span></code> responses and is
+detected automatically.</p>
+
+<p><strong>Method FQN</strong>: the unique per-project identifier produced by
+<code class="language-dafny highlighter-rouge"><span class="n">Utils</span><span class="o">.</span><span class="n">uniqueSymbolName</span></code>, e.g. <code class="language-dafny highlighter-rouge"><span class="n">com</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">MyClass</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="kt">int</span><span class="p">)</span></code>.  It includes
+the fully qualified class name and the erased parameter types, so overloaded
+methods are always distinguished.</p>
+
+<p><strong><code class="language-dafny highlighter-rouge"><span class="err">@</span><span class="n">line</span></code> fallback</strong>: if the client does not have the FQN (e.g. before the first
+type-check, so no code lenses have been issued), pass <code class="language-dafny highlighter-rouge"><span class="err">@</span><span class="o">&lt;</span><span class="n">line</span><span class="o">&gt;</span></code> (e.g. <code class="language-dafny highlighter-rouge"><span class="err">@</span><span class="mi">12</span></code>) as
+the method argument.  The server resolves the containing method from the AST.
+If no AST is available yet the request is silently ignored.  Clients that can
+obtain the FQN from <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeLens</span></code> should prefer it.</p>
+
+<h4 id="openjmlrunescsplitbyfile"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscSplitByFile</span></code></h4>
+
+<p>Run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> on a set of files, launching a separate ESC invocation per file (in
+parallel). Each file’s result is published as it completes, rather than waiting for
+all files to finish.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.runEscSplitByFile"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path1&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path2&gt;"</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h4 id="openjmlrunescsplitbymethod"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscSplitByMethod</span></code></h4>
+
+<p>Run <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code> on a set of files, launching a separate ESC invocation per method (in
+parallel). Per-method code lens updates arrive in real time as each proof completes.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.runEscSplitByMethod"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path1&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path2&gt;"</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h4 id="openjmlrunrac"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runRac</span></code></h4>
+
+<p>Compile one or more files or directories with JML assertions as runtime checks.
+The output directory for compiled class files is taken from the project’s <code class="language-dafny highlighter-rouge"><span class="n">ProjectConfig</span></code>.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.runRac"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path1&gt;"</span><span class="p">,</span> <span class="s2">"&lt;path2&gt;"</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h4 id="openjmlsaveandrunesc-vs-code-extension-ui-command--not-a-server-command"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">saveAndRunEsc</span></code> (VS Code extension UI command — not a server command)</h4>
+
+<p>This is a VS Code extension-level command registered in <code class="language-dafny highlighter-rouge"><span class="n">package</span><span class="o">.</span><span class="n">json</span></code> and bound to
+menu items and keyboard shortcuts. When the user triggers it, the VS Code extension
+saves the document (equivalent to <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didSave</span></code>) and then sends
+<code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">executeCommand</span></code> with <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEsc</span></code> to the server. The string
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">saveAndRunEsc</span></code> is <strong>never sent to the server</strong>; it is handled entirely
+client-side by the VS Code extension. Other clients (Eclipse, generic LSP clients)
+should implement the same pattern: save first, then call <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEsc</span></code>.
+The command is most relevant to the user when automatically running ESC on 
+a Save is turned off (set to “manual”) and the user wants a one-shot way 
+to save a file and start an ESC operation.</p>
+
+<h4 id="openjmlcancelesc"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">cancelEsc</span></code></h4>
+
+<p>Cancel one or more in-progress ESC runs.  <strong>Stops all remaining proofs</strong> in the
+targeted run — no further methods are attempted after cancellation.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.cancelEsc"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;target&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">target</span></code> controls what is cancelled:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Value</th>
+      <th>Effect</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="kc">null</span></code> / absent / <code class="language-dafny highlighter-rouge"><span class="s2">""</span></code></td>
+      <td>Cancel all ESC runs</td>
+    </tr>
+    <tr>
+      <td>A plain file URI (e.g. <code class="language-dafny highlighter-rouge"><span class="n">file</span><span class="o">:</span><span class="c1">///…/Foo.java</span></code>)</td>
+      <td>Cancel the whole-file ESC for that URI</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"&lt;uri&gt;#&lt;methodName&gt;"</span></code></td>
+      <td>Cancel the per-method ESC for the named method</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Cancelled methods have their code lens status set to <code class="language-dafny highlighter-rouge"><span class="n">Cancelled</span></code>; other methods are
+unaffected.</p>
+
+<p>Use <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">abortCurrentProof</span></code> instead when the intent is to skip only the
+currently-running proof and continue proving the remaining methods.</p>
+
+<h4 id="openjmlabortcurrentproof"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">abortCurrentProof</span></code></h4>
+
+<p>Abort only the currently-running method proof, then allow the ESC loop to continue
+with the next method.  The in-progress SMT solver invocation is killed immediately
+and the method is reported <code class="language-dafny highlighter-rouge"><span class="n">Cancelled</span></code>, but no further proofs are prevented.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.abortCurrentProof"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;target&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">target</span></code> uses the same format as <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">cancelEsc</span></code>.  If the target identifies a
+whole-file or project run, only the single method currently being proved is aborted;
+the remaining methods in the queue are unaffected.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Situation</th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">cancelEsc</span></code></th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">abortCurrentProof</span></code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Current method</td>
+      <td>CANCELLED</td>
+      <td>CANCELLED</td>
+    </tr>
+    <tr>
+      <td>Remaining methods</td>
+      <td>not attempted</td>
+      <td>continue normally</td>
+    </tr>
+    <tr>
+      <td>Overall run exit code</td>
+      <td>CANCELLED (5)</td>
+      <td>determined by remaining proofs</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The code lens “✕ Cancel” action uses <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">abortCurrentProof</span></code> semantics so
+that cancelling one method in a whole-file run does not discard all pending proofs.</p>
+
+<h4 id="openjmlgetrunningesctasks"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">getRunningEscTasks</span></code></h4>
+
+<p>Returns the list of currently running ESC task keys as a JSON array of strings.
+Each entry is either a plain file URI (whole-file ESC) or a <code class="language-dafny highlighter-rouge"><span class="s2">"&lt;uri&gt;#&lt;method-fqn&gt;"</span></code>
+string (per-method ESC), where <code class="language-dafny highlighter-rouge"><span class="o">&lt;</span><span class="kr">method</span><span class="o">-</span><span class="n">fqn</span><span class="o">&gt;</span></code> is the same FQN used in
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscForMethod</span></code> arguments. Returns an empty array when no ESC is in progress.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.getRunningEscTasks"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[]</span>
+</code></pre></div></div>
+
+<p>Clients can use this to populate a cancellation UI (e.g. a checklist dialog or
+Quick Pick) before calling <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">cancelEsc</span></code> or <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">abortCurrentProof</span></code>.</p>
+
+<h4 id="openjmlindexproject"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">indexProject</span></code></h4>
+
+<p>Trigger a <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> pass on all source directories of the specified project.
+For every file the check touches, diagnostics and the nav-tier AST cache entry
+are replaced; files not reached retain their previous values.  The nav-tier AST
+cache takes highest precedence for navigation operations (Go to Definition,
+Find References, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code>).  Use <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">clearAndReindex</span></code> for a full
+reset that clears all tiers first.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.indexProject"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;projectId&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p>When <code class="language-dafny highlighter-rouge"><span class="n">projectId</span></code> matches a project registered via the <code class="language-dafny highlighter-rouge"><span class="n">projects</span></code> settings array, only
+that project’s <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code> are indexed.  An absent or empty <code class="language-dafny highlighter-rouge"><span class="n">projectId</span></code> indexes all
+configured projects.</p>
+
+<p><strong>Eclipse plugin:</strong> exposed as the “Index Project” item in the OpenJML main menu,
+editor popup, and Package Explorer context menu.  Intended for use before “Find All
+Declarations” to ensure files that have not yet been opened are covered by the index.</p>
+
+<h4 id="openjmlsymbolsforproject"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">symbolsForProject</span></code></h4>
+
+<p>Return <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code>-style declarations filtered to a single project.  This is the
+preferred API for multi-project clients: pass the project ID directly instead of encoding
+a project root into the <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code> query string.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.symbolsForProject"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;query&gt;"</span><span class="p">,</span> <span class="s2">"&lt;projectId&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Argument</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">query</span></code></td>
+      <td>Symbol name substring to search (case-insensitive; empty = return all).</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">projectId</span></code></td>
+      <td>Project identifier from the <code class="language-dafny highlighter-rouge"><span class="n">projects</span></code> settings array.  When absent or empty, symbols from all projects are returned.  An unknown ID is reported as an error.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Returns a JSON array of <code class="language-dafny highlighter-rouge"><span class="n">SymbolInformation</span></code> objects (same format as <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code>).
+Matching behavior is identical to <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code>: case-insensitive substring match
+on the simple symbol name.</p>
+
+<p><strong>Eclipse plugin:</strong> the “Find All Declarations” handler uses this command, passing
+<code class="language-dafny highlighter-rouge"><span class="n">IProject</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span></code> as the project ID.  <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">symbol</span></code> with the encoded-query
+form remains supported for generic LSP clients that cannot issue custom commands.</p>
+
+<h4 id="openjmlfocusfile"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">focusFile</span></code></h4>
+
+<p>Notify the server that the user has switched focus to an already-open file. Triggers
+a <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> recheck so that stale diagnostics from fixed dependencies are cleared.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.focusFile"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;file-uri&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<p><strong>Implications for generic clients:</strong> This is a real UX gap for clients that do not
+implement it. Without <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">focusFile</span></code>, a client that edits file A, switches to
+file B, then returns to file A will see stale diagnostics on A until the next edit or
+save triggers a new <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code>. The Eclipse plugin sends the focus command on every
+editor tab switch (200 ms debounced) to keep diagnostics current proactively.</p>
+
+<p>Client authors should implement the equivalent:</p>
+<ul>
+  <li><strong>VS Code:</strong> already implemented via <code class="language-dafny highlighter-rouge"><span class="n">onDidChangeActiveTextEditor</span></code> with a 200 ms
+debounce (see the VS Code extension source).</li>
+  <li><strong>IntelliJ / other IDEs:</strong> hook the “file editor gained focus” event and send
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">focusFile</span></code> with the same debounce.</li>
+  <li><strong>Bare LSP clients</strong> that do not implement this get degraded-but-functional behavior:
+diagnostics are correct after the next edit or save, just not updated proactively
+on focus change.</li>
+</ul>
+
+<h4 id="openjmlgetsemantictokens"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">getSemanticTokens</span></code></h4>
+
+<p>This command is a VS Code-specific workaround. It returns JML semantic token data directly as the command
+result rather than via <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">full</span></code>. The VS Code extension uses
+this because it registers its own <code class="language-dafny highlighter-rouge"><span class="n">DocumentSemanticTokensProvider</span></code> directly (to avoid
+being overwritten by the Red Hat Java extension), bypassing the standard LSP
+negotiation.</p>
+
+<p><strong>Non-VS Code clients should use <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">full</span></code> instead.</strong> The
+server advertises <code class="language-dafny highlighter-rouge"><span class="n">semanticTokensProvider</span></code> in <code class="language-dafny highlighter-rouge"><span class="n">ServerCapabilities</span></code> and handles the
+standard request; both paths call the same underlying token computation. The Eclipse
+plugin uses the standard protocol via LSP4E’s <code class="language-dafny highlighter-rouge"><span class="n">SemanticTokensClient</span></code>.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">command</span><span class="o">:</span>   <span class="s2">"openjml.getSemanticTokens"</span>
+<span class="n">arguments</span><span class="o">:</span> <span class="p">[</span><span class="s2">"&lt;file-uri&gt;"</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h4 id="openjmlclearandreindex"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">clearAndReindex</span></code></h4>
+
+<p>Clear all server-side caches (AST cache, diagnostics, ESC status) and reindex the
+workspace from disk.  Takes no arguments.</p>
+
+<p>The server cancels all pending work, clears its internal caches, and publishes empty
+diagnostics for every previously-marked URI.  It then re-indexes all configured
+projects from disk.  <strong>The server does not re-check open editors from its internal
+content cache</strong> — that cache is cleared by the reset.  Clients must restore open-editor
+content using one of these protocols:</p>
+
+<ul>
+  <li><strong>Save-then-clear</strong>: save all dirty open editors before issuing <code class="language-dafny highlighter-rouge"><span class="n">clearAndReindex</span></code>.
+The workspace index picks up the saved content from disk.</li>
+  <li><strong>Clear-then-resend</strong>: issue <code class="language-dafny highlighter-rouge"><span class="n">clearAndReindex</span></code>, then send a full-text
+<code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didChange</span></code> for every dirty open editor in JML-natured projects
+(both <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">java</span></code> and <code class="language-dafny highlighter-rouge"><span class="o">.</span><span class="n">jml</span></code> files).  The <code class="language-dafny highlighter-rouge"><span class="n">didChange</span></code> must carry the complete current
+buffer text, not an incremental delta.</li>
+</ul>
+
+<p>If project configuration has also changed, send <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code>
+<strong>before</strong> <code class="language-dafny highlighter-rouge"><span class="n">clearAndReindex</span></code>; the server rebuilds its project registry at the start
+of the reset, so configuration sent after the command arrives too late to influence
+the disk scan.</p>
+
+<h4 id="openjmlclearmarkers"><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">clearMarkers</span></code></h4>
+
+<p>Clears all OpenJML diagnostics without scheduling any new checks. The server clears
+its internal diagnostic state and sends <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">publishDiagnostics</span></code> with an
+empty list for every URI that currently has diagnostics; the client’s normal handling
+of those notifications removes the visible annotations. A client that already knows
+its display is stale (e.g. after a workspace rebuild) may also clear its own
+annotations independently, before or without waiting for the server’s response —
+both approaches are valid and complementary. Takes no arguments.</p>
+
+<hr />
+
+<h3 id="unimplemented-lsp-features">Unimplemented LSP Features</h3>
+
+<p>The following standard LSP features are not implemented. Entries marked <em>not relevant</em>
+are outside the server’s intended scope and will not be added; all others may be added
+in the future. Sorted alphabetically by method name.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">prepareCallHierarchy</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">callHierarchy</span><span class="o">/</span><span class="n">incomingCalls</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">callHierarchy</span><span class="o">/</span><span class="n">outgoingCalls</span></code></td>
+      <td>Not relevant — complex to implement; provides no JML-specific value beyond what Java IDEs already provide natively</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">codeLens</span><span class="o">/</span><span class="n">resolve</span></code></td>
+      <td>Not relevant — lazy-loads additional data for a code lens returned with incomplete information; OpenJML lenses are fully populated (label, command, arguments) on first request, so resolution is never needed. The server advertises <code class="language-dafny highlighter-rouge"><span class="n">resolveProvider</span><span class="o">:</span> <span class="kc">false</span></code> in <code class="language-dafny highlighter-rouge"><span class="n">CodeLensOptions</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">telemetry</span><span class="o">/</span><span class="n">event</span></code></td>
+      <td>Not relevant — server-to-client telemetry notification used to forward analytics events to the client for reporting; OpenJML does not collect or emit telemetry</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeAction</span></code></td>
+      <td>Quick fixes for JML errors (e.g. inserting a missing <code class="language-dafny highlighter-rouge"><span class="kr">requires</span></code>); code lens is currently used for ESC invocation instead</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeAction</span><span class="o">/</span><span class="n">resolve</span></code></td>
+      <td>Not relevant — lazy-resolves additional detail for a previously returned code action; not applicable while <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">codeAction</span></code> itself is unimplemented</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">colorPresentation</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">documentColor</span></code></td>
+      <td>Not relevant — color-picker protocol for CSS/HTML; Java and JML source files contain no color values</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">completion</span><span class="o">/</span><span class="n">resolve</span></code></td>
+      <td>Not relevant — lazy-resolves additional detail (e.g. documentation) for a completion item that was intentionally left sparse; OpenJML completion items are fully populated on first request, so resolution is never needed</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">diagnostic</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">diagnostic</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">diagnostic</span><span class="o">/</span><span class="n">refresh</span></code></td>
+      <td>Not relevant — pull-model diagnostics (LSP 3.17); OpenJML publishes diagnostics proactively via <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">publishDiagnostics</span></code> (push model), making the pull model redundant</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">documentLink</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">documentLink</span><span class="o">/</span><span class="n">resolve</span></code></td>
+      <td>Not relevant — highlights navigable URLs and file links inside source; not applicable to Java/JML compilation workflows</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">formatting</span></code></td>
+      <td>Code formatting; must be JML-comment-aware to avoid corrupting <code class="language-dafny highlighter-rouge"><span class="c1">//@ </span></code> lines</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">implementation</span></code></td>
+      <td>Go to implementation</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">inlayHint</span><span class="o">/</span><span class="n">refresh</span></code></td>
+      <td>Server-initiated hint refresh; would complement <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">refresh</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">inlayHint</span><span class="o">/</span><span class="n">resolve</span></code></td>
+      <td>Not relevant — lazy-loads additional hint detail for complex hints; OpenJML hints are simple type strings and contain complete data on first request</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">linkedEditingRange</span></code></td>
+      <td>Not relevant — simultaneous editing of matched tag pairs (e.g. HTML open/close tags); not applicable to Java/JML</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">moniker</span></code></td>
+      <td>Not relevant — cross-repository symbol package identifiers for code-intelligence platforms (LSIF/SCIP); not applicable to IDE tooling</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">onTypeFormatting</span></code></td>
+      <td>Not relevant — live formatting as the user types; Java formatting is the responsibility of the client’s Java language server</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">progress</span></code>, <code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="o">/</span><span class="n">progress</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">workDoneProgress</span><span class="o">/</span><span class="n">create</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">workDoneProgress</span><span class="o">/</span><span class="n">cancel</span></code></td>
+      <td>Progress reporting for long-running check and ESC operations. <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">workDoneProgress</span><span class="o">/</span><span class="n">create</span></code> / <code class="language-dafny highlighter-rouge"><span class="n">cancel</span></code> are the server-initiated variants for client-managed progress tokens; neither is currently sent</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">showDocument</span></code></td>
+      <td>Not relevant — server-to-client request to open an arbitrary URI in the client editor or browser; OpenJML has no need to programmatically open documents on behalf of the user</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">rangeFormatting</span></code></td>
+      <td>Range-based formatting</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">selectionRange</span></code></td>
+      <td>Expand selection to the enclosing syntactic range; could be implemented using the cached AST</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">delta</span></code></td>
+      <td>Incremental token diff; an optimization that avoids retransmitting unchanged tokens on each edit</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">range</span></code></td>
+      <td>Viewport-range token request; useful for very large files where full tokenization would be expensive</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">semanticTokens</span><span class="o">/</span><span class="n">refresh</span></code></td>
+      <td>Server-initiated token refresh; would signal clients to re-request tokens after <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> completes, eliminating the need for client-side workarounds</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">typeDefinition</span></code></td>
+      <td>Go to type definition</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">prepareTypeHierarchy</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">typeHierarchy</span><span class="o">/</span><span class="n">supertypes</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">typeHierarchy</span><span class="o">/</span><span class="n">subtypes</span></code></td>
+      <td>Not relevant — complex to implement; Java IDEs provide structural type hierarchy natively; JML spec-inheritance tracing does not yet warrant a dedicated implementation</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">willSave</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">willSaveWaitUntil</span></code></td>
+      <td>Not relevant — pre-save hooks for server-side processing before disk write; <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didSave</span></code> covers all post-save check needs</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">applyEdit</span></code></td>
+      <td>Not relevant — server-initiated bulk edit applied by the client; OpenJML returns rename edits directly in the <code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">rename</span></code> response rather than pushing them via <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">applyEdit</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">configuration</span></code></td>
+      <td>Not relevant — client-initiated pull of per-section configuration; OpenJML uses a push model (<code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code>) so the server never requests configuration from the client</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeWorkspaceFolders</span></code></td>
+      <td>Not implemented — the server reads workspace folders once from <code class="language-dafny highlighter-rouge"><span class="n">workspaceFolders</span></code> in <code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> and does not update them dynamically; clients that add or remove workspace folders must reconnect or send <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeConfiguration</span></code> with updated <code class="language-dafny highlighter-rouge"><span class="n">rootPaths</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didCreateFiles</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didDeleteFiles</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didRenameFiles</span></code></td>
+      <td>Not relevant — file-system operation notifications; file changes are handled via <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeWatchedFiles</span></code></td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">willCreateFiles</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">willDeleteFiles</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">willRenameFiles</span></code></td>
+      <td>Not relevant — pre-operation file-system hooks; no server-side processing is needed before file creation, deletion, or OS-level rename</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">workspaceSymbol</span><span class="o">/</span><span class="n">resolve</span></code></td>
+      <td>Not relevant — lazy-resolves additional detail (e.g. <code class="language-dafny highlighter-rouge"><span class="n">location</span></code>) for a workspace symbol that was returned with partial data; OpenJML workspace symbol results are fully populated on first request</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h3 id="threading-and-concurrency">Threading and Concurrency</h3>
+
+<p>The server uses a single-threaded LSP dispatch thread (managed by LSP4J) and a
+cached thread pool for check and ESC tasks. Debouncing uses a single-threaded
+scheduled executor.</p>
+
+<p>Within a single file, starting a new ESC cancels the previous one via
+<code class="language-dafny highlighter-rouge"><span class="n">Future</span><span class="o">.</span><span class="n">cancel</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span></code>. A generation counter ensures that results from a superseded
+ESC run are silently discarded if they arrive after a newer run has already started.</p>
+
+<p>Separate ESC runs for different files, methods, or projects may overlap concurrently —
+all tasks share a single fixed thread pool (default size: 5, configurable via the
+<code class="language-dafny highlighter-rouge"><span class="n">escThreads</span></code> setting).</p>
+
+<p>The <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> runner never updates method ESC status or requests a code lens refresh,
+so in-progress edits do not disturb the ESC status badges visible to the user.</p>
+
+<hr />
+
+<h3 id="error-handling-and-logging">Error Handling and Logging</h3>
+
+<p>All diagnostic output goes to the log file described above
+(<code class="language-dafny highlighter-rouge"><span class="err">~</span><span class="o">/.</span><span class="n">openjml</span><span class="o">/</span><span class="n">logs</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">-&lt;</span><span class="n">pid</span><span class="o">&gt;.</span><span class="n">log</span></code> in production, <code class="language-dafny highlighter-rouge"><span class="o">/</span><span class="n">tmp</span><span class="o">/</span><span class="n">openjml</span><span class="o">-</span><span class="n">lsp</span><span class="o">-</span><span class="n">debug</span><span class="o">.</span><span class="n">log</span></code> in dev).
+The JSON-RPC stream on stdout is protected by two complementary redirections:</p>
+
+<ol>
+  <li>The launcher script redirects the process’s stderr to the log file
+(<code class="language-dafny highlighter-rouge"><span class="n">exec</span> <span class="mi">2</span><span class="o">&gt;&gt;</span><span class="s2">"$LOG"</span></code>) before starting Java.</li>
+  <li><code class="language-dafny highlighter-rouge"><span class="n">ServerLauncher</span><span class="o">.</span><span class="n">main</span><span class="p">()</span></code> captures the real stdout as the LSP wire stream, then calls
+<code class="language-dafny highlighter-rouge"><span class="n">System</span><span class="o">.</span><span class="n">setOut</span><span class="p">(</span><span class="n">System</span><span class="o">.</span><span class="n">err</span><span class="p">)</span></code> so that any subsequent <code class="language-dafny highlighter-rouge"><span class="n">System</span><span class="o">.</span><span class="n">out</span><span class="o">.</span><span class="n">println</span></code> calls —
+from OpenJML, from javac, or from the server itself — are routed to stderr and
+therefore to the log file, never to the JSON-RPC channel.</li>
+</ol>
+
+<p>OpenJML’s compiler text output is additionally captured via the <code class="language-dafny highlighter-rouge"><span class="n">PrintWriter</span></code> argument
+to <code class="language-dafny highlighter-rouge"><span class="n">IAPI</span><span class="o">.</span><span class="n">make</span><span class="p">()</span></code>, which wraps <code class="language-dafny highlighter-rouge"><span class="n">System</span><span class="o">.</span><span class="n">err</span></code> in the server, so compiler messages also
+appear in the log file alongside the server’s own debug output.</p>
+
+<p>If OpenJML exits with code 3 or 4 (catastrophic error), the server marks all methods
+as <code class="language-dafny highlighter-rouge"><span class="n">Check</span> <span class="n">error</span></code> and publishes whatever diagnostics were collected before the failure.</p>
+
+<p>If OpenJML exits with code 2 (bad command-line arguments), a message is written to
+the debug log; this always indicates a bug in the server.</p>
+
+<hr />
+
+<h3 id="custom-notifications-openjmlactionmessage">Custom Notifications: <code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="o">/</span><span class="n">openjml</span><span class="o">/</span><span class="n">actionMessage</span></code></h3>
+
+<p>The server uses a custom notification to deliver advisory and error messages to clients
+that can act on them (e.g. open a preferences page).  Generic clients that do not
+support this extension continue to receive plain <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code> instead.</p>
+
+<h4 id="capability-advertisement">Capability advertisement</h4>
+
+<p>Declare support in <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code>:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="p">{</span><span class="w"> </span><span class="nl">"supportsActionMessages"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>When the server sees this flag it routes advisory and error messages through
+<code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="o">/</span><span class="n">openjml</span><span class="o">/</span><span class="n">actionMessage</span></code> exclusively — it does <strong>not</strong> also send a duplicate
+<code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code>.  Clients that omit the flag receive only <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code>
+and see the text but no action dialog.</p>
+
+<h4 id="notification-shape">Notification shape</h4>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"jsonrpc"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2.0"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$/openjml/actionMessage"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"params"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"type"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"In --(no-)warn, 'asdasd' is not a valid warning key."</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"actions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w"> </span><span class="nl">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"openPreferences"</span><span class="p">,</span><span class="w"> </span><span class="nl">"target"</span><span class="p">:</span><span class="w"> </span><span class="s2">"toolOptions"</span><span class="p">,</span><span class="w"> </span><span class="nl">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Open Preferences"</span><span class="w"> </span><span class="p">},</span><span class="w">
+      </span><span class="p">{</span><span class="w"> </span><span class="nl">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"dismiss"</span><span class="p">,</span><span class="w">                                   </span><span class="nl">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"OK"</span><span class="w"> </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Field</th>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="kr">type</span></code></td>
+      <td>integer</td>
+      <td>LSP <code class="language-dafny highlighter-rouge"><span class="n">MessageType</span></code>: 1=Error, 2=Warning, 3=Info, 4=Log</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">message</span></code></td>
+      <td>string</td>
+      <td>Human-readable text to log and (if actions present) display in the dialog</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">actions</span></code></td>
+      <td>array?</td>
+      <td>Optional; if absent or empty, log only — no dialog</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5 id="action-kinds">Action kinds</h5>
+
+<table>
+  <thead>
+    <tr>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">kind</span></code></th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">target</span></code> values</th>
+      <th>Meaning</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">openPreferences</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"settings"</span></code></td>
+      <td>Open the top-level OpenJML settings/preferences page</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">openPreferences</span></code></td>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"toolOptions"</span></code></td>
+      <td>Open the OpenJML tool-options page (–warn, –esc flags, etc.)</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="n">dismiss</span></code></td>
+      <td>—</td>
+      <td>No-op; use as the cancel/close button</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Clients should silently ignore any <code class="language-dafny highlighter-rouge"><span class="n">kind</span></code> value they do not recognise, treating it
+the same as <code class="language-dafny highlighter-rouge"><span class="n">dismiss</span></code>.</p>
+
+<h4 id="expected-client-behavior">Expected client behavior</h4>
+
+<ol>
+  <li><strong>Log</strong> <code class="language-dafny highlighter-rouge"><span class="n">message</span></code> to the client’s output/console surface using <code class="language-dafny highlighter-rouge"><span class="kr">type</span></code> for severity-
+appropriate coloring (e.g. Error/Warning in red, Info normal).</li>
+  <li><strong>Show a dialog</strong> if <code class="language-dafny highlighter-rouge"><span class="n">actions</span></code> is non-empty, presenting one button per action item.</li>
+  <li><strong>Execute</strong> the action when the user clicks a button:
+    <ul>
+      <li><code class="language-dafny highlighter-rouge"><span class="n">openPreferences</span></code> / <code class="language-dafny highlighter-rouge"><span class="n">target</span><span class="o">:</span> <span class="s2">"settings"</span></code> → open top-level OpenJML settings</li>
+      <li><code class="language-dafny highlighter-rouge"><span class="n">openPreferences</span></code> / <code class="language-dafny highlighter-rouge"><span class="n">target</span><span class="o">:</span> <span class="s2">"toolOptions"</span></code> → open tool-options settings</li>
+      <li><code class="language-dafny highlighter-rouge"><span class="n">dismiss</span></code> → close dialog, no further action</li>
+    </ul>
+  </li>
+</ol>
+
+<h4 id="message-categories">Message categories</h4>
+
+<table>
+  <thead>
+    <tr>
+      <th>Scenario</th>
+      <th><code class="language-dafny highlighter-rouge"><span class="kr">type</span></code></th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">actions</span></code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CheckRunner progress/timing</td>
+      <td>Log (4)</td>
+      <td>— (still sent as <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code>)</td>
+    </tr>
+    <tr>
+      <td>Check/RAC summary</td>
+      <td>Info (3)</td>
+      <td>none</td>
+    </tr>
+    <tr>
+      <td>ESC could not run (type errors in dependency)</td>
+      <td>Info (3)</td>
+      <td>none</td>
+    </tr>
+    <tr>
+      <td>Unexpected runtime exception (Check/RAC failed)</td>
+      <td>Error (1)</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">[</span><span class="n">dismiss</span><span class="p">]</span></code></td>
+    </tr>
+    <tr>
+      <td>Unknown project ID / .jml companion mismatch</td>
+      <td>Error (1)</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">[</span><span class="n">dismiss</span><span class="p">]</span></code></td>
+    </tr>
+    <tr>
+      <td>Bad <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">warn</span></code>/<code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">warn</span></code> key</td>
+      <td>Warning (2)</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">[</span><span class="n">openPreferences</span><span class="o">/</span><span class="n">toolOptions</span><span class="p">,</span> <span class="n">dismiss</span><span class="p">]</span></code></td>
+    </tr>
+    <tr>
+      <td>openjml rejected CLI option (exit code 2)</td>
+      <td>Error (1)</td>
+      <td><code class="language-dafny highlighter-rouge"><span class="p">[</span><span class="n">openPreferences</span><span class="o">/</span><span class="n">settings</span><span class="p">,</span> <span class="n">dismiss</span><span class="p">]</span></code></td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p><strong>Note:</strong> <code class="language-dafny highlighter-rouge"><span class="n">CheckRunner</span></code> log output (verbose invocation lines, timing) is always sent
+as <code class="language-dafny highlighter-rouge"><span class="n">window</span><span class="o">/</span><span class="n">logMessage</span></code> type 4 (Log) regardless of the <code class="language-dafny highlighter-rouge"><span class="n">supportsActionMessages</span></code> flag,
+because it never warrants a dialog.</p>
+</blockquote>
+
+<hr />
+
+<h3 id="vs-code-extension-notes">VS Code Extension Notes</h3>
+
+<p>The bundled VS Code extension (<code class="language-dafny highlighter-rouge"><span class="n">OpenJMLlsp</span><span class="o">/</span><span class="n">vscode</span><span class="o">-</span><span class="n">extension</span><span class="o">/</span></code>) has several design decisions that differ from a generic LSP client. This section documents them for extension maintainers and third-party client authors.</p>
+
+<h4 id="client-identifier-and-javamode-default">Client identifier and <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> default</h4>
+
+<p>The extension passes <code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"vscode-java"</span></code> in <code class="language-dafny highlighter-rouge"><span class="n">initializationOptions</span></code>. This causes the server to default <code class="language-dafny highlighter-rouge"><span class="n">javaMode</span></code> to <code class="language-dafny highlighter-rouge"><span class="s2">"jml-only"</span></code>, which suppresses features that overlap with the Red Hat Java extension (<code class="language-dafny highlighter-rouge"><span class="n">documentSymbol</span></code> Java members, Java hover, Java inlay hints). The <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">javaMode</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">client</span></code> settings in <code class="language-dafny highlighter-rouge"><span class="n">package</span><span class="o">.</span><span class="n">json</span></code> let users override these if they want full coverage (e.g., when Red Hat Java is not installed).</p>
+
+<h4 id="semantic-tokens--additive-merge-with-red-hat-java">Semantic tokens — additive merge with Red Hat Java</h4>
+
+<p>The vscode-languageclient library’s built-in semantic tokens feature competes with the Red Hat Java extension’s semantic tokens provider via a provider race that VS Code resolves non-deterministically. To avoid this:</p>
+
+<ol>
+  <li>The LSP-channel semantic tokens response is suppressed in middleware:
+    <div class="language-js highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="nx">provideDocumentSemanticTokens</span><span class="p">:</span> <span class="p">(</span><span class="nx">_document</span><span class="p">,</span> <span class="nx">_token</span><span class="p">,</span> <span class="nx">_next</span><span class="p">)</span> <span class="o">=&gt;</span>
+    <span class="k">new</span> <span class="nx">vscode</span><span class="p">.</span><span class="nx">SemanticTokens</span><span class="p">(</span><span class="k">new</span> <span class="nb">Uint32Array</span><span class="p">([]))</span>
+</code></pre></div>    </div>
+  </li>
+  <li>A separate <code class="language-dafny highlighter-rouge"><span class="n">DocumentSemanticTokensProvider</span></code> is registered directly with VS Code via <code class="language-dafny highlighter-rouge"><span class="n">vscode</span><span class="o">.</span><span class="n">languages</span><span class="o">.</span><span class="n">registerDocumentSemanticTokensProvider</span></code>. It fetches tokens by calling the <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">getSemanticTokens</span></code> custom command and returns them as a <code class="language-dafny highlighter-rouge"><span class="n">vscode</span><span class="o">.</span><span class="n">SemanticTokens</span></code> object.</li>
+</ol>
+
+<p>This approach merges the JML tokens additively on top of whatever Red Hat produces.
+The legend registered with VS Code <strong>must exactly match the server’s legend</strong> — all 21
+token type names in index order, then the 10 modifier names in index order
+(see the <a href="LSP-Integration-Guide.html#semantic-tokens----textdocumentsemantictokensfull">Semantic Tokens</a> section
+above for the full table).  A mismatch causes incorrect colors for any token type whose
+index differs between client and server legends.</p>
+
+<p>In <code class="language-dafny highlighter-rouge"><span class="n">jml</span><span class="o">-</span><span class="n">only</span></code> mode (the default when <code class="language-dafny highlighter-rouge"><span class="n">client</span><span class="o">:</span> <span class="s2">"vscode-java"</span></code> is sent), the server
+emits tokens only for JML constructs, so Red Hat’s Java coloring is not disturbed for
+ordinary Java code.</p>
+
+<h4 id="preparerename-middleware"><code class="language-dafny highlighter-rouge"><span class="n">prepareRename</span></code> middleware</h4>
+
+<p>The extension overrides <code class="language-dafny highlighter-rouge"><span class="n">prepareRename</span></code> in middleware to return the word range at the cursor immediately for Java identifiers, bypassing the server round-trip. This is required because the Red Hat extension’s rename provider would otherwise race with ours and win. For non-identifier positions the call falls through to the server.</p>
+
+<h4 id="javaformatenabled-caveat"><code class="language-dafny highlighter-rouge"><span class="n">java</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">enabled</span></code> caveat</h4>
+
+<p>The Red Hat Java formatter rewrites <code class="language-dafny highlighter-rouge"><span class="c1">//@ </span></code> to <code class="language-dafny highlighter-rouge"><span class="c1">// @</span></code> (inserts a space after <code class="language-dafny highlighter-rouge"><span class="c1">//</span></code>), silently disabling all JML annotations. The extension warns once per workspace on activation and offers to disable <code class="language-dafny highlighter-rouge"><span class="n">java</span><span class="o">.</span><span class="n">format</span><span class="o">.</span><span class="n">enabled</span></code>. Users who need formatting can still invoke it manually via Shift+Alt+F; they should configure a formatter profile that excludes line-comment reformatting.</p>
+
+<h4 id="type-checking-triggers">Type-checking triggers</h4>
+
+<p><code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> (JML type-check) trigger depends on <code class="language-dafny highlighter-rouge"><span class="n">checkTriggerOn</span></code>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">checkTriggerOn</span></code></th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">didOpen</span></code></th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">didChange</span></code></th>
+      <th><code class="language-dafny highlighter-rouge"><span class="n">didSave</span></code></th>
+      <th>focus (<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">focusFile</span></code>)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"edit"</span></code> (default)</td>
+      <td>yes</td>
+      <td>yes, debounced 500 ms</td>
+      <td>yes</td>
+      <td>yes, debounced 200 ms</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"save"</span></code></td>
+      <td>yes</td>
+      <td>no</td>
+      <td>yes</td>
+      <td>yes</td>
+    </tr>
+    <tr>
+      <td><code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code></td>
+      <td>no</td>
+      <td>no</td>
+      <td>no</td>
+      <td>no</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>In <code class="language-dafny highlighter-rouge"><span class="s2">"manual"</span></code> mode, <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> only runs when explicitly requested via the <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">checkJml</span></code> command. This mode is intended for codebases where automatic checking is slow or causes problems. ESC (<code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">esc</span></code>) is separate and has its own trigger setting (<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">escTriggerOn</span></code>).</p>
+
+<h4 id="status-bar--esc-progress-indicator">Status bar — ESC progress indicator</h4>
+
+<p>While any ESC task is running, the extension shows a status bar item at the bottom of the window:</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">OpenJML</span> <span class="n">N</span> <span class="n">ESC</span> <span class="n">task</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="n">running</span> <span class="err">…</span>
+</code></pre></div></div>
+
+<p>where <code class="language-dafny highlighter-rouge"><span class="n">N</span></code> is the count of currently running tasks (queried every 800 ms via
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">getRunningEscTasks</span></code>). Clicking the item invokes <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">cancelEsc</span></code>.  The item
+is hidden when no tasks are running and on any query error.</p>
+
+<h4 id="code-lens-based-method-fqn-for-runescformethod">Code-lens-based method FQN for <code class="language-dafny highlighter-rouge"><span class="n">runEscForMethod</span></code></h4>
+
+<p>When the user invokes <strong>Run ESC for Method</strong> from the keyboard, the extension calls
+<code class="language-dafny highlighter-rouge"><span class="n">vscode</span><span class="o">.</span><span class="n">executeCodeLensProvider</span></code> to retrieve the current document’s code lenses and finds
+the lens whose range starts at or above the cursor line with command
+<code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">.</span><span class="n">runEscForMethod</span></code>.  The method FQN is taken directly from that lens’s
+arguments (the <code class="language-dafny highlighter-rouge"><span class="n">Utils</span><span class="o">.</span><span class="n">uniqueSymbolName</span></code> form, e.g. <code class="language-dafny highlighter-rouge"><span class="n">com</span><span class="o">.</span><span class="n">example</span><span class="o">.</span><span class="n">MyClass</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="kt">int</span><span class="p">)</span></code>),
+which the server’s AST scanner computed and embedded when building the code lenses.
+This approach correctly resolves methods in secondary classes and nested classes without
+any client-side regex.  Generic clients can use the same mechanism or read the FQN from
+the code lens command arguments directly.</p>
+
+<h4 id="explorer-context-menu">Explorer context menu</h4>
+
+<p>The extension contributes menu items to the <code class="language-dafny highlighter-rouge"><span class="n">explorer</span><span class="o">/</span><span class="n">context</span></code> menu for file and folder
+nodes, including <code class="language-dafny highlighter-rouge"><span class="n">runEscSplitByFile</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">runEscSplitByMethod</span></code>, and <code class="language-dafny highlighter-rouge"><span class="n">indexProject</span></code>.
+Explorer multi-select (the <code class="language-dafny highlighter-rouge"><span class="n">explorerSelection</span></code> argument VS Code passes as the second
+argument to Explorer context commands) is handled by <code class="language-dafny highlighter-rouge"><span class="n">resolveTargetPaths</span></code>, which unions
+all selected URIs into a single path list for the server command.</p>
+
+<hr />
+
+<h3 id="known-limitations">Known Limitations</h3>
+
+<ul>
+  <li>
+    <p><strong>Single-file scope</strong>: Each check or ESC invocation processes one file at a time.
+Cross-file type information (e.g., specs for imported classes) is available if
+<code class="language-dafny highlighter-rouge"><span class="n">sourcePath</span></code> is configured, but the server does not automatically re-check
+dependent files when a spec file changes.</p>
+  </li>
+  <li>
+    <p><strong>ESC-on-save</strong>: When <code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span></code> is <code class="language-dafny highlighter-rouge"><span class="s2">"save"</span></code>, the server triggers ESC from
+<code class="language-dafny highlighter-rouge"><span class="n">textDocument</span><span class="o">/</span><span class="n">didSave</span></code>. The LSP protocol does not carry a save reason, so the
+server fires on every save (manual or auto). Users who save frequently should
+use <code class="language-dafny highlighter-rouge"><span class="n">escTriggerOn</span><span class="o">:</span> <span class="s2">"manual"</span></code> instead.</p>
+  </li>
+  <li>
+    <p><strong>Method detection</strong>: Code lens placement uses an AST-based scanner after the first
+<code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> completes.  The scanner covers methods in all class types — primary and
+secondary top-level classes, member nested classes, local classes, and anonymous
+classes — using <code class="language-dafny highlighter-rouge"><span class="n">Utils</span><span class="o">.</span><span class="n">uniqueSymbolName</span></code> as the canonical FQN key, which matches
+the key used by <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="kr">method</span></code> filtering.  Lambda bodies are not scanned.  Before the
+first <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">check</span></code> completes no code lenses are shown; trigger a check (manually or by
+opening the file) to populate them.</p>
+  </li>
+  <li>
+    <p><strong>Workspace folders</strong>: The server accepts workspace folder roots (from
+<code class="language-dafny highlighter-rouge"><span class="n">workspaceFolders</span></code> in <code class="language-dafny highlighter-rouge"><span class="n">initialize</span></code> and the <code class="language-dafny highlighter-rouge"><span class="n">workspaceFolderPaths</span></code> setting) and
+uses them as a fallback <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">sourcepath</span></code> when no explicit source path is configured.
+However, per-folder configuration, cross-folder dependency tracking, and
+<code class="language-dafny highlighter-rouge"><span class="n">workspace</span><span class="o">/</span><span class="n">didChangeWorkspaceFolders</span></code> are not implemented.</p>
+  </li>
+</ul>
+
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

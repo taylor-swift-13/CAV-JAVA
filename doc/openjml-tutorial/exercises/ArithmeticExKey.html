@@ -1,0 +1,228 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../../images/favicon.ico" rel="shortcut icon">
+
+<title>JML Tutorial - Exercises - Arithmetic</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="https://www.openjml.org/documentation/features.shtml">Features</a></li>
+	<li  class="active"><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li  ><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">JML Tutorial - Exercises - Arithmetic</h1>
+  </header>
+
+  <div class="post-content">
+    <h2 id="arithmetic-exercises-key">Arithmetic Exercises Key:</h2>
+<h3 id="arithmetic-tutorial"><a href="../ArithmeticModes.html">Arithmetic Tutorial</a></h3>
+
+<h3 id="question-1"><strong>Question 1</strong></h3>
+<p><strong>Given the function below determine the strongest preconditions needed to verify the function.</strong></p>
+<pre><code class="language-Java">public class ArithmeticExample1 {
+	//@ spec_public
+	private int sum;
+
+	//@ ensures 0 &lt; sum &lt; Integer.MAX_VALUE;
+	public void sumThreeNums(int n1, int n2, int n3) {
+		sum = n1 + n2 + n3;
+	}	
+}
+</code></pre>
+<p><strong>Asnwer and Explanation:</strong>
+First let’s break down the code. The function <code class="language-dafny highlighter-rouge"><span class="n">sumThreeNums</span><span class="p">()</span></code> takes in three integer variables <code class="language-dafny highlighter-rouge"><span class="n">n1</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">n2</span></code>, and <code class="language-dafny highlighter-rouge"><span class="n">n3</span></code> and will add them together and set the global variable <code class="language-dafny highlighter-rouge"><span class="n">sum</span></code> equal to the result. We are given our postoncdition of the function which states that <code class="language-dafny highlighter-rouge"><span class="n">sum</span></code> must be greater than zero and less than <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code>. <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> is simply a variable of the class Integer that is the largest possible value of type int. If we were to run this code using OpenJML we would get many warnings concerning the Arithmetic Operation Range. What this means is essentially OpenJML cannot verify that the function will not have any overflow or underflow errors when it passes in all possible inputs. So we need to tell OpenJML what our range of <code class="language-dafny highlighter-rouge"><span class="n">n1</span></code>, <code class="language-dafny highlighter-rouge"><span class="n">n2</span></code>, and <code class="language-dafny highlighter-rouge"><span class="n">n3</span></code> can be.</p>
+
+<p>Given the postcondition that <code class="language-dafny highlighter-rouge"><span class="n">sum</span></code> must be less than <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> we can determine that all of our integers passed in must also be less than <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> otherwise one variable on it’s own will cause an overflow error because it could be greater than the largest value of type int. Additionally, we are told that sum must be greater than zero, so we also need to reflect this in our requirements for out integer variables passed in. As such, we can write something like the following:</p>
+<pre><code class="language-Java">public class ArithmeticExample1 {
+	//@ spec_public
+	private int sum;
+
+	//@ requires 0 &lt; n1 &lt; Integer.MAX_VALUE;
+	//@ requires 0 &lt; n2 &lt; Integer.MAX_VALUE;
+	//@ requires 0 &lt; n3 &lt; Integer.MAX_VALUE;
+	//@ ensures 0 &lt; sum &lt; Integer.MAX_VALUE;
+	public void sumThreeNums(int n1, int n2, int n3){
+		sum = n1 + n2 + n3;
+	}	
+}
+</code></pre>
+<p>While we might think we are done, we are not. OpenJML still cannot verify tht <strong>adding</strong> all of these numbers together won’t cause and overflow or underflow error so let’s take care of that. Let’s take a look at what <code class="language-dafny highlighter-rouge"><span class="n">sum</span></code> is equal to in our function. In our function <code class="language-dafny highlighter-rouge"><span class="n">sum</span> <span class="o">=</span> <span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span></code>, therefore, we need to make sure that <code class="language-dafny highlighter-rouge"><span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span></code> is less than <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code>. We might say <code class="language-dafny highlighter-rouge"><span class="p">(</span><span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> but this on its own isn’t really doing anything we haven’t said. Let’s rework it to be <code class="language-dafny highlighter-rouge"><span class="n">n1</span> <span class="o">&lt;</span> <span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span><span class="o">/</span><span class="p">(</span><span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span><span class="p">)</span></code> which we know is valid because of Alegrba. However, now OpenJML cannot verify that <code class="language-dafny highlighter-rouge"><span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span></code> isn’t greater than or equal to <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> so we need to check that <code class="language-dafny highlighter-rouge"><span class="n">n2</span> <span class="o">&lt;</span> <span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span><span class="o">/</span><span class="n">n3</span></code>. Note, we don’t have to worry about dividing by zero since we explicitly stated that our numbers are greater than zero -  if we didn’t do this it would cause warnings of possible divisions by zero.</p>
+
+<p>Also, note that we are modifying the memory of global variable <code class="language-dafny highlighter-rouge"><span class="n">sum</span></code> and should therefore specify this in our speicifations. That being said, let’s write the following:</p>
+<pre><code class="language-Java">public class ArithmeticExample1 {
+	//@ spec_public
+	private int sum;
+
+	//@ requires 0 &lt; n1 &lt; Integer.MAX_VALUE;
+	//@ requires 0 &lt; n2 &lt; Integer.MAX_VALUE;
+	//@ requires 0 &lt; n3 &lt; Integer.MAX_VALUE;
+	//@ requires n2 &lt; Integer.MAX_VALUE/n3;
+	//@ requires n1 &lt; Integer.MAX_VALUE/(n2 + n3);
+	//@ assigns sum;
+	//@ ensures 0 &lt; sum &lt; Integer.MAX_VALUE;
+	public void sumThreeNums(int n1, int n2, int n3){
+		sum = n1 + n2 + n3;
+	}	
+}
+</code></pre>
+<p><strong>Learning Objective:</strong> 
+The goal of this exercise is to make the student more comfortable with handling potential overflow and underflow errors. We want the student to be aware the while the compiler will not throw any errors about overflow/underflow errors, OpenJML will test all possible inputs and therefore if the student doesn’t specify the range of their variables it won’t verify. We also introduce the student to <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> and ask them to think critically about the steps needed to verify the function. The student should recongize that in order for <code class="language-dafny highlighter-rouge"><span class="n">n1</span> <span class="o">+</span> <span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span></code> to be less than <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code> we need to make sure that <code class="language-dafny highlighter-rouge"><span class="n">n2</span> <span class="o">+</span> <span class="n">n3</span></code> is less than <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code>. This exercise also gives the student more experience with the <code class="language-dafny highlighter-rouge"><span class="n">assigns</span></code> clause.</p>
+
+<h3 id="question-2"><strong>Question 2</strong></h3>
+<p><strong>(a) The function given below is unable to be verified; determine where in the specifications it is failing, and fix it.</strong></p>
+<pre><code class="language-Java">//@ spec_public
+	private int playerHealth;
+	
+	//@ requires dmg &lt;= 0;
+	//@ requires 0 &lt; playerHealth;
+	public int updatePlayerHealth(int dmg) {
+		if(playerHealth &gt; dmg) {
+			return (playerHealth - dmg);
+		}else {
+			return 0;
+		}
+	}
+</code></pre>
+<p><strong>Asnwer and Explanation:</strong>
+First let’s assess what the current preconditions are requiring of both <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code>. The first precondition requires that <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> be a negative number. Next, the program requires that <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span></code> be greater than or equal to zero. Now, within the function we check if <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span></code> is greater than <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code>, and if it is we return <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">-</span> <span class="n">dmg</span></code>, otherwise we return zero - since the player would be dead if their health is less than the <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> attack or zero.</p>
+
+<p>Can you determine the error in the preconditions given the code? Notice how we require that <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> be negative but we return <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">-</span> <span class="n">dmg</span></code>, which would mean we are actually returning <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="n">dmg</span><span class="p">)</span></code> = <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">+</span> <span class="n">dmg</span></code> (since <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> has to be negative). This would cause an error since we would now potentially have an overflow error since we are adding <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> to <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span></code> is not bounded with <code class="language-dafny highlighter-rouge"><span class="n">Integer</span><span class="o">.</span><span class="n">MAX_VALUE</span></code>. To fix this we need to require that <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> be a positive number since it is we are subtracting <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> from <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span></code>. So we write the following:</p>
+<pre><code class="language-Java">//@ spec_public
+private int playerHealth;
+	
+//@ requires 0 &lt;= dmg &lt; Integer.MAX_VALUE;
+//@ requires 0 &lt; playerHealth;
+public int updatePlayerHealth(int dmg) {
+	if(playerHealth &gt; dmg) {
+		return (playerHealth - dmg);
+	}else {
+		return 0;
+	}
+}
+</code></pre>
+<p><strong>(b) How could you edit the code to verify the function with the original specification?</strong></p>
+
+<p><strong>Asnwer and Explanation:</strong>
+To keep the original preconditions without errors we would have to make a small edit to the code. The original problem with the function was that <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">-</span> <span class="p">(</span><span class="o">-</span><span class="n">dmg</span><span class="p">)</span></code> = <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">+</span> <span class="n">dmg</span></code>. So if we want to require that <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> be negative we need to change the return to <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">+</span> <span class="n">dmg</span></code> so that <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">dmg</span><span class="p">)</span></code> = <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">-</span> <span class="n">dmg</span></code>. So we can write the following:</p>
+<pre><code class="language-Java"> //@ spec_public
+private int playerHealth;
+	
+// @ requires dmg &lt;= 0;
+//@ requires 0 &lt; playerHealth;
+public int updatePlayerHealth(int dmg) {
+	if(playerHealth &gt; dmg) {
+		return (playerHealth + dmg);
+	}else {
+		return 0;
+	}
+}
+</code></pre>
+<p><strong>Learning Objective:</strong> 
+The goal of this exercise is to see if the student understands how they need to account for OpenJML testing all possible inputs that conform to the preconditions. While the exercises focuses on using the correct opteration we want to show the student how not using the correct operation would cause error. Given the preconditions and the code in part (a) the student needs to recognize that since OpenJML will test negative values for <code class="language-dafny highlighter-rouge"><span class="n">dmg</span></code> it will cause overflow warnings because with the code it returns <code class="language-dafny highlighter-rouge"><span class="n">playerHealth</span> <span class="o">+</span> <span class="n">dmg</span></code>. Additionally, in part (b) we want to see if the student understands how the original precondition can still be used to have the same result if the code makes sense with the input OpenJML passes in. At this point in the students studies they have seen numerous examples of potential overflow errors and how to handle them, so this should be an easier exercise.</p>
+
+<h3 id="resources"><strong>Resources:</strong></h3>
+<ul>
+  <li><a href="ArithmeticEx.html">Arithmetic Exercises</a></li>
+  <li><a href="ArithmeticExample1.java">Question 1 Java</a></li>
+  <li><a href="ArithmeticExample2.java">Question 2 Java</a></li>
+  <li><a href="exercises.html">All exercises</a></li>
+</ul>
+
+  </div>
+
+</article>
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

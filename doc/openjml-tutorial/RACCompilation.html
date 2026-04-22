@@ -1,0 +1,175 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../images/favicon.ico" rel="shortcut icon">
+
+<title>JML Tutorial - Runtime Assertion Checking (RAC) - Compilation and Execution</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="https://www.openjml.org/documentation/features.shtml">Features</a></li>
+	<li  class="active"><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li  ><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">JML Tutorial - Runtime Assertion Checking (RAC) - Compilation and Execution</h1>
+  </header>
+
+  <div class="post-content">
+    <p>A JML-annotated Java program can be compiled and executed like any Java program, but with the JML assertions checked at runtime.
+The JML assertions are only checked for the particular values of inputs, variables, etc. that occur during that particular run
+of the program, not for all possible inputs (as in static deductive verification). Furthermore not all JML constructs are executable;
+some will be ignored during compilation for RAC.</p>
+
+<h3 id="compilation">Compilation</h3>
+
+<p>The <code class="language-dafny highlighter-rouge"><span class="n">openjml</span></code> tool when used with the <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">rac</span></code> option compiles a Java program with runtime assertions added. In this mode <code class="language-dafny highlighter-rouge"><span class="n">openjml</span></code>
+functions much like <code class="language-dafny highlighter-rouge"><span class="n">javac</span></code>: it has the same Java command-line options (like <code class="language-dafny highlighter-rouge"><span class="o">-</span><span class="n">cp</span></code> or <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">classpath</span></code>), along with additional OpenJML
+options.</p>
+
+<p>For example,</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="c1">// openjml --rac T_Rac1.java</span>
+<span class="n">public</span> <span class="kr">class</span> <span class="n">T_Rac1</span> <span class="p">{</span>
+
+  <span class="n">public</span> <span class="kr">static</span> <span class="n">void</span> <span class="n">main</span><span class="p">(</span><span class="n">String</span><span class="o">...</span> <span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">//@ assert args.length == 1;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+<p>compiles with <code class="language-dafny highlighter-rouge"><span class="n">openjml</span> <span class="o">--</span><span class="n">rac</span> <span class="n">T_Rac1</span><span class="o">.</span><span class="n">java</span></code> to produce a <code class="language-dafny highlighter-rouge"><span class="n">T_Rac1</span><span class="o">.</span><span class="kr">class</span></code> file.</p>
+
+<h3 id="execution">Execution</h3>
+
+<p>The RAC-compiled Java program can then be executed in two ways: either using the command <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">java</span></code> or the standard installed <code class="language-dafny highlighter-rouge"><span class="n">java</span></code> command.
+If you are using <code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">java</span></code> you do not need to have an installation of Java itself.</p>
+
+<h4 id="openjml-java">openjml-java</h4>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">java</span></code> is a build of <code class="language-dafny highlighter-rouge"><span class="n">java</span></code> produced and installed along with <code class="language-dafny highlighter-rouge"><span class="n">openjml</span></code>. It functions like <code class="language-dafny highlighter-rouge"><span class="n">java</span></code> except that it includes the 
+runtime libraries needed for RAC. So to run the program compiled above one just executes</p>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">java</span> <span class="o">-</span><span class="n">cp</span> <span class="o">.</span> <span class="n">T_Rac1</span></code></p>
+
+<p>producing</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">T_Rac1</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">5</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">JML</span> <span class="n">assertion</span> <span class="ow">is</span> <span class="kc">false</span>
+    <span class="c1">//@ assert args.length == 1;</span>
+        <span class="o">^</span>
+
+</code></pre></div></div>
+
+<p>If you run it with one command-line argument, then the assertion in the program is true and does not produce any error messages:</p>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">openjml</span><span class="o">-</span><span class="n">java</span> <span class="o">-</span><span class="n">cp</span> <span class="o">.</span> <span class="n">T_Rac1</span> <span class="n">hi</span></code></p>
+
+<h4 id="java">java</h4>
+<p>If you have java (at least v. 21, as of December 2024) installed on your system, you can use it to run the RAC-compiled program produced by <code class="language-dafny highlighter-rouge"><span class="n">openjml</span></code>. You need to include in your classpath the JML runtime library, <code class="language-dafny highlighter-rouge"><span class="n">jmlruntime</span><span class="o">.</span><span class="n">jar</span></code>, which is available in the OpenJML installation. 
+If <code class="language-dafny highlighter-rouge"><span class="err">$</span><span class="n">OJ</span></code> is the path to the installation folder containing <code class="language-dafny highlighter-rouge"><span class="n">openjml</span></code> and <code class="language-dafny highlighter-rouge"><span class="n">jmlruntime</span><span class="o">.</span><span class="n">jar</span></code> then you can run the RAC-compiled class file from 
+above as</p>
+
+<p><code class="language-dafny highlighter-rouge"><span class="n">java</span> <span class="o">-</span><span class="n">cp</span> <span class="o">.:</span><span class="err">$</span><span class="n">OJ</span><span class="o">/</span><span class="n">jmlruntime</span><span class="o">.</span><span class="n">jar</span> <span class="n">T_Rac1</span></code></p>
+
+<p>producing</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">T_Rac1</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">5</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">JML</span> <span class="n">assertion</span> <span class="ow">is</span> <span class="kc">false</span>
+    <span class="c1">//@ assert args.length == 1;</span>
+        <span class="o">^</span>
+
+</code></pre></div></div>
+
+
+  </div>
+
+</article>
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

@@ -1,0 +1,9 @@
+#! /usr/bin/env bash
+
+( "$INSTALL/openjml-compile" Run.java ;\
+  "$INSTALL/openjml-run" Run ; \
+  "$INSTALL/openjml-java" A ; \
+) > actual
+diff expected actual && rm -rf actual
+
+

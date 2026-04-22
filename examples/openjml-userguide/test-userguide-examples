@@ -1,0 +1,63 @@
+#! /usr/bin/env bash
+
+pushd $(dirname "$BASH_SOURCE") > /dev/null
+cd examples
+
+chmod +x */run
+X=0
+DIRS=`echo *`
+if [ -n "$1" ]; then DIRS=$@ ; fi
+for f in $DIRS ; do
+  if [[ ! -d $f ]]; then
+    echo $f is not a directory
+  elif [[ -e $f/run ]]; then
+    echo RUN $f
+    ( cd $f ; . ../../installLocation userguide-$f ; ./run ) || X=1
+  elif [[ -e $f/ESC.out1 ]]; then
+    echo ESC $f
+    out=ESC.out
+    pushd $f > /dev/null
+    . ../../installLocation userguide-$f
+    "$INSTALL/openjml" --esc *.java >& actual
+    n=0
+    Y=1
+    while [[ $( diff actual $out > /dev/null ) ]]; do
+      let ++n
+      out=ESC.out$n
+      if [[ ! -e $out ]]; then Y=0; break; fi
+    done
+    if [[ $Y ]]; then rm -rf actual; else X=1; diff actual ESC.out; fi
+    popd > /dev/null
+  elif [ -e $f/ESC.out -o -e $f/RAC.out -o -e $f/RAC-CH.out ] ; then
+    if [[ -e $f/ESC.out ]]; then
+      echo ESC $f
+      ( cd $f; ( . ../../installLocation userguide-$f; "$INSTALL/openjml" --esc *.java 2>&1 | tee actual | diff - ESC.out ) && rm -f actual ) || X=1
+    fi
+    if [[ -e $f/RAC.out ]] ; then
+      echo RAC $f
+      ( cd $f; ( ( . ../../installLocation userguide-$f; "$INSTALL/openjml" --rac *.java; "$INSTALL/openjml-java" Demo ) 2>&1 | tee actual | diff - RAC.out ) && rm -f actual ) || X=1
+    fi
+    if [[ -e $f/RAC-CH.out ]] ; then
+      echo RAC-CH $f
+      ( cd $f; ( ( . ../../installLocation userguide-$f; "$INSTALL/openjml" --rac --rac-check-assumptions *.java; "$INSTALL/openjml-java" Demo ) 2>&1 | tee actual | diff - RAC-CH.out ) && rm -f actual ) || X=1
+    fi
+  else
+    echo MULTIPLE $f
+    pushd $f > /dev/null
+    . ../../installLocation userguide-$f
+    for g in *.java; do
+      echo "    " $g
+      out=$( echo $g | sed -e 's/java/out/')
+      cmd=--esc
+      cmd=`grep 'CMD:' $g | sed -e 'sx^//CMD: openjmlxx'`
+      tmp=${out}-tmp
+      grep -v "Show statement expression" $out > $tmp
+      ( "$INSTALL/openjml" $cmd 2>&1 | grep -v "Show statement expression" | diff - $tmp ) || X=1
+      rm -f $tmp
+    done
+    popd > /dev/null
+  fi
+done
+popd > /dev/null
+if [ "$X" == 0 ]; then echo All userguide tests successful; else echo Userguide test failures ; fi
+exit $X

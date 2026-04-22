@@ -1,0 +1,185 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../images/favicon.ico" rel="shortcut icon">
+
+<title>Introduction to OpenJML</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li class="active"><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="features.shtml.html">Features</a></li>
+	<li><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <div class="row">
+  <div class="col-md-12">
+
+<h2>JML</h2>
+<p>
+The Java Modeling Language (JML) is a language used to describe the functional behavior of Java classes and methods.
+The descriptions of behavior are expressed as structured
+Java comments or Java annotations that use Java-like logical expressions. Various tools can then read the JML
+information and do static checking, runtime checking, test generation, display for documentation,
+or other useful tasks.
+</p>
+<p>
+More information about JML can be found on the
+<a href="http://www.jmlspecs.org">JML web site</a>.
+The information includes publications, groups using or contributing to JML,
+mailing lists, etc.
+There is also a <a href="https://github.com/OpenJML">GitHub project</a>,
+this <a href="https://www.openjml.org/index.html">general documentation site</a>,
+and a <a href="https://github.com/OpenJML/OpenJML/wiki">wiki for OpenJML developers</a>.
+</p>
+<p>
+The old sourceforge site at https://jmlspecs.sourceforge.net is now obsolete and not maintained; any material there is out of date. Refer to the github project for current releases.
+</p>
+<h2>OpenJML</h2>
+<p>
+OpenJML is a tool set for JML, built on the OpenJDK framework for Java.
+It is intended as the replacement for ESC/Java2, which is only for Java 1.4.
+OpenJML intends to be current with current Java.
+This page makes available some resources for OpenJML and links give information about installing and running OpenJML.
+</p>
+<p>
+<b>Note that OpenJML is not a theorem prover or model checker itself.</b> OpenJML
+translates JML specifications into <a href="http://www.smtlib.org">SMT-LIB format</a> and passes the proof
+problems implied by the Java+JML program to backend SMT solvers. Success in checking
+the consistency of the specifications and the code will depend on
+</p>
+<ul>
+<li>(a) the capability of the backend SMT solver, </li>
+<li>(b) the particular encoding of code+specifications into SMT by OpenJML, and</li>
+<li>(c) the complexity and style in which the code and specifications are written.</li>
+</ul>
+
+<p>
+<b>The key goal of OpenJML is to implement a full tool for JML that is easy for practitioners and students
+to use to specify and verify Java programs.
+In addition, however, and corresponding to the points above, other goals of OpenJML are to provide challenge problems to
+SMT solvers (point a), particularly around quantified expressions,
+to experiment with the encoding of code and specifications in OpenJML itself (point b)
+and to allow users to easily experiment with styles of specification writing (point c).
+</b>
+</p>
+<p>
+A summary of the features and the implementation status of OpenJML is
+<a href="features.shtml.html">here</a>.
+</p>
+
+<p>
+Current OpenJML does not require an installation of Java to run.
+
+The source code for OpenJML is kept in github as a module of the
+<a href="https://github.com/OpenJML">OpenJML GitHub project</a>.
+The JMLAnnotations, Specs, OpenJMLDemo and Solvers projects (also modules of that project) are used by OpenJML.
+The openjml.github.io project contains the source for the openjml.org web site.
+</p>
+
+OpenJML itself is a command-line tool. However, there is also a
+<a href="openjml-lsp.html">Language Server for OpenJML</a>, enabling
+LSP-compatible clients to interact with Java+JML programs and with OpenJML capabilities.
+Releases of OpenJML include a VSCode extension and an Eclipse plugin that interact with OpenJML through the LSP interface.
+
+<h3>Language Server for OpenJML</h3>
+
+An integration guide for clients using LSP to interact with OpenJML is
+<a href="openjml-lsp.html">here</a>.
+
+<h3>Development of OpenJML</h3>
+<p>Developers contributing to OpenJML should refer to the <a href="https://github.com/OpenJML/OpenJML/wiki">OpenJML wiki</a>.
+</p>
+
+  </div>
+</div>
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

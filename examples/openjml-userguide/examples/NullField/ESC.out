@@ -1,0 +1,4 @@
+Demo.java:2: verify: The prover cannot establish an assertion (NullField) in method Demo
+  Object o;
+         ^
+1 verification failure

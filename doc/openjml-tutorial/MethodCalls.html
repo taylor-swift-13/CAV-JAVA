@@ -1,0 +1,304 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../images/favicon.ico" rel="shortcut icon">
+
+<title>JML Tutorial - Method Calls</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="https://www.openjml.org/documentation/features.shtml">Features</a></li>
+	<li  class="active"><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li  ><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">JML Tutorial - Method Calls</h1>
+  </header>
+
+  <div class="post-content">
+    <p>We have seen how to verify method implementations that have
+pre- and postconditions describing
+the behavior of method bodies that contain if statements and assignments.
+Now let’s progress to method calls.</p>
+
+<p>The key point to remember is that verification in JML (and other similar
+deductive verification languages and tools) is <em>modular by method</em>.
+That is, each method is verified on its own; only when all methods are 
+verified with a consistent set of specifications
+across all of them can the program as a whole be 
+considered verified.</p>
+
+<p>Consider two methods, a caller and a callee, as shown in this diagram.</p>
+
+<p><img src="tutorial1.001.png" alt="Caller-callee verification" /></p>
+
+<p>The callee, on the right, is a simple standalone method. When the method is
+verified, the logical engine</p>
+<ul>
+  <li>assumes its preconditions are true</li>
+  <li>symbolically represents the actions of the method body</li>
+  <li>asserts the postconditions—that is, proves that the postconditions logically follow from the preconditions and method body in every initial state allowed by the preconditions</li>
+</ul>
+
+<p>As for the caller, it also follows the same three steps. But how do we represent the call to <code class="language-dafny highlighter-rouge"><span class="n">callee</span><span class="p">()</span></code>? We could inline the whole callee method, but that would
+become unwieldy, would not work for recursion, and is not modular.
+Instead, we replace the call of <code class="language-dafny highlighter-rouge"><span class="n">callee</span><span class="p">()</span></code> in the caller’s body with the callee’s
+pre- and post-conditions. We know that the callee’s postconditions will be true if the callee’s preconditions are satisfied. So the caller, at the point of the method call,</p>
+
+<ul>
+  <li>must prove (assert) that the callee’s preconditions hold</li>
+  <li>and then it may assume that the callee’s postconditions will hold</li>
+</ul>
+
+<p>As long as we keep the callee’s specifications the same, we can verify the callee and the caller independently. (Thus the callee’s specification is a summary of its behavior and is not affected by the callee’s implementation details.)</p>
+
+<p>It is easy to see that this process works for verifying the methods in a program that do not call anything, to those methods that just call those leaves, all the way up to the top-level methods of the program. It can also be demonstrated that this process is sound when there are recursive calls, as long as it can
+be proved that the program terminates.</p>
+
+<p>The following code is a simple example of a two-method verification.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="c1">// openjml --esc --progress --no-show-summary T_CallerCallee.java</span>
+<span class="n">public</span> <span class="kr">class</span> <span class="n">T_CallerCallee</span> <span class="p">{</span>
+
+  <span class="n">public</span> <span class="n">void</span> <span class="n">caller1</span><span class="p">()</span> <span class="p">{</span>
+     <span class="n">boolean</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
+     <span class="c1">//@ assert b1 == true;</span>
+     <span class="n">boolean</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span><span class="mi">4</span><span class="p">);</span>
+     <span class="c1">//@ assert b2 == false;</span>
+  <span class="p">}</span>
+
+  <span class="n">public</span> <span class="n">void</span> <span class="n">caller2</span><span class="p">()</span> <span class="p">{</span>
+     <span class="n">boolean</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">public</span> <span class="n">void</span> <span class="n">caller3</span><span class="p">()</span> <span class="p">{</span>
+     <span class="n">boolean</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">public</span> <span class="n">void</span> <span class="n">caller4</span><span class="p">()</span> <span class="p">{</span>
+     <span class="n">boolean</span> <span class="n">b</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+     <span class="c1">//@ assert b == true;</span>
+  <span class="p">}</span>
+
+  <span class="c1">//@ requires x &gt; y &amp;&amp; y &gt;= 0;</span>
+  <span class="c1">//@ ensures \result == (x &lt; y + y);</span>
+  <span class="n">public</span> <span class="n">boolean</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">return</span> <span class="n">x</span><span class="o">-</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">y</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span> 
+
+</code></pre></div></div>
+
+<p>The output on verifying is given next. Note that the openjml command includes
+the <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">progress</span></code> option, so we receive quite a bit more output.</p>
+
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">Proving</span> <span class="n">methods</span> <span class="ow">in</span> <span class="n">T_CallerCallee</span>
+<span class="n">Starting</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">T_CallerCallee</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span>
+<span class="n">Method</span> <span class="n">assertions</span> <span class="n">are</span> <span class="n">validated</span>
+<span class="n">Completed</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">T_CallerCallee</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span> <span class="o">-</span> <span class="n">no</span> <span class="n">warnings</span>
+<span class="n">Starting</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller1</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span>
+<span class="n">Method</span> <span class="n">assertions</span> <span class="n">are</span> <span class="n">validated</span>
+<span class="n">Completed</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller1</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span> <span class="o">-</span> <span class="n">no</span> <span class="n">warnings</span>
+<span class="n">Starting</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller2</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span>
+<span class="n">Method</span> <span class="n">assertions</span> <span class="n">are</span> <span class="n">INVALID</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">Precondition</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">caller2</span>
+     <span class="n">boolean</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">);</span>
+                                <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Associated</span> <span class="n">declaration</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span>
+  <span class="n">public</span> <span class="n">boolean</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+                 <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">24</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Precondition</span> <span class="n">conjunct</span> <span class="ow">is</span> <span class="kc">false</span><span class="o">:</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+  <span class="c1">//@ requires x &gt; y &amp;&amp; y &gt;= 0;</span>
+                          <span class="o">^</span>
+<span class="n">Completed</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller2</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span> <span class="o">-</span> <span class="n">with</span> <span class="n">warnings</span>
+<span class="n">Starting</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller3</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span>
+<span class="n">Method</span> <span class="n">assertions</span> <span class="n">are</span> <span class="n">INVALID</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">16</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">Precondition</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">caller3</span>
+     <span class="n">boolean</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+                                <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Associated</span> <span class="n">declaration</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">16</span><span class="o">:</span>
+  <span class="n">public</span> <span class="n">boolean</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+                 <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">24</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Precondition</span> <span class="n">conjunct</span> <span class="ow">is</span> <span class="kc">false</span><span class="o">:</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span>
+  <span class="c1">//@ requires x &gt; y &amp;&amp; y &gt;= 0;</span>
+                 <span class="o">^</span>
+<span class="n">Completed</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller3</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span> <span class="o">-</span> <span class="n">with</span> <span class="n">warnings</span>
+<span class="n">Starting</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller4</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span>
+<span class="n">Method</span> <span class="n">assertions</span> <span class="n">are</span> <span class="n">INVALID</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">21</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">Assert</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">caller4</span>
+     <span class="c1">//@ assert b == true;</span>
+         <span class="o">^</span>
+<span class="n">Completed</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">caller4</span><span class="p">()</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span> <span class="o">-</span> <span class="n">with</span> <span class="n">warnings</span>
+<span class="n">Starting</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="kt">int</span><span class="p">)</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span>
+<span class="n">Method</span> <span class="n">assertions</span> <span class="n">are</span> <span class="n">validated</span>
+<span class="n">Completed</span> <span class="n">proof</span> <span class="n">of</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="kt">int</span><span class="p">)</span> <span class="n">with</span> <span class="n">prover</span> <span class="n">z3_4_3</span> <span class="o">-</span> <span class="n">no</span> <span class="n">warnings</span>
+<span class="n">Completed</span> <span class="n">proving</span> <span class="n">methods</span> <span class="ow">in</span> <span class="n">T_CallerCallee</span>
+<span class="mi">7</span> <span class="n">verification</span> <span class="n">failures</span>
+
+</code></pre></div></div>
+
+<p>Looking at this piece by piece:</p>
+<ul>
+  <li>The method <code class="language-dafny highlighter-rouge"><span class="n">lessThanDouble</span></code> requires positive inputs with the first argument
+larger than the second. It returns true if the first argument is less than double the second. The method proves without a problem. 
+The output about <code class="language-dafny highlighter-rouge"><span class="n">lessThanDouble</span></code> is near the end of the verification listing above.</li>
+  <li>The default constructor <code class="language-dafny highlighter-rouge"><span class="n">T_CallerCallee</span><span class="p">()</span></code> also verifies without problem.</li>
+  <li>The method <code class="language-dafny highlighter-rouge"><span class="n">caller1</span></code> calls <code class="language-dafny highlighter-rouge"><span class="n">lessThanDouble</span></code> for two test cases and checks 
+that the result is what is expected. This method also verifies.</li>
+  <li>The method <code class="language-dafny highlighter-rouge"><span class="n">caller2</span></code> calls <code class="language-dafny highlighter-rouge"><span class="n">lessThanDouble</span></code> with arguments that do not 
+satisfy <code class="language-dafny highlighter-rouge"><span class="n">lessThanDoouble</span></code>’s preconditions, so openjml issues a Precondition
+verification error. Note that after the report of a Precondition error there
+is additional information pointing to which precondition is possibly not
+true and which conjunct within the precondition is false. Here it is that
+<code class="language-dafny highlighter-rouge"><span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span></code> is false (more accurately, is not necessarily always true).</li>
+  <li><code class="language-dafny highlighter-rouge"><span class="n">caller3</span></code> issues a call of <code class="language-dafny highlighter-rouge"><span class="n">lessThanDouble</span></code> that also does not satisfy the
+preconditions, so it also reports a Precondition error, this time claiming
+that <code class="language-dafny highlighter-rouge"><span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span></code> is not valid.</li>
+  <li><code class="language-dafny highlighter-rouge"><span class="n">caller4</span></code> makes a legitimate call to <code class="language-dafny highlighter-rouge"><span class="n">lessThanDouble</span></code> but then states an
+incorrect assertion about the result of that call, so the subsequent assertion
+is reported as not verified.</li>
+</ul>
+
+<p>A few additional points might be helpful.</p>
+
+<p>Often one is working on the specifications for just one method and so one does not want to try to verify everything. 
+You can specify the one method to run like this:  <code class="language-dafny highlighter-rouge"><span class="n">openjml</span> <span class="o">--</span><span class="n">esc</span> <span class="o">--</span><span class="kr">method</span><span class="o">=</span><span class="n">caller2</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span></code></p>
+
+<p>Secondly, the <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">progress</span></code> option is useful to see the detail about what verified and what did not; it also puts out information as work is accomplished, so you can see what progress is being made in a long-running job. But you can also reduce the amount of output. For example, the default <code class="language-dafny highlighter-rouge"><span class="o">--</span><span class="n">normal</span></code> option</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">openjml</span> <span class="o">--</span><span class="n">esc</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span>
+</code></pre></div></div>
+<p>produces</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">Precondition</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">caller2</span>
+     <span class="n">boolean</span> <span class="n">b1</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">);</span>
+                                <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Associated</span> <span class="n">declaration</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">12</span><span class="o">:</span>
+  <span class="n">public</span> <span class="n">boolean</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+                 <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">24</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Precondition</span> <span class="n">conjunct</span> <span class="ow">is</span> <span class="kc">false</span><span class="o">:</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+  <span class="c1">//@ requires x &gt; y &amp;&amp; y &gt;= 0;</span>
+                          <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">16</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">Precondition</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">caller3</span>
+     <span class="n">boolean</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+                                <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">26</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Associated</span> <span class="n">declaration</span><span class="o">:</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">16</span><span class="o">:</span>
+  <span class="n">public</span> <span class="n">boolean</span> <span class="n">lessThanDouble</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+                 <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">24</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">Precondition</span> <span class="n">conjunct</span> <span class="ow">is</span> <span class="kc">false</span><span class="o">:</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">y</span>
+  <span class="c1">//@ requires x &gt; y &amp;&amp; y &gt;= 0;</span>
+                 <span class="o">^</span>
+<span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">21</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">Assert</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">caller4</span>
+     <span class="c1">//@ assert b == true;</span>
+         <span class="o">^</span>
+<span class="mi">7</span> <span class="n">verification</span> <span class="n">failures</span>
+
+</code></pre></div></div>
+<p>which just shows any error messages.</p>
+
+<p>If you want you can hide all the output text and just observe the exit code:</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">openjml</span> <span class="o">--</span><span class="n">esc</span> <span class="o">--</span><span class="n">quiet</span> <span class="n">T_CallerCallee</span><span class="o">.</span><span class="n">java</span> <span class="p">;</span> <span class="n">echo</span> <span class="err">$</span><span class="n">?</span>
+</code></pre></div></div>
+<p>produces just</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="mi">6</span>
+</code></pre></div></div>
+<p>The exit code 6 indicates that verification errors were found (but no parsing
+or type-checking or command-line or system errors).</p>
+
+<h3 id="veriyfing-method-calls-problem-set"><strong><a href="exercises/VerifyingMethodCallsEx.html">Veriyfing Method Calls Problem Set</a></strong></h3>
+
+
+  </div>
+
+</article>
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

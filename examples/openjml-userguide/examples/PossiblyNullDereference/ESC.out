@@ -1,0 +1,4 @@
+Demo.java:4: verify: The prover cannot establish an assertion (PossiblyNullDeReference) in method test
+    return d.i;
+            ^
+1 verification failure

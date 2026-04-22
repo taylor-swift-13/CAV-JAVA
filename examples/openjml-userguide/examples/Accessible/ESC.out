@@ -1,0 +1,13 @@
+Demo.java:14: verify: The prover cannot establish an assertion (Accessible: Demo.java:12:) in method mbad: i
+    return i; // ERROR
+           ^
+Demo.java:12: verify: Associated declaration: Demo.java:14:
+  //@ reads \nothing;
+      ^
+Demo.java:19: verify: The prover cannot establish an assertion (Accessible: Demo.java:17:) in method mbad2: i
+    return mok(); // ERROR
+              ^
+Demo.java:17: verify: Associated declaration: Demo.java:19:
+  //@ reads j;
+      ^
+4 verification failures

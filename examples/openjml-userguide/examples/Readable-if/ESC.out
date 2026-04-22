@@ -1,0 +1,7 @@
+Demo.java:6: verify: The prover cannot establish an assertion (Readable-if: Demo.java:4:) in method test: Demo.i
+    return i;
+           ^
+Demo.java:4: verify: Associated declaration: Demo.java:6:
+  //@ readable i if j > 0;
+      ^
+2 verification failures

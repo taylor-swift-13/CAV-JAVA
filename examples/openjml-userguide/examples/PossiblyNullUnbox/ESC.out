@@ -1,0 +1,4 @@
+Demo.java:2: verify: The prover cannot establish an assertion (PossiblyNullUnbox) in method main
+  public static void main(String ... args) { /*@ nullable */ Integer i = null; int k = (int)i; }
+                                                                                            ^
+1 verification failure

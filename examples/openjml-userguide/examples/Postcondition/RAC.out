@@ -1,0 +1,12 @@
+Demo.java:4: verify: JML postcondition is false
+  static int mm(int i) {
+             ^
+Demo.java:3: verify: Associated declaration: Demo.java:4:
+  //@ ensures \result >= 0;
+      ^
+Demo.java:8: verify: JML postcondition is false
+  public static void main(String ... args) { mm(-1); }
+                                               ^
+Demo.java:3: verify: Associated declaration: Demo.java:8:
+  //@ ensures \result >= 0;
+      ^

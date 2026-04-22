@@ -1,0 +1,21 @@
+S=OpenJMLsrc
+if [ -n "$INSTALL" ]; then
+  : ## continue
+elif [ -e ../../../../$S/openjml-java ]; then
+INSTALL=../../../../$S
+elif [ -e ../../../../OpenJML21/OpenJML/$S ]; then
+INSTALL=../../../../OpenJML21/OpenJML/$S
+elif [ -e ../../../../OpenJML21B/OpenJML/$S ]; then
+INSTALL=../../../../OpenJML21B/OpenJML/$S
+elif [ -e ../../../$S/openjml-java ]; then
+INSTALL=../../../$S
+elif [ -e ../../../../../$S/openjml-java ]; then
+## Path to install directory when running make userguide-tests in OpenJMLTest
+INSTALL=../../../../../$S
+else 
+  echo Cannot find installation directory from `pwd`; set INSTALL manually
+  exit 1
+fi
+export INSTALL
+
+if [ -n "${COV++}" -a -n "$1" ]; then . $INSTALL/../OpenJMLTest/setup-coverage $1 ; fi

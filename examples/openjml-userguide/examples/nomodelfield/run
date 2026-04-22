@@ -1,0 +1,4 @@
+#! /usr/bin/env bash
+
+rm -f *.class
+( "$INSTALL/openjml" --rac T.java ; "$INSTALL/openjml" -Xprefer:source --compile P.java ; "$INSTALL/openjml-java" T ) 2>&1 | diff - RUN.out

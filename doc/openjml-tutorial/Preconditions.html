@@ -1,0 +1,181 @@
+<!DOCTYPE html> 
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link href="../images/favicon.ico" rel="shortcut icon">
+
+<title>JML Tutorial - Preconditions (requires clauses)</title>
+
+<!-- Bootstrap core CSS -->
+<link href="../bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="../css/syntax.css" rel="stylesheet">
+
+<!-- Custom styles for this template -->
+<link href="../css/openjml.css" rel="stylesheet">
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+
+  </head> 
+ 
+  <body>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button> 
+      <a class="navbar-brand" href="https://www.openjml.org/"><img  width="100" src="../images/OpenJML-Logo.png" alt="OpenJML Logo"/></a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+
+
+      <ul class="nav navbar-nav">
+
+	
+
+	<li><a href="https://www.openjml.org/downloads">Downloads</a></li>
+        <li><a href="https://www.openjml.org/documentation">Documentation</a></li>
+        <li><a href="https://www.openjml.org/examples">Examples</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML/wiki">Wiki</a></li>
+	<li><a href="https://github.com/OpenJML/OpenJML">GitHub</a></li>
+	<li><a href="https://www.openjml.org/documentation/features.shtml">Features</a></li>
+	<li  class="active"><a href="https://www.openjml.org/tutorial">Tutorial</a></li>
+        <li  ><a href="https://www.openjml.org/about">About</a></li>
+
+	
+      </ul>
+    </div><!--/.navbar-collapse -->
+  </div>
+</nav>
+
+<!--
+
+        <li><a href="http://www.rise4fun.com/OpenJMLESC/">Try Online</a></li>
+-->
+
+
+
+    <div class="container">
+      <article class="post">
+
+  <header class="post-header">
+    <h1 class="post-title">JML Tutorial - Preconditions (requires clauses)</h1>
+  </header>
+
+  <div class="post-content">
+    <p>Sometimes a method may work (or be well-defined) in certain combinations of program state and actual
+arguments. Such restrictions are called <em>preconditions</em> and
+are written with one (or more) <em>requires</em> clause(s).</p>
+
+<p>For example, a method to compute an integer square root requires its
+input to be non-negative:</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="c1">// openjml --esc T_requires1.java</span>
+<span class="n">public</span> <span class="kr">class</span> <span class="n">T_requires1</span> <span class="p">{</span>
+
+  <span class="c1">//@ requires i &gt;= 0;</span>
+  <span class="n">public</span> <span class="kt">int</span> <span class="n">isqrt</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// yet to be implemented</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>Other common preconditions are that a collection is not empty
+(e.g., <code class="language-dafny highlighter-rouge"><span class="o">!</span><span class="n">c</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">()</span></code>)
+or that an index is in range for an array (<code class="language-dafny highlighter-rouge"><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">a</span><span class="o">.</span><span class="n">length</span></code>).
+Note that the default in JML is that arguments are automatically considered to be non-null (<code class="language-dafny highlighter-rouge"><span class="n">a</span> <span class="o">!=</span> <span class="kc">null</span></code>) unless the specification indicates otherwise; see <a href="Nullness.html">Null and non-null</a>.</p>
+
+<p>A method’s specifications may include more than one requires clause. For example,</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="c1">// openjml --esc --nullable-by-default T_requires2.java</span>
+<span class="n">public</span> <span class="kr">class</span> <span class="n">T_requires2</span> <span class="p">{</span>
+
+  <span class="c1">//@ requires a != null;</span>
+  <span class="c1">//@ requires 0 &lt;= index &lt; a.length;</span>
+  <span class="c1">//@ ensures \result == a[index];</span>
+  <span class="n">public</span> <span class="kt">int</span> <span class="n">getElement</span><span class="p">(</span><span class="kt">int</span><span class="p">[]</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">return</span> <span class="n">a</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+
+<p>There may be an order to the requires clauses. In this case, the <code class="language-dafny highlighter-rouge"><span class="n">a</span><span class="o">.</span><span class="n">length</span></code> in
+the second clause is undefined if <code class="language-dafny highlighter-rouge"><span class="n">a</span></code> is null. Thus we also need the
+condition stated in the first clause, and it must be stated before the
+second clause. Reversing the order will result in an error (when arguments are nullable by default):</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="c1">// openjml --esc --nullable-by-default T_requires3.java</span>
+<span class="n">public</span> <span class="kr">class</span> <span class="n">T_requires3</span> <span class="p">{</span>
+
+  <span class="c1">//@ requires 0 &lt;= index &lt; a.length;</span>
+  <span class="c1">//@ requires a != null;</span>
+  <span class="c1">//@ ensures \result == a[index];</span>
+  <span class="n">public</span> <span class="kt">int</span> <span class="n">getElement</span><span class="p">(</span><span class="kt">int</span><span class="p">[]</span> <span class="n">a</span><span class="p">,</span> <span class="kt">int</span> <span class="n">index</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">return</span> <span class="n">a</span><span class="p">[</span><span class="n">index</span><span class="p">];</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+</code></pre></div></div>
+<p>produces</p>
+<div class="language-dafny highlighter-rouge"><div class="highlight"><pre class="syntax"><code><span class="n">T_requires3</span><span class="o">.</span><span class="n">java</span><span class="o">:</span><span class="mi">4</span><span class="o">:</span> <span class="n">verify</span><span class="o">:</span> <span class="n">The</span> <span class="n">prover</span> <span class="n">cannot</span> <span class="n">establish</span> <span class="n">an</span> <span class="n">assertion</span> <span class="p">(</span><span class="n">UndefinedNullDeReference</span><span class="p">)</span> <span class="ow">in</span> <span class="kr">method</span> <span class="n">getElement</span>
+  <span class="c1">//@ requires 0 &lt;= index &lt; a.length;</span>
+                             <span class="o">^</span>
+<span class="mi">1</span> <span class="n">verification</span> <span class="n">failure</span>
+
+</code></pre></div></div>
+
+<p>Ensures clauses may be mixed in order with the requires clauses, but good,
+and clearer, style suggests putting all requires clauses first and then
+all ensures clauses.</p>
+
+<h3 id="preconditions-problem-set"><strong><a href="exercises/PreConEx.html">Preconditions Problem Set</a></strong></h3>
+
+
+  </div>
+
+</article>
+
+      <hr>
+      <footer>
+        <p><i>Last Modified: <script type="text/javascript"> document.write(new Date(document.lastModified).toUTCString())</script></i></p>
+	<p>&copy; 2015 &mdash; 2026 OpenJML.org &middot; See <a href="https://www.openjml.org/about/index.html#Acknowledgements">Acknowledgements</a> for a list of contributors and sources of support.</p>
+      </footer>
+    </div> <!-- /container -->
+
+    <script src="../bower_components/jquery/dist/jquery.min.js"></script>
+<script src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+<script src="../bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- used for development -->
+<script>
+  //document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')
+</script>
+
+<!-- GA tags -->
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-77535099-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+
+
+
+  </body>
+</html>

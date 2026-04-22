@@ -1,0 +1,4 @@
+Demo.java:4: verify: The prover cannot establish an assertion (Unreachable) in method main
+      //@ unreachable
+          ^
+1 verification failure

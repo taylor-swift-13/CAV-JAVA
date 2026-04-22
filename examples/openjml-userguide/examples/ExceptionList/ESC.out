@@ -1,0 +1,7 @@
+Demo.java:4: verify: The prover cannot establish an assertion (ExceptionList: Demo.java:2:) in method test
+    throw new java.io.FileNotFoundException();
+    ^
+Demo.java:2: verify: Associated declaration: Demo.java:4:
+  //@ signals_only NullPointerException;
+      ^
+2 verification failures

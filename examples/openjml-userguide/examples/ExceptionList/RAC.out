@@ -1,0 +1,15 @@
+Demo.java:3: verify: JML unexpected exception for the signals_only clause: java.io.FileNotFoundException
+  public static void test() throws Exception {
+                     ^
+Demo.java:2: verify: Associated declaration: Demo.java:3:
+  //@ signals_only NullPointerException;
+      ^
+Demo.java:6: verify: JML unexpected exception for the signals_only clause: java.io.FileNotFoundException
+  public static void main(String ... args) throws Exception { test(); }
+                                                                  ^
+Demo.java:2: verify: Associated declaration: Demo.java:6:
+  //@ signals_only NullPointerException;
+      ^
+Exception in thread "main" java.io.FileNotFoundException
+	at Demo.test(Demo.java:4)
+	at Demo.main(Demo.java:6)

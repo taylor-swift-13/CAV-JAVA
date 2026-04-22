@@ -1,0 +1,5 @@
+#! /usr/bin/env bash
+
+X=0
+( ( "$INSTALL/openjml" --rac --rac-precondition-entry Demo.java && "$INSTALL/openjml-java" Demo ) 2>&1 | diff - RAC.out ) || X=1
+exit $X
