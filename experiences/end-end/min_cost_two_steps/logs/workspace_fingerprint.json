@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_201546_min_cost_two_steps",
+  "stage": "verify",
+  "input_c": "input/min_cost_two_steps.c",
+  "input_v": "input/min_cost_two_steps.v",
+  "original_c": "output/verify_20260422_201546_min_cost_two_steps/original/min_cost_two_steps.c",
+  "original_v": "output/verify_20260422_201546_min_cost_two_steps/original/min_cost_two_steps.v",
+  "annotated_c": "annotated/verify_20260422_201546_min_cost_two_steps.c",
+  "function_name": "min_cost_two_steps",
+  "program_sha256": "f005348679a534b41af1962272899ab420108aa21e2bddb5c29722018b95f77b",
+  "semantic_description": "Verifies min_cost_two_steps, a scalar dynamic-programming computation over an input integer array cost of length n. For n = 1 it returns cost[0]; otherwise it initializes prev2 = cost[0] and prev1 = cost[0] + cost[1], then runs a for loop from i = 2 to n - 1 computing cur = min(prev1, prev2) + cost[i], shifting prev2 and prev1. The function returns the Coq specification min_cost_two_steps_spec(l) and preserves the input IntArray::full(cost, n, l). The loop may execute zero times when n = 2 and contains a branch on the order of prev1 and prev2.",
+  "keywords": {
+    "algorithm_family": "dynamic_programming",
+    "control_flow": ["if", "for_loop"],
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "pure_arithmetic"],
+    "numeric_properties": ["nonnegative_input", "overflow_guard", "int_range"],
+    "edge_case_behavior": ["branch_on_order", "empty_loop_possible"],
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

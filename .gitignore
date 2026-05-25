@@ -3,6 +3,7 @@
 *.jmlrac
 out/
 output/
+annotated/
 *.log
 *.tmp
 __pycache__/

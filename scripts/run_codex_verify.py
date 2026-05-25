@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compatibility wrapper for the renamed verify runner."""
+"""Compatibility wrapper for the renamed C verify runner."""
 from run_verify import main
 
 

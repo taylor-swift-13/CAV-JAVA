@@ -8,27 +8,18 @@
 
 约定：
 - 输入 `n` 为非负整数。
-- `a` 表示一段可写的连续数组内存。
+- `a` 指向一段可写的连续数组内存。
 - 数组至少包含 `n` 个元素。
 - 只修改 `a[0]` 到 `a[n - 1]`，不访问越界位置。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `ArrayInit`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+void array_init(int n, int *a) {
+    int i;
 
-## Java 参考实现
-
-```java
-class ArrayInit {
-    public static void array_init(int n, int[] a) {
-        int i;
-
-        for (i = 0; i < n; ++i) {
-            a[i] = 0;
-        }
+    for (i = 0; i < n; ++i) {
+        a[i] = 0;
     }
 }
 ```

@@ -1,0 +1,36 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_025022_string_first_char",
+  "stage": "verify",
+  "input_c": "input/string_first_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_025022_string_first_char/original/string_first_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_025022_string_first_char.c",
+  "function_name": "string_first_char",
+  "program_sha256": "2fa4e4c18cbc857ef62588dafba338c5a3aa90cf507412ea7d45ca06fe695e27",
+  "semantic_description": "The function reads the first character from a nonempty null-terminated character array described by CharArray::full(s, n + 1, app(l, cons(0, nil))). The precondition requires 1 <= n, Zlength(l) == n, all payload characters are nonzero, and the owned buffer contains l followed by a zero terminator. The implementation has straight-line control flow, returns s[0], and does not modify memory, so the postcondition relates the return value to l[0] while preserving the same CharArray::full resource.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "straight_line",
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "heap_reasoning",
+      "pure_arithmetic"
+    ],
+    "numeric_properties": "int_range",
+    "verification_status": [
+      "manual_witness_needed",
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted",
+      "generated_goal_contains_axioms"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,7 +1,0 @@
-Demo.java:4: verify: The prover cannot establish an assertion (InvariantEntrance: Demo.java:11:) in method main: (Caller: Demo.main(String...), Callee: Demo.test())
-    test();
-        ^
-Demo.java:11: verify: Associated declaration: Demo.java:4:
-  //@ public static invariant i == 0;
-                    ^
-2 verification failures

@@ -1,0 +1,37 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_045417_string_trim_last_char",
+  "stage": "verify",
+  "input_c": "input/string_trim_last_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_045417_string_trim_last_char/original/string_trim_last_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_045417_string_trim_last_char.c",
+  "function_name": "string_trim_last_char",
+  "program_sha256": "f2d09eb76bb0ef403a270283942876501f2dfc0a6df30ec6e85b4f6ff6cae4d0",
+  "semantic_description": "Verifies a straight-line in-place update on a caller-owned null-terminated character buffer of logical length n. The function preserves the buffer when n == 0, and when n > 0 it writes 0 to s[n - 1] while leaving earlier characters and the final terminator at s[n] represented in the post-state character list.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": [
+      "straight_line",
+      "if"
+    ],
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "case_split",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,124 +1,91 @@
 ---
-name: java-openjml-eval
-description: Evaluate an existing Java/JML implementation against concrete positive and negative cases by treating the JML spec as an executable predicate (spec-test).
+name: c-qcp-eval
+description: Evaluate an existing C/QCP implementation against concrete positive and negative cases by treating the attached contract as the semantic target.
 ---
 
 Use this workflow independently from contract, verify, and audit. The goal is
-to decide whether the JML spec attached to an implementation correctly
-characterizes that implementation's behavior on representative inputs. The
-spec and the implementation are not modified.
-
-Eval treats the JML spec as an **executable predicate** and looks for cases
-where mechanical evaluation disagrees with the implementation. It does **not**
-invoke `openjml -esc`, and it does **not** check well-formedness: the contract
-stage's success gate already guarantees the spec parses, type-checks, is free
-of `NOT IMPLEMENTED` and the unsupported aggregate quantifiers
-(`\num_of` / `\sum` / `\product`), and passes the anti-cheating scan. Deductive
-proof is the verify/audit stage's job. By the time eval runs, the spec is
-already well-formed, so eval only has to test its semantics.
+to decide whether the contract attached to an implementation correctly
+characterizes that implementation's behavior on representative concrete inputs.
+Do not modify the implementation, its contract, or any `.v` helper file.
 
 ## Required References
 
 - `experiences/general/EVAL.md`
 - `experiences/general/AUDIT.md`
-- `experiences/general/OPENJML.md`
+- `experiences/general/CONTRACT.md`
 
 ## Inputs
 
-- Implementation/spec Java file.
-- Target class and method.
+- Implementation/spec C file.
+- Optional companion `.v` file.
+- Target function.
 - Workspace path.
 - Cases directory and evaluation directory.
 
 ## Output Layout
 
-```
+```text
 output/eval_<timestamp>_<name>/
-  original/<name>.java
+  original/<name>.c
+  original/<name>.v            # optional copy when provided
   cases/cases.json
   evaluation/evaluation.json
   logs/test_reasoning.md
   logs/issues.md
   logs/metrics.md
   logs/final_result.md
-  logs/<agent>_prompt_<run>.txt
-  logs/<agent>_stdout_<run>.{jsonl,log}
-  logs/<agent>_stderr_<run>.log
-  logs/<agent>_last_message_<run>.txt
+  logs/agent_prompt_<run>.txt
+  logs/agent_stdout_<run>.{jsonl,log}
+  logs/agent_stderr_<run>.log
+  logs/agent_last_message_<run>.txt
 ```
 
 ## Cases
 
-Generate **exactly the requested number of positive** and **exactly the requested number of negative** cases in
-`cases/cases.json`. Positive cases must satisfy every `requires` clause;
-their `result` and `post_state` come from running the implementation. Negative
-cases either violate one `requires` clause (precondition negative) or claim a
-`result` that contradicts the spec (postcondition negative).
+Generate exactly the requested number of positive and negative cases in
+`cases/cases.json`.
 
-Choose cases adversarially: positives must cover EVERY branch / input partition
-(e.g. both `a >= b` and `a < b`) and stress each `ensures` clause, so a
-one-branch spec bug is not missed because no case hit that branch.
+- Positive cases satisfy every `Require` clause.
+- Negative cases either violate a precondition or claim a return value / post
+  state that should be rejected by `Ensure`.
+- Prefer adversarial coverage: hit every branch and every postcondition shape.
 
-`cases/cases.json` schema:
+Schema:
 
 ```json
 {
-  "class_name": "MaxOfTwo",
-  "method_name": "max_of_two",
+  "function_name": "abs_value",
   "positive": [
     {
       "id": "pos01",
-      "description": "a > b on small positives",
-      "inputs": {"a": 5, "b": 3},
-      "old": {},
-      "result": 5,
+      "description": "negative branch",
+      "inputs": {"x": -3},
+      "result": 3,
       "post_state": {}
     }
   ],
   "negative": [
     {
-      "id": "neg01_precondition",
-      "kind": "precondition",
-      "description": "violates requires a >= 0",
-      "inputs": {"a": -1, "b": 3},
-      "old": {},
-      "result": null,
-      "post_state": {},
-      "violated_clause": "requires a >= 0"
-    },
-    {
-      "id": "neg02_wrong_output",
+      "id": "neg01_wrong_output",
       "kind": "postcondition",
-      "description": "claims wrong result; spec should reject",
-      "inputs": {"a": 5, "b": 3},
-      "old": {},
-      "result": 3,
+      "description": "claims a wrong return value",
+      "inputs": {"x": -3},
+      "result": -3,
       "post_state": {},
-      "violated_clause": "ensures \\result == a || \\result == b"
+      "violated_clause": "__return >= 0"
     }
   ]
 }
 ```
 
-## Test, then judge only the leftovers
+## Evaluation
 
-Simple flow: **test each case mechanically; if it cannot be tested
-mechanically, judge it.** No separate per-tier files.
+For each case, evaluate the contract clauses against the concrete values.
+Mechanical substitution is preferred; if a clause depends on external Coq
+predicates or other semantics that cannot be decided mechanically from the case,
+reason about it explicitly and record why.
 
-1. **Test (mechanical).** For each case, substitute its inputs / `\result` /
-   `\old(...)` into every spec clause and compute the boolean by ordinary
-   Java arithmetic/logic (`&&`, `||`, `==>`, `<==>`, `!`, constant indexing).
-   Enumerate bounded quantifiers over the case's concrete range
-   (`\forall` passes iff every witness is true; `\exists` iff some witness is;
-   `\sum`/`\num_of`/`\product` by running the implied loop). This is mechanical
-   substitution, not judgment — record the `substituted` string and the
-   `evaluated` boolean for each clause.
-2. **Judge (only leftovers).** A clause that cannot be decided mechanically
-   (unbounded quantifier, model function, etc.) is `needs_judge`. Judge only
-   those, citing the clause and reason. Do not judge what was decided
-   mechanically.
-
-Write ONE results file `evaluation/evaluation.json`:
+Write `evaluation/evaluation.json`:
 
 ```json
 {
@@ -127,64 +94,57 @@ Write ONE results file `evaluation/evaluation.json`:
       "id": "pos01",
       "verdict": "pass",
       "clauses": [
-        {"clause": "ensures \\result == a || \\result == b",
-         "substituted": "5 == 5 || 5 == 3", "evaluated": true}
+        {
+          "clause": "__return >= 0",
+          "substituted": "3 >= 0",
+          "evaluated": true
+        }
       ]
-    },
-    {
-      "id": "pos07",
-      "verdict": "needs_judge",
-      "clauses": [{"clause": "ensures someModelExpr(\\result)", "substituted": null, "evaluated": null}],
-      "judge": {"verdict": "pass", "reason": "..."}
     }
   ]
 }
 ```
 
-`judge` is present only on `needs_judge` cases.
+Allowed case verdicts:
+- `pass`
+- `fail`
+- `needs_judge`
 
-## Aggregate spec verdict
+If `needs_judge` is used, include a `judge` object with `verdict` and `reason`.
+
+## Aggregate Verdict
 
 Write `logs/final_result.md` with one of:
 
-- **Spec verdict: Correct** — every positive case passes, every negative case
-  fails (as it should), and nothing stayed inconclusive after judging.
-- **Spec verdict: Buggy** — at least one positive case failed, or a negative
-  case passed. Record the offending cases and clauses.
-- **Spec verdict: Inconclusive** — a judged clause stayed undecided. Record
-  which clauses prevented a decisive verdict.
+- `Spec verdict: Correct`
+- `Spec verdict: Buggy`
+- `Spec verdict: Inconclusive`
+
+Rules:
+- `Correct`: every positive passes, every negative fails, and nothing remains
+  undecided.
+- `Buggy`: at least one positive fails, or at least one negative passes.
+- `Inconclusive`: some clause or case could not be resolved decisively.
 
 ## Anti-Cheating Rules
 
-- No `assume`, `axiom`, `Admitted`, `skipesc`, broad `nowarn`, `native`,
-  reflection, or impossible-path tricks.
-- Do not weaken or delete target specs.
-- Do not encode negative tests by making methods unreachable.
-- Do not invoke `openjml -esc` to decide the verdict.
-
-## Experience
-
-Do not record experience here. Eval is a critic stage; experience is
-consolidated once at the very end of the flow by a dedicated unit
-(`scripts/experience_consolidate.py`), scoped to whatever flow ran. Just write a
-clear `logs/final_result.md` (the spec verdict) and `logs/issues.md` — the
-consolidation unit reads them.
+- Do not rewrite the contract to fit the cases.
+- Do not treat unreachable-code tricks as valid negative cases.
+- Do not claim `Correct` when you are actually unsure.
+- Do not record experience here; only write the stage logs.
 
 ## Final Result
 
-`logs/metrics.md` must end with one of:
+`logs/metrics.md` must end with exactly one of:
 
-```
+```text
 Final Result: Success
 Final Result: Fail
 ```
 
-`Final Result: Success` is allowed only when:
-
-- exactly the requested number of positive and negative cases are present in
-  `cases/cases.json`;
+`Success` is allowed only when:
+- the requested number of positive and negative cases were produced;
 - `evaluation/evaluation.json` exists and covers every case;
-- the aggregated spec verdict is `Correct` or `Buggy` (either is decisive);
-- `Spec verdict: Inconclusive` is treated as `Final Result: Fail`.
+- `logs/final_result.md` contains `Spec verdict: Correct` or `Spec verdict: Buggy`.
 
-If any condition is missing, write `Final Result: Fail`.
+`Spec verdict: Inconclusive` is `Final Result: Fail`.

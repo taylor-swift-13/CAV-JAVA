@@ -1,0 +1,33 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_191241_max_of_three",
+  "stage": "verify",
+  "input_c": "input/max_of_three.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_191241_max_of_three/original/max_of_three.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_191241_max_of_three.c",
+  "function_name": "max_of_three",
+  "program_sha256": "3b6174b50a18e8d871a1dbc82986c42ec122f84670ea0f464802c574c97523c1",
+  "semantic_description": "Computes and returns the maximum of three scalar integer inputs using straight-line initialization followed by two conditional branches. The result must be one of the original inputs and must be greater than or equal to all three original inputs. The function performs no heap or pointer memory updates.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": [
+      "straight_line",
+      "if"
+    ],
+    "data_shape": "scalar_only",
+    "semantic_intent": "return_max",
+    "proof_pattern": [
+      "pure_arithmetic",
+      "case_split"
+    ],
+    "edge_case_behavior": "branch_on_order",
+    "verification_status": [
+      "goal_check_passed",
+      "auto_proof_contains_admitted"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

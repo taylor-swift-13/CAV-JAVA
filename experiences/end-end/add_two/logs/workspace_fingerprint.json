@@ -1,0 +1,27 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_013742_add_two",
+  "stage": "verify",
+  "input_c": "input/add_two.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_013742_add_two/original/add_two.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_013742_add_two.c",
+  "function_name": "add_two",
+  "program_sha256": "3745bcbb62caa58ca589fd75d7429e45dc3701f39525813bf97e5e0116bee17e",
+  "semantic_description": "The function add_two is a straight-line scalar integer computation. It returns the mathematical sum of input parameters a and b, under the contract precondition that a + b is within the C int range. It has no loops, branches, pointer parameters, heap ownership changes, or memory writes; the postcondition relates the return value to the pre-state values a@pre and b@pre.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "straight_line",
+    "data_shape": "scalar_only",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": "pure_arithmetic",
+    "numeric_properties": [
+      "overflow_guard",
+      "int_range"
+    ],
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

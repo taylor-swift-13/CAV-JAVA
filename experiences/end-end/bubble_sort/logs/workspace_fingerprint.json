@@ -1,0 +1,40 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_130100_bubble_sort",
+  "stage": "verify",
+  "input_c": "input/bubble_sort.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_130100_bubble_sort/original/bubble_sort.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_130100_bubble_sort.c",
+  "function_name": "bubble_sort",
+  "program_sha256": "1d67105c875fc9dee1838036c9b74d2429966f9e0a7c7f98367319e312578a83",
+  "semantic_description": "In-place bubble sort over an integer array a of length n. The function uses nested for loops to repeatedly compare and swap adjacent elements, mutating the array memory while preserving the multiset of the original list. The required output relation is a sorted list l0 with Permutation(l, l0) and IntArray::full(a, n, l0). Edge cases n = 0 and n = 1 execute no inner swaps and should leave the array valid.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": [
+      "for_loop",
+      "nested_loop"
+    ],
+    "data_shape": "array",
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "case_split"
+    ],
+    "numeric_properties": [
+      "int_range",
+      "overflow_guard"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted",
+      "generated_goal_contains_axioms"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

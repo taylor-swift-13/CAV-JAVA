@@ -1,0 +1,34 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_120929_string_last_char",
+  "stage": "verify",
+  "input_c": "input/string_last_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_120929_string_last_char/original/string_last_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_120929_string_last_char.c",
+  "function_name": "string_last_char",
+  "program_sha256": "25aa234ddc74b3b780806cd1d9a8bcbd8b3b32f3d94d4f9b93a1c2f8f1fc69e7",
+  "semantic_description": "The function scans a nonempty null-terminated character array from index 0 until it finds that the next character is the terminating zero, then returns the current character. The contract relates the return value to the last element l[n - 1] of the nonzero prefix l, preserves the full character array memory, uses a while(1) loop with a break on s[i + 1] == 0, and does not modify memory.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": "while_loop",
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": "int_range",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

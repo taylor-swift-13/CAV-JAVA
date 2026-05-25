@@ -1,0 +1,33 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_205655_power_nonnegative",
+  "stage": "verify",
+  "input_c": "input/power_nonnegative.c",
+  "input_v": "input/power_nonnegative.v",
+  "original_c": "output/verify_20260422_205655_power_nonnegative/original/power_nonnegative.c",
+  "original_v": "output/verify_20260422_205655_power_nonnegative/original/power_nonnegative.v",
+  "annotated_c": "annotated/verify_20260422_205655_power_nonnegative.c",
+  "function_name": "power_nonnegative",
+  "program_sha256": "8cdfb5c150ce61af9c4ed59f8acf8806a448b2b3f660b92bf7e83e98feaf03b7",
+  "semantic_description": "Scalar-only nonnegative exponentiation. The function initializes ans to 1, iterates a for loop from i = 0 while i < exp, multiplies ans by base once per iteration, and returns power_nonnegative_z(base@pre, exp@pre). The contract restricts exp to be nonnegative and supplies an INT range guard for every prefix power from 0 through exp, so each intermediate multiplication result is representable as a C int. The loop may be empty when exp is 0. The function does not access or modify heap memory.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "for_loop",
+    "data_shape": "scalar_only",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

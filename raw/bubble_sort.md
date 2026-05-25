@@ -6,32 +6,23 @@
 
 约定：
 - 输入范围：`0 <= n <= 2000`。
-- `a` 表示一段可写的连续数组内存。
+- `a` 指向一段可写的连续数组内存。
 - 数组至少包含 `n` 个元素。
-- 元素范围：对所有 `0 <= i < n`，有 `Integer.MIN_VALUE <= a[i] <= INT_MAX`。
+- 元素范围：对所有 `0 <= i < n`，有 `INT_MIN <= a[i] <= INT_MAX`。
 - 不申请额外堆内存，只在原数组上交换元素。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `BubbleSort`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+void bubble_sort(int *a, int n) {
+    int i, j;
 
-## Java 参考实现
-
-```java
-class BubbleSort {
-    public static void bubble_sort(int[] a, int n) {
-        int i, j;
-
-        for (i = 0; i < n; ++i) {
-            for (j = 0; j + 1 < n - i; ++j) {
-                if (a[j] > a[j + 1]) {
-                    int t = a[j];
-                    a[j] = a[j + 1];
-                    a[j + 1] = t;
-                }
+    for (i = 0; i < n; ++i) {
+        for (j = 0; j + 1 < n - i; ++j) {
+            if (a[j] > a[j + 1]) {
+                int t = a[j];
+                a[j] = a[j + 1];
+                a[j + 1] = t;
             }
         }
     }

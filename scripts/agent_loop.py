@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generic budget-driven agent loop for the Java/OpenJML solver stages.
+"""Generic budget-driven agent loop for solver stages.
 
 A "solver" stage (contract, verify) drives a Codex agent toward a concrete
 success gate. This module owns the loop policy shared by those stages:
@@ -30,6 +30,8 @@ import subprocess
 from typing import Callable
 
 
+# This module lives at <repo>/scripts/, so the repo root is one level up.
+# Used as the agent subprocess cwd / -C dir.
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # Returned by attempt_fn. Drives the loop's restart decision.

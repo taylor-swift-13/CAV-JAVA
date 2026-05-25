@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_025651_string_has_double_char",
+  "stage": "verify",
+  "input_c": "input/string_has_double_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_025651_string_has_double_char/original/string_has_double_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_025651_string_has_double_char.c",
+  "function_name": "string_has_double_char",
+  "program_sha256": "93ca948db88df2d2af7691cc75e05985934a48fead7cf4926f4d1677e3e8e03e",
+  "semantic_description": "Scans a null-terminated character array represented by prefix list l followed by 0. The function starts at index 1, returns 1 if it finds adjacent equal characters before the terminator, and returns 0 if it reaches the terminator with every adjacent pair in l unequal. It uses a single while loop with early returns and does not modify memory; the CharArray::full resource must be preserved.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["if", "while_loop"],
+    "data_shape": ["string", "array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

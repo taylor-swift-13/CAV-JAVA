@@ -1,4 +1,0 @@
-Demo.java:4: verify: The prover cannot establish an assertion (LoopInvariantBeforeLoop) in method m
-    //@ loop_invariant 0 <= i <= 10;
-        ^
-1 verification failure

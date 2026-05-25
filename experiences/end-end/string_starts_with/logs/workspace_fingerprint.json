@@ -1,0 +1,33 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_042409_string_starts_with",
+  "stage": "verify",
+  "input_c": "input/string_starts_with.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_042409_string_starts_with/original/string_starts_with.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_042409_string_starts_with.c",
+  "function_name": "string_starts_with",
+  "program_sha256": "74b492e5a01268d1332a1b08d6c8064cc1820e3409bf11559cea3884b0dda509",
+  "semantic_description": "The function reads the first character of a caller-owned null-terminated character array segment and returns 1 exactly when s[0] equals the input character c, otherwise returns 0. The control flow is a single if/return branch with no loops. The contract models the string as a list l followed by a null terminator; when n is 0 the first character is the terminator, and when n is positive the first character is l[0]. The function does not modify memory and must preserve the full CharArray resource.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "if",
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "case_split",
+      "heap_reasoning"
+    ],
+    "numeric_properties": "int_range",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

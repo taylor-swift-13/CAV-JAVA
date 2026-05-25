@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_165724_find_first_equal",
+  "stage": "verify",
+  "input_c": "input/find_first_equal.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_165724_find_first_equal/original/find_first_equal.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_165724_find_first_equal.c",
+  "function_name": "find_first_equal",
+  "program_sha256": "bc4728e8ad7f3534cbaa9d04820728d48fcc0e608e4dc4e7e76e6c90f7848508",
+  "semantic_description": "Function find_first_equal scans the input integer array a[0..n) from left to right and returns the first index i where l[i] equals k. If no element equals k, it returns -1. The loop may execute zero times when n is 0. The function only reads the array and preserves the IntArray::full(a, n, l) heap predicate.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound"],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

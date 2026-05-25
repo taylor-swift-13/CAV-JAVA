@@ -1,0 +1,44 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_204612_partition_nonnegative",
+  "stage": "verify",
+  "input_c": "input/partition_nonnegative.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_204612_partition_nonnegative/original/partition_nonnegative.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_204612_partition_nonnegative.c",
+  "function_name": "partition_nonnegative",
+  "program_sha256": "1d6885cc1d130b72475153792d52307d8a7181bf9f7cfd8e30d44b910b669aad",
+  "semantic_description": "In-place two-pointer partition over an integer array of length n. The loop maintains a left index i and right index j, advances i past negative elements, swaps nonnegative elements at i with the current right element, and decrements j until i passes j. The return value is the partition boundary: all elements before it are negative, all elements from it to n are nonnegative, the final array is a permutation of the input list, and the same memory block is updated in place. The empty array case is allowed because n may be zero, producing i = 0 and j = -1 so the loop is skipped.",
+  "keywords": {
+    "algorithm_family": "two_pointers",
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted",
+      "generated_goal_contains_axioms"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

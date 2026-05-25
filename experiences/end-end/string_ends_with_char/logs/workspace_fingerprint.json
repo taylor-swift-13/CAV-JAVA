@@ -1,0 +1,42 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_020633_string_ends_with_char",
+  "stage": "verify",
+  "input_c": "input/string_ends_with_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_020633_string_ends_with_char/original/string_ends_with_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_020633_string_ends_with_char.c",
+  "function_name": "string_ends_with_char",
+  "program_sha256": "b20a5b67b4e47ea0f6e45022e7c441d126eaac84e36bbfbd7f65691c508afee8",
+  "semantic_description": "The function scans a null-terminated character array represented by logical list l followed by 0. It returns 0 for the empty string, otherwise advances i until s[i + 1] is the terminator, then compares the last nonzero character l[n - 1] with c and returns 1 exactly when they are equal. The loop is an unbounded while(1) scan with an internal break at the terminator; the function only reads the string memory and preserves the CharArray resource.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "if",
+      "while_loop"
+    ],
+    "data_shape": [
+      "string",
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

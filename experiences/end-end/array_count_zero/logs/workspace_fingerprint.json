@@ -1,0 +1,36 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_034412_array_count_zero",
+  "stage": "verify",
+  "input_c": "input/array_count_zero.c",
+  "input_v": "input/array_count_zero.v",
+  "original_c": "output/verify_20260422_034412_array_count_zero/original/array_count_zero.c",
+  "original_v": "output/verify_20260422_034412_array_count_zero/original/array_count_zero.v",
+  "annotated_c": "annotated/verify_20260422_034412_array_count_zero.c",
+  "function_name": "array_count_zero",
+  "program_sha256": "12454006ec6c76c3142de404e68cc288b5865e8114a18ac956c8f6114c8cec5c",
+  "semantic_description": "Function array_count_zero scans an integer array a of length n with a for-loop, increments a scalar accumulator count for each element equal to zero, returns the recursive Coq count of zero elements in the input list, and preserves the IntArray::full heap contents unchanged. The loop may be empty when n is 0; the contract requires n to be nonnegative and Zlength(l) == n.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "monotone_accumulator",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

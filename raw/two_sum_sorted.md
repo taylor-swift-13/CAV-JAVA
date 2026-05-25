@@ -2,46 +2,37 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入长度为 `n` 的非递减整数数组 `a` 和目标值 `target`，判断是否存在两个不同下标 `i < j`，使得 `a[i] + a[j] == target`。如果存在返回 `1`，否则返回 `0`。
+实现一个函数，输入长度为 `n` 的非递减整数数组 `a` 和目标值 `target`，判断是否存在两个不同下标 `i < j`，使得 `a[i] + a[j] == target`。如果存在返回 `1`，否则返回 `0`。
 
 约定：
 
 - `n >= 0`
 - `a` 的长度恰好是 `n`
 - 数组 `a` 非递减
-- 方法不修改数组
+- 函数不修改数组
 - 返回值只使用 `0` 或 `1`
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `TwoSumSorted`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int two_sum_sorted(int n, int *a, int target) {
+    int left = 0;
+    int right = n - 1;
+    int s;
 
-## Java 参考实现
-
-```java
-class TwoSumSorted {
-    public static int two_sum_sorted(int n, int[] a, int target) {
-        int left = 0;
-        int right = n - 1;
-        int s;
-
-        while (left < right) {
-            s = a[left] + a[right];
-            if (s == target) {
-                return 1;
-            }
-            if (s < target) {
-                left++;
-            } else {
-                right--;
-            }
+    while (left < right) {
+        s = a[left] + a[right];
+        if (s == target) {
+            return 1;
         }
-
-        return 0;
+        if (s < target) {
+            left++;
+        } else {
+            right--;
+        }
     }
+
+    return 0;
 }
 ```
 

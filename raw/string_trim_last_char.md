@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入一个长度为 `n` 的字符串 `s`。如果 `n > 0`，删除最后一个字符；如果 `n == 0`，保持空串不变。
+实现一个函数，输入一个长度为 `n` 的字符串 `s`。如果 `n > 0`，删除最后一个字符；如果 `n == 0`，保持空串不变。
 
 约定：
 
@@ -10,21 +10,12 @@
 - `n` 是字符串当前长度
 - 需要原地修改字符串
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `StringTrimLastChar`。
-- 目标方法应为 `public static`。
-- 原版中的字符指针按 Java `char[]` 表示，以 `'\0'` 作为字符串结束符。
-- 方法只依赖参数和数组内容，不使用全局状态。
-
-## Java 参考实现
-
-```java
-class StringTrimLastChar {
-    public static void string_trim_last_char(int n, char[] s) {
-        if (n > 0) {
-            s[n - 1] = '\0';
-        }
+```c
+void string_trim_last_char(int n, char *s) {
+    if (n > 0) {
+        s[n - 1] = '\0';
     }
 }
 ```

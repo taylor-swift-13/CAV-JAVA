@@ -1,4 +1,0 @@
-#! /usr/bin/env bash
-
-"$INSTALL/openjml" --esc --check-accessible Demo.java >& actual
-diff actual ESC.out && rm -rf actual

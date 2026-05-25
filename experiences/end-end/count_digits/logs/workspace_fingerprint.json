@@ -1,0 +1,40 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_121024_count_digits",
+  "stage": "verify",
+  "input_c": "input/count_digits.c",
+  "input_v": "input/count_digits.v",
+  "original_c": "output/verify_20260423_121024_count_digits/original/count_digits.c",
+  "original_v": "output/verify_20260423_121024_count_digits/original/count_digits.v",
+  "annotated_c": "annotated/verify_20260423_121024_count_digits.c",
+  "function_name": "count_digits",
+  "program_sha256": "66017dcd129506aa5216c84e2fd1e4ed36bc1c77fed9db196e0eb78463555a0e",
+  "semantic_description": "Verifies a scalar-only digit-counting function for nonnegative integers. The function returns 1 when the original input is 0; otherwise it repeatedly divides a positive local copy of the input by 10 in a while loop, increments a counter once per iteration, returns that counter, and does not modify memory.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": [
+      "if",
+      "while_loop"
+    ],
+    "data_shape": "scalar_only",
+    "semantic_intent": "count_iterations",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "termination_by_bound",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "monotone_accumulator",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

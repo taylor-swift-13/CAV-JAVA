@@ -1,0 +1,45 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_012416_string_count_vowels",
+  "stage": "verify",
+  "input_c": "input/string_count_vowels.c",
+  "input_v": "input/string_count_vowels.v",
+  "original_c": "output/verify_20260423_012416_string_count_vowels/original/string_count_vowels.c",
+  "original_v": "output/verify_20260423_012416_string_count_vowels/original/string_count_vowels.v",
+  "annotated_c": "annotated/verify_20260423_012416_string_count_vowels.c",
+  "function_name": "string_count_vowels",
+  "program_sha256": "391c4693cd4c41edde8dc2cf151a2d167caf78536df27e368733df667018cc83",
+  "semantic_description": "Counts lowercase vowels in a null-terminated string prefix. The function scans a CharArray-backed string with a while(1) loop, stops when s[i] is 0, increments a scalar accumulator when the current character is one of 97, 101, 105, 111, or 117, returns string_count_vowels_spec(l), and preserves the input memory unchanged. The empty-string case is possible when n is 0, in which case the loop exits immediately and returns 0.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "count_iterations",
+      "preserve_input"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "monotone_accumulator",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

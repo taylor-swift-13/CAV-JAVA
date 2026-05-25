@@ -1,4 +1,0 @@
-Demo.java:2: verify: The prover cannot establish an assertion (PossiblyNullInitialization) in method main: i
-  public static void main(String ... args) { Integer i = null; }
-                                                     ^
-1 verification failure

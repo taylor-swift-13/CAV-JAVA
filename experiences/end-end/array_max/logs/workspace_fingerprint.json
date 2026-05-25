@@ -1,0 +1,49 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_055419_array_max",
+  "stage": "verify",
+  "input_c": "input/array_max.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_055419_array_max/original/array_max.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_055419_array_max.c",
+  "function_name": "array_max",
+  "program_sha256": "0f8e3d3a46a0ed872f0b1c871527783efbddfa5c7f696b6e8f96cf9c26b16d05",
+  "semantic_description": "array_max scans a non-empty integer array a[0..n-1] without modifying memory. It initializes ret from a[0], then uses a for loop from i = 1 to n - 1 to keep ret equal to an element of the already-scanned prefix and greater than or equal to every element in that prefix. On return, ret is an element of the whole input list l and every valid array element is less than or equal to ret. The loop may be skipped when n == 1, and the IntArray::full heap predicate must be preserved unchanged.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": [
+      "for_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "return_max",
+      "preserve_input"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "int_range"
+    ],
+    "edge_case_behavior": [
+      "empty_loop_possible",
+      "branch_on_order"
+    ],
+    "verification_status": [
+      "goal_check_passed",
+      "manual_witness_needed",
+      "auto_proof_contains_admitted",
+      "generated_goal_contains_axioms"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

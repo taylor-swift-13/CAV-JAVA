@@ -1,0 +1,40 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_004841_string_count_lowercase",
+  "stage": "verify",
+  "input_c": "input/string_count_lowercase.c",
+  "input_v": "input/string_count_lowercase.v",
+  "original_c": "output/verify_20260423_004841_string_count_lowercase/original/string_count_lowercase.c",
+  "original_v": "output/verify_20260423_004841_string_count_lowercase/original/string_count_lowercase.v",
+  "annotated_c": "annotated/verify_20260423_004841_string_count_lowercase.c",
+  "function_name": "string_count_lowercase",
+  "program_sha256": "5cb83c6819cd9d97a760357c9a3d4541930736f3de9b12196085a49da29689cf",
+  "semantic_description": "Counts the lowercase ASCII letters in an input character list stored as a NUL-terminated char array. The loop scans the string with index i until it reaches the terminator at position n, keeps cnt equal to string_count_lowercase_spec over the already scanned prefix, preserves the input buffer unchanged, and returns zero for an empty string.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "while_loop",
+    "data_shape": [
+      "string",
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "count_iterations",
+      "preserve_input"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,43 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_181654_is_sorted_nondecreasing",
+  "stage": "verify",
+  "input_c": "input/is_sorted_nondecreasing.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_181654_is_sorted_nondecreasing/original/is_sorted_nondecreasing.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_181654_is_sorted_nondecreasing.c",
+  "function_name": "is_sorted_nondecreasing",
+  "program_sha256": "3eb3fe72100e90ba8c58b43b679d3ad4ec561229ce0ad31da8c4fa55fc30a250",
+  "semantic_description": "Read-only array scan that checks whether every adjacent pair is nondecreasing. The loop inspects a[i] and a[i + 1] from left to right and returns 0 immediately when it finds a descending adjacent pair; otherwise it exits the loop and returns 1. For n equal to 0 or 1 the loop body is skipped and the universal sortedness condition is vacuous. The function preserves the input array memory unchanged.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "for_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": [
+      "branch_on_order",
+      "empty_loop_possible"
+    ],
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

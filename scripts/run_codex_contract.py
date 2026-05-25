@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compatibility wrapper for the renamed contract runner."""
+"""Compatibility wrapper for the renamed C contract runner."""
 from run_contract import main
 
 

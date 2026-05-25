@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_184334_longest_increasing_run",
+  "stage": "verify",
+  "input_c": "input/longest_increasing_run.c",
+  "input_v": "input/longest_increasing_run.v",
+  "original_c": "output/verify_20260422_184334_longest_increasing_run/original/longest_increasing_run.c",
+  "original_v": "output/verify_20260422_184334_longest_increasing_run/original/longest_increasing_run.v",
+  "annotated_c": "annotated/verify_20260422_184334_longest_increasing_run.c",
+  "function_name": "longest_increasing_run",
+  "program_sha256": "816308122cca056bada8b40ae855d9be4d25029616afe1cfd3b260205d0f9635",
+  "semantic_description": "Computes the length of the longest contiguous strictly increasing run in an integer array. For n = 0 it returns 0 without entering the loop; otherwise it scans a[1..n-1] with a for loop, maintaining cur as the length of the current increasing suffix ending at the previous/current element and best as the maximum run length seen so far. The function reads but does not modify the input array, and the postcondition preserves IntArray::full(a, n, l).",
+  "keywords": {
+    "algorithm_family": ["search", "accumulation"],
+    "control_flow": ["if", "for_loop"],
+    "data_shape": "array",
+    "semantic_intent": ["return_max", "preserve_input"],
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound"],
+    "numeric_properties": ["nonnegative_input", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": ["empty_loop_possible", "branch_on_order"],
+    "verification_status": ["goal_check_passed", "proof_check_passed", "manual_witness_needed", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

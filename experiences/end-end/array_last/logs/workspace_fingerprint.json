@@ -1,0 +1,36 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_053439_array_last",
+  "stage": "verify",
+  "input_c": "input/array_last.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_053439_array_last/original/array_last.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_053439_array_last.c",
+  "function_name": "array_last",
+  "program_sha256": "a4135f4b71bd716d8b809e5645d4e4dc7f53fe5a3167dd80d03ad06500321e9d",
+  "semantic_description": "array_last returns the final element of an input integer array. The contract requires n >= 1, Zlength(l) == n, and full ownership of IntArray::full(a, n, l). The implementation is straight-line code with no branches or loops: it reads a[n - 1] and returns that value. It does not modify memory, so the postcondition preserves the same full array predicate and relates the return value to l[n@pre - 1].",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "straight_line",
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "pure_arithmetic",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

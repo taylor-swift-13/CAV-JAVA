@@ -2,46 +2,37 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入长度为 `n` 的非负整数数组 `a`，返回在不能选择相邻元素的限制下可以得到的最大和。
+实现一个函数，输入长度为 `n` 的非负整数数组 `a`，返回在不能选择相邻元素的限制下可以得到的最大和。
 
 约定：
 
 - `n >= 0`
 - `a` 的长度恰好是 `n`
 - 所有 `a[i] >= 0`
-- 方法不修改数组
+- 函数不修改数组
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `HouseRobber`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int house_robber(int n, int *a) {
+    int i;
+    int prev2 = 0;
+    int prev1 = 0;
+    int take;
+    int cur;
 
-## Java 参考实现
-
-```java
-class HouseRobber {
-    public static int house_robber(int n, int[] a) {
-        int i;
-        int prev2 = 0;
-        int prev1 = 0;
-        int take;
-        int cur;
-
-        for (i = 0; i < n; ++i) {
-            take = prev2 + a[i];
-            if (take > prev1) {
-                cur = take;
-            } else {
-                cur = prev1;
-            }
-            prev2 = prev1;
-            prev1 = cur;
+    for (i = 0; i < n; ++i) {
+        take = prev2 + a[i];
+        if (take > prev1) {
+            cur = take;
+        } else {
+            cur = prev1;
         }
-
-        return prev1;
+        prev2 = prev1;
+        prev1 = cur;
     }
+
+    return prev1;
 }
 ```
 

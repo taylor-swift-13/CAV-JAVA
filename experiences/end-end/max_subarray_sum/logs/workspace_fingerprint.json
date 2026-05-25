@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_192331_max_subarray_sum",
+  "stage": "verify",
+  "input_c": "input/max_subarray_sum.c",
+  "input_v": "input/max_subarray_sum.v",
+  "original_c": "output/verify_20260422_192331_max_subarray_sum/original/max_subarray_sum.c",
+  "original_v": "output/verify_20260422_192331_max_subarray_sum/original/max_subarray_sum.v",
+  "annotated_c": "annotated/verify_20260422_192331_max_subarray_sum.c",
+  "function_name": "max_subarray_sum",
+  "program_sha256": "3e5703973f2f694162e1de14bf9cc9340848eaf8f442e46801b4bf5c4d4b88a9",
+  "semantic_description": "Kadane-style array scan over a nonempty int array. The function initializes cur and best from a[0], then uses a for loop from i = 1 to n - 1 to update cur as max(a[i], cur + a[i]) and best as max(best, cur). It returns max_subarray_sum_spec(l) and preserves the input array memory unchanged. The contract requires n >= 1, Zlength(l) == n, full ownership of the input IntArray, and an overflow guard for every nonempty subarray sum.",
+  "keywords": {
+    "algorithm_family": ["dynamic_programming", "greedy", "accumulation"],
+    "control_flow": ["for_loop", "if"],
+    "data_shape": "array",
+    "semantic_intent": ["return_max", "preserve_input"],
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound"],
+    "numeric_properties": ["overflow_guard", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["manual_witness_needed", "goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

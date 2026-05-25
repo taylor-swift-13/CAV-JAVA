@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_032238_string_remove_char_to_output",
+  "stage": "verify",
+  "input_c": "input/string_remove_char_to_output.c",
+  "input_v": "input/string_remove_char_to_output.v",
+  "original_c": "output/verify_20260423_032238_string_remove_char_to_output/original/string_remove_char_to_output.c",
+  "original_v": "output/verify_20260423_032238_string_remove_char_to_output/original/string_remove_char_to_output.v",
+  "annotated_c": "annotated/verify_20260423_032238_string_remove_char_to_output.c",
+  "function_name": "string_remove_char_to_output",
+  "program_sha256": "edcfa6feb50e7facd9f4e9dc1a7becb0c31c457ecad2ca49fb5e39b8ac857485",
+  "semantic_description": "Scans input string s from left to right until the terminating 0, copies every character not equal to c into caller-provided output buffer out, writes a terminating 0 after the copied prefix, and returns the number of copied characters. The input string memory is preserved. The output memory is modified so its prefix equals string_remove_char_to_output_spec(l, c), followed by 0 and an unconstrained suffix. The main control structure is a while(1) loop with a break on s[i] == 0 and a conditional output write/increment when s[i] != c. Empty input is possible when n == 0.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["string", "array", "pointer"],
+    "semantic_intent": ["preserve_input", "in_place_update"],
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

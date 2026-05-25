@@ -1,0 +1,31 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_060249_array_min",
+  "stage": "verify",
+  "input_c": "input/array_min.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_060249_array_min/original/array_min.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_060249_array_min.c",
+  "function_name": "array_min",
+  "program_sha256": "f56d605278cd43b31cce96d9b02fec68f72b709bcebda0d16fe42b26724618e3",
+  "semantic_description": "Function array_min scans a nonempty integer array a of logical contents l and length n, initializes ret from a[0], then uses a for loop from i = 1 to n - 1 to keep ret as the minimum value seen in the prefix l[0..i). It returns a value that occurs at some valid index of l and is less than or equal to every element of l. The function only reads the input array and preserves IntArray::full(a, n, l). The boundary case n = 1 skips the loop and returns a[0].",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "proof_pattern": [
+      "loop_invariant",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

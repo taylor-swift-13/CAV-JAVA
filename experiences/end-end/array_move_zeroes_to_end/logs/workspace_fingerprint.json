@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_061035_array_move_zeroes_to_end",
+  "stage": "verify",
+  "input_c": "input/array_move_zeroes_to_end.c",
+  "input_v": "input/array_move_zeroes_to_end.v",
+  "original_c": "output/verify_20260422_061035_array_move_zeroes_to_end/original/array_move_zeroes_to_end.c",
+  "original_v": "output/verify_20260422_061035_array_move_zeroes_to_end/original/array_move_zeroes_to_end.v",
+  "annotated_c": "annotated/verify_20260422_061035_array_move_zeroes_to_end.c",
+  "function_name": "array_move_zeroes_to_end",
+  "program_sha256": "adad0cb553dee6cef7f18892573b979416fbac128bceec7defa8a265913f590f",
+  "semantic_description": "In-place array transformation that scans an integer array with a write index, copies each nonzero element into the next output prefix slot, then fills the remaining suffix with zero. The output length equals the input length, preserves the relative order of all nonzero input elements, and moves all zero elements to the end. The function has two while loops, mutates the input array buffer, and handles n = 0 by skipping both loops.",
+  "keywords": {
+    "algorithm_family": [
+      "two_pointers",
+      "selection"
+    ],
+    "control_flow": "while_loop",
+    "data_shape": "array",
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

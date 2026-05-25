@@ -8,33 +8,24 @@
 
 约定：
 - 输入范围：`0 <= n <= 10000`。
-- `a` 表示一段可读的连续数组内存。
+- `a` 指向一段可读的连续数组内存。
 - 数组至少包含 `n` 个元素。
 - 元素范围：对所有 `0 <= i < n`，有 `-10000 <= a[i] <= 10000`。
 - 只读取 `a[0]` 到 `a[n - 1]`，不访问越界位置。
 - 在上述范围下，和的绝对值最多为 `10^9`，不会超出 32 位 `int` 范围。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `ArraySum`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int array_sum(int n, int *a) {
+    int i;
+    int ret = 0;
 
-## Java 参考实现
-
-```java
-class ArraySum {
-    public static int array_sum(int n, int[] a) {
-        int i;
-        int ret = 0;
-
-        for (i = 0; i < n; ++i) {
-            ret += a[i];
-        }
-
-        return ret;
+    for (i = 0; i < n; ++i) {
+        ret += a[i];
     }
+
+    return ret;
 }
 ```
 

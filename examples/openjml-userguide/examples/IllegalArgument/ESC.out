@@ -1,4 +1,0 @@
-Demo.java:3: verify: The prover cannot establish an assertion (IllegalArgument) in method test
-        //@ check \elemtype(\type(Object)) == \type(boolean);
-                           ^
-1 verification failure

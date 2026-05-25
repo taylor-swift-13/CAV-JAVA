@@ -1,0 +1,33 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_161944_factorial",
+  "stage": "verify",
+  "input_c": "input/factorial.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_161944_factorial/original/factorial.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_161944_factorial.c",
+  "function_name": "factorial",
+  "program_sha256": "8f3a322905823cb738e2933e46658463af767cd9eea3c406b6a50e3c6187134a",
+  "semantic_description": "Computes the factorial of an integer n with precondition 0 <= n <= 10. The function uses scalar local variables only: res starts at 1 and a for loop multiplies res by each i from 1 through n, so the loop may be skipped when n is 0. It returns the mathematical factorial(n@pre) and does not read or modify heap memory.",
+  "keywords": {
+    "algorithm_family": "factorial",
+    "control_flow": "for_loop",
+    "data_shape": "scalar_only",
+    "semantic_intent": "compute_factorial",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "monotone_accumulator",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

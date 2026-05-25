@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_190218_majority_candidate",
+  "stage": "verify",
+  "input_c": "input/majority_candidate.c",
+  "input_v": "input/majority_candidate.v",
+  "original_c": "output/verify_20260422_190218_majority_candidate/original/majority_candidate.c",
+  "original_v": "output/verify_20260422_190218_majority_candidate/original/majority_candidate.v",
+  "annotated_c": "annotated/verify_20260422_190218_majority_candidate.c",
+  "function_name": "majority_candidate",
+  "program_sha256": "2c281cba2d2f327aadff15dde66c01e3548fab8f5630268a07c58c7232e78049",
+  "semantic_description": "The function scans a nonempty integer array using a Boyer-Moore majority-candidate style loop. It initializes candidate to the first element and count to 1, then iterates i from 1 up to n-1, updating only scalar locals based on count==0, a[i]==candidate, or the mismatch case. The input array is read-only and must be preserved. The return value is specified by the Coq recursive function majority_candidate_spec over the full input list. The loop can be skipped when n == 1.",
+  "keywords": {
+    "algorithm_family": ["selection", "simulation"],
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "scalar_only"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "termination_by_bound", "heap_reasoning"],
+    "numeric_properties": ["int_range", "nonnegative_input"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

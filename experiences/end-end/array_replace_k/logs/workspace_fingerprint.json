@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_072722_array_replace_k",
+  "stage": "verify",
+  "input_c": "input/array_replace_k.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_072722_array_replace_k/original/array_replace_k.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_072722_array_replace_k.c",
+  "function_name": "array_replace_k",
+  "program_sha256": "8457473b409f7a01bad450a3ca86794d95ff406e9dbed05d1b5cfe24e670d088",
+  "semantic_description": "Verifies array_replace_k, which iterates through an integer array of length n and updates the array in place so every element equal to old_k is replaced by new_k while every other element keeps its original value. The control structure is a single for loop over indices 0 <= i < n with an if branch on a[i] == old_k. For n = 0 the loop is skipped and the empty array predicate is preserved. The function returns void and modifies only the caller-provided array memory described by IntArray::full.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "case_split", "heap_reasoning"],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,4 +1,0 @@
-Demo.java:3: verify: The prover cannot establish an assertion (PossiblyNullAssignment) in method main
-  public static void main(String ... args) { i = null; }
-                                               ^
-1 verification failure

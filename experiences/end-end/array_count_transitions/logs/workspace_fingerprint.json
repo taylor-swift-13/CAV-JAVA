@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_033321_array_count_transitions",
+  "stage": "verify",
+  "input_c": "input/array_count_transitions.c",
+  "input_v": "input/array_count_transitions.v",
+  "original_c": "output/verify_20260422_033321_array_count_transitions/original/array_count_transitions.c",
+  "original_v": "output/verify_20260422_033321_array_count_transitions/original/array_count_transitions.v",
+  "annotated_c": "annotated/verify_20260422_033321_array_count_transitions.c",
+  "function_name": "array_count_transitions",
+  "program_sha256": "e31c7616b00461039843bacc473d1de2cbe99b5f3802a9f033b70b8ddc36826b",
+  "semantic_description": "The function scans an integer array without modifying it and counts adjacent transitions, i.e. positions i from 1 to n-1 where a[i] differs from a[i-1]. The loop initializes cnt to 0 and i to 1, so arrays of length 0 or 1 skip the loop and return 0. The input list length equals n, the array memory is preserved, and the return value must equal the Coq recursive specification over the original list.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

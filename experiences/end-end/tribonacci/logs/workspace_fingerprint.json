@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_051744_tribonacci",
+  "stage": "verify",
+  "input_c": "input/tribonacci.c",
+  "input_v": "input/tribonacci.v",
+  "original_c": "output/verify_20260423_051744_tribonacci/original/tribonacci.c",
+  "original_v": "output/verify_20260423_051744_tribonacci/original/tribonacci.v",
+  "annotated_c": "annotated/verify_20260423_051744_tribonacci.c",
+  "function_name": "tribonacci",
+  "program_sha256": "26c517ae82ab402073907f058796e1c925ce7422a2070a5b9d21c37af2e2137b",
+  "semantic_description": "The target function computes the n-th Tribonacci number for an integer input n with 0 <= n <= 37. It returns immediately for n == 0 and n == 1, otherwise it uses a scalar for-loop recurrence with registers a, b, and c holding consecutive Tribonacci values and returns c after the loop. The function does not read or modify heap memory; all state is scalar local variables. The loop may be skipped for n == 2, in which case the initialized c already represents tribonacci_z(2).",
+  "keywords": {
+    "algorithm_family": "dynamic_programming",
+    "control_flow": ["if", "for_loop"],
+    "data_shape": "scalar_only",
+    "proof_pattern": ["loop_invariant", "pure_arithmetic", "range_bound"],
+    "numeric_properties": ["nonnegative_input", "overflow_guard", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

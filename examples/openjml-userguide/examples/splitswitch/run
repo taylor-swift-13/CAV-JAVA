@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-
-X=0
-( "$INSTALL/openjml" -jmltesting --esc --progress Demo.java 2>&1 | diff - ESC.out ) || X=1
-exit $X

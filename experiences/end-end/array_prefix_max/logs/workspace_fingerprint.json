@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_063947_array_prefix_max",
+  "stage": "verify",
+  "input_c": "input/array_prefix_max.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_063947_array_prefix_max/original/array_prefix_max.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_063947_array_prefix_max.c",
+  "function_name": "array_prefix_max",
+  "program_sha256": "9bf23c2d575e4639b35da48b098875f84810d6efb391d78d56855bc91cde11e8",
+  "semantic_description": "array_prefix_max handles a nonnegative-length integer array. For n == 0 it returns without modifying memory beyond preserving both full arrays. For n > 0 it reads input array a, writes out[0] = a[0], then runs a for_loop from i = 1 to n - 1 with an if branch that updates cur when a[i] is larger. The output array should contain, at every index i, some element from the prefix a[0..i] that is at least every element in that prefix; the input array is preserved and the output array is overwritten with the prefix maximum sequence.",
+  "keywords": {
+    "algorithm_family": ["accumulation", "greedy"],
+    "control_flow": ["if", "for_loop"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": ["return_max", "preserve_input"],
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "monotone_accumulator"],
+    "edge_case_behavior": ["defined_for_nonnegative_only", "empty_loop_possible", "branch_on_order"],
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_210632_prefix_sum",
+  "stage": "verify",
+  "input_c": "input/prefix_sum.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_210632_prefix_sum/original/prefix_sum.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_210632_prefix_sum.c",
+  "function_name": "prefix_sum",
+  "program_sha256": "1bd87bbd27edc6bdf248dee9395ee8a75f1b84deb3b7f6e7557943856b11f158",
+  "semantic_description": "Verifies prefix_sum, which scans arrays a and out with a single for loop from i = 0 to i < n, keeps an integer accumulator acc equal to sum(sublist(0, i, la)) at loop head, preserves the input array a, and writes out[i] to the inclusive prefix sum sum(sublist(0, i + 1, la)). The contract permits n = 0, so the loop may execute zero times and out remains an array of length 0 in the postcondition. The function mutates only the caller-provided out array and relies on the precondition that every prefix sum from length 0 through n is within signed int range.",
+  "keywords": {
+    "algorithm_family": "prefix_sum",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": ["preserve_input", "in_place_update"],
+    "proof_pattern": ["loop_invariant", "heap_reasoning", "range_bound"],
+    "numeric_properties": ["overflow_guard", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "manual_witness_needed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,38 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_171952_house_robber",
+  "stage": "verify",
+  "input_c": "input/house_robber.c",
+  "input_v": "input/house_robber.v",
+  "original_c": "output/verify_20260422_171952_house_robber/original/house_robber.c",
+  "original_v": "output/verify_20260422_171952_house_robber/original/house_robber.v",
+  "annotated_c": "annotated/verify_20260422_171952_house_robber.c",
+  "function_name": "house_robber",
+  "program_sha256": "24016c8c321ae6a7c5bbc1f4ca7325a224633b93d5d288d26426bda282ed059d",
+  "semantic_description": "The function scans an integer array a[0..n) with a for loop, keeps two scalar dynamic-programming states prev2 and prev1, and returns the Coq-defined house_robber_spec over the full input list. The input array is read-only and must be preserved. The loop may execute zero times when n is 0, in which case the initial accumulator value 0 is returned. The contract bounds n, every array element, and every prefix result to the C int range.",
+  "keywords": {
+    "algorithm_family": "dynamic_programming",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted",
+      "generated_goal_contains_axioms"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,4 +1,0 @@
-Demo.java:7: verify: The prover cannot establish an assertion (PossiblyDivideByZero) in method mbad
-    int k = 1/i;
-             ^
-1 verification failure

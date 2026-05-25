@@ -1,0 +1,30 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_013302_abs_value",
+  "stage": "verify",
+  "input_c": "input/abs_value.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_013302_abs_value/original/abs_value.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_013302_abs_value.c",
+  "function_name": "abs_value",
+  "program_sha256": "82a54deb5821d8e7630df389e6dc44d2aa89b708a4a14b0b09b980bc376406d4",
+  "semantic_description": "Computes the absolute value of scalar integer x using a single if/else branch. The contract excludes INT_MIN so the negation branch cannot overflow, and the result must be nonnegative and equal either to the original input or to its negation. The function does not modify memory.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "if",
+    "data_shape": "scalar_only",
+    "proof_pattern": [
+      "pure_arithmetic",
+      "case_split"
+    ],
+    "numeric_properties": [
+      "overflow_guard",
+      "int_range"
+    ],
+    "edge_case_behavior": "branch_on_order",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

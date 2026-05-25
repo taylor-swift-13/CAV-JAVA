@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_092628_binary_search_first",
+  "stage": "verify",
+  "input_c": "input/binary_search_first.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_092628_binary_search_first/original/binary_search_first.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_092628_binary_search_first.c",
+  "function_name": "binary_search_first",
+  "program_sha256": "5f576a336832465a516eb22aa0ef575c5b72f27a81299ecae247db62c2f2b148",
+  "semantic_description": "Verifies binary_search_first, which performs a while-loop lower-bound search on a sorted IntArray of length n. The function preserves the input array and returns the first index whose value equals target, or -1 when every array element differs from target. The loop maintains a half-open search interval [left, right), handles the empty-array and target-not-found cases, and does not modify memory.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "termination_by_bound", "monotonicity", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": ["empty_loop_possible", "branch_on_order"],
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

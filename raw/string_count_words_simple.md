@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，统计以 `'\0'` 结尾的字符串中单词的个数。
+实现一个函数，统计以 `'\0'` 结尾的字符串中单词的个数。
 
 约定：
 - 字符串由普通字符、空格字符 `' '` 和结尾字符 `'\0'` 组成。
@@ -10,34 +10,25 @@
 - 多个连续空格不产生空单词。
 - 前导空格和尾随空格不产生额外单词。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `StringCountWordsSimple`。
-- 目标方法应为 `public static`。
-- 原版中的字符指针按 Java `char[]` 表示，以 `'\0'` 作为字符串结束符。
-- 方法只依赖参数和数组内容，不使用全局状态。
-
-## Java 参考实现
-
-```java
-class StringCountWordsSimple {
-    public static int string_count_words_simple(char[] s) {
-        int count = 0;
-        boolean in_word = false;
-        int i = 0;
-        while (s[i] != '\0') {
-            if (s[i] == ' ') {
-                in_word = false;
-            } else {
-                if (!in_word) {
-                    count++;
-                    in_word = true;
-                }
+```c
+int string_count_words_simple(char *s) {
+    int count = 0;
+    int in_word = 0;
+    int i = 0;
+    while (s[i] != '\0') {
+        if (s[i] == ' ') {
+            in_word = 0;
+        } else {
+            if (!in_word) {
+                count++;
+                in_word = 1;
             }
-            i++;
         }
-        return count;
+        i++;
     }
+    return count;
 }
 ```
 

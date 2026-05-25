@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入整数 `n`、字符 `c` 和缓冲区 `s`。把前 `n` 个位置全部写成 `c`，最后一个位置写终止符。
+实现一个函数，输入整数 `n`、字符 `c` 和缓冲区 `s`。把前 `n` 个位置全部写成 `c`，最后一个位置写终止符。
 
 约定：
 
@@ -10,25 +10,16 @@
 - `s` 缓冲区长度至少是 `n + 1`
 - 需要原地写入字符串
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `StringFillChar`。
-- 目标方法应为 `public static`。
-- 原版中的字符指针按 Java `char[]` 表示，以 `'\0'` 作为字符串结束符。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+void string_fill_char(int n, char c, char *s) {
+    int i;
 
-## Java 参考实现
-
-```java
-class StringFillChar {
-    public static void string_fill_char(int n, char c, char[] s) {
-        int i;
-
-        for (i = 0; i < n; ++i) {
-            s[i] = c;
-        }
-        s[n] = '\0';
+    for (i = 0; i < n; ++i) {
+        s[i] = c;
     }
+    s[n] = '\0';
 }
 ```
 

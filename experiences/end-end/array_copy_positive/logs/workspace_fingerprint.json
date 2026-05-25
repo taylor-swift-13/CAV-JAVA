@@ -1,0 +1,46 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_025204_array_copy_positive",
+  "stage": "verify",
+  "input_c": "input/array_copy_positive.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_025204_array_copy_positive/original/array_copy_positive.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_025204_array_copy_positive.c",
+  "function_name": "array_copy_positive",
+  "program_sha256": "abc0fb0efb9edde62a225035a34d0f32ca2dff7c1eed274204043710569329f1",
+  "semantic_description": "array_copy_positive scans indices 0 <= i < n once with a for loop, reads input array a without modifying it, and writes each output element out[i] to la[i] when the corresponding input value is positive and to 0 otherwise. The loop may execute zero times when n == 0. The function mutates only the caller-provided output array while preserving ownership and contents of the input array.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": [
+      "for_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "preserve_input",
+      "in_place_update"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible"
+    ,
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

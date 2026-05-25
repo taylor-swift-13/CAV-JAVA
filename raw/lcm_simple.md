@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入两个正整数 `a` 和 `b`，返回它们的最小公倍数。
+实现一个函数，输入两个正整数 `a` 和 `b`，返回它们的最小公倍数。
 
 约定：
 
@@ -10,25 +10,17 @@
 - `b > 0`
 - 使用简单枚举，从 `a` 开始每次加 `a`，直到找到能被 `b` 整除的数
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `LcmSimple`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int lcm_simple(int a, int b) {
+    int x = a;
 
-## Java 参考实现
-
-```java
-class LcmSimple {
-    public static int lcm_simple(int a, int b) {
-        int x = a;
-
-        while (x % b != 0) {
-            x = x + a;
-        }
-
-        return x;
+    while (x % b != 0) {
+        x = x + a;
     }
+
+    return x;
 }
 ```
 

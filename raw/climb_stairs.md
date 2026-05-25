@@ -11,29 +11,21 @@
 - `n = 1` 时返回 `1`。
 - 输入 `n` 为非负整数。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `ClimbStairs`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int climbStairs(int n) {
+    if (n <= 1) return 1;
+    int prev2 = 1; // 代表 dp[i-2]
+    int prev1 = 1; // 代表 dp[i-1]
+    int cur = 0;
 
-## Java 参考实现
-
-```java
-class ClimbStairs {
-    public static int climbStairs(int n) {
-        if (n <= 1) return 1;
-        int prev2 = 1; // 代表 dp[i-2]
-        int prev1 = 1; // 代表 dp[i-1]
-        int cur = 0;
-
-        for (int i = 2; i <= n; i++) {
-            cur = prev1 + prev2;
-            prev2 = prev1;
-            prev1 = cur;
-        }
-        return cur;
+    for (int i = 2; i <= n; i++) {
+        cur = prev1 + prev2;
+        prev2 = prev1;
+        prev1 = cur;
     }
+    return cur;
 }
 ```
 

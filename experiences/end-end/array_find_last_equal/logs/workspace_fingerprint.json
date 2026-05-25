@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_040059_array_find_last_equal",
+  "stage": "verify",
+  "input_c": "input/array_find_last_equal.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_040059_array_find_last_equal/original/array_find_last_equal.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_040059_array_find_last_equal.c",
+  "function_name": "array_find_last_equal",
+  "program_sha256": "6c5338c419f0fcfbba54558d6d47b390485c8918fc3c68524e9633257adcb6c3",
+  "semantic_description": "Scans an input integer array from left to right, preserving the array memory, and returns the last index whose value equals k. The loop maintains ans as either -1 when no matching element has appeared in the scanned prefix, or a valid index in the scanned prefix holding k with no later match before the current loop index. If n is zero, the loop is skipped and the function returns -1 with the universal no-match condition over the empty range.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

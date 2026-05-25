@@ -1,7 +1,0 @@
-Demo.java:7: verify: The prover cannot establish an assertion (Writable-if: Demo.java:4:) in method test: Demo.i
-    i = 1;
-    ^
-Demo.java:4: verify: Associated declaration: Demo.java:7:
-  //@ writable i if j > 0;
-      ^
-2 verification failures

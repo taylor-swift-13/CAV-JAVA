@@ -1,7 +1,0 @@
-Demo.java:4: verify: The prover cannot establish an assertion (InvariantExit: Demo.java:3:) in method test
-  public void test() {
-              ^
-Demo.java:3: verify: Associated declaration: Demo.java:4:
-  //@ public invariant i >= 0;
-             ^
-2 verification failures

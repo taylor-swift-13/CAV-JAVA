@@ -1,0 +1,39 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_011517_string_count_spaces",
+  "stage": "verify",
+  "input_c": "input/string_count_spaces.c",
+  "input_v": "input/string_count_spaces.v",
+  "original_c": "output/verify_20260423_011517_string_count_spaces/original/string_count_spaces.c",
+  "original_v": "output/verify_20260423_011517_string_count_spaces/original/string_count_spaces.v",
+  "annotated_c": "annotated/verify_20260423_011517_string_count_spaces.c",
+  "function_name": "string_count_spaces",
+  "program_sha256": "0217df1d3220b4b066b884ad9b5ef32d8bb68bca3e95dfe41b5db21a9af8430f",
+  "semantic_description": "Scans a null-terminated character array without modifying memory, counts elements equal to ASCII space (32) before the terminating 0, and returns the Coq recursive count over the logical list prefix. The loop is an unbounded while(1) with an internal break on the null terminator; the empty-string case is possible when n = 0. The contract preserves the full input character array and requires all prefix characters before the terminator to be nonzero.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "while_loop",
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "termination_by_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

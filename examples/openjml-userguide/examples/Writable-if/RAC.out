@@ -1,6 +1,0 @@
-Demo.java:7: verify: JML writable clause is false for variable Demo.i
-    i = 1;
-    ^
-Demo.java:4: verify: Associated declaration: Demo.java:7:
-  //@ writable i if j > 0;
-      ^

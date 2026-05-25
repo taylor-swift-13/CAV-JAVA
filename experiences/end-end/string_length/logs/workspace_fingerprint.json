@@ -1,0 +1,38 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_121011_string_length",
+  "stage": "verify",
+  "input_c": "input/string_length.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_121011_string_length/original/string_length.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_121011_string_length.c",
+  "function_name": "string_length",
+  "program_sha256": "9055a520813f159d83d0c8fab98f0865165bca2ca9d0a464a17a74f0b389babe",
+  "semantic_description": "The function scans a null-terminated character array from index 0 with an unbounded while loop, stopping when it reads the first 0 byte. The contract states that the logical list l has length n, all positions 0 <= k < n are nonzero, and the array content is app(l, cons(0, nil)); therefore the return value must be exactly n. The function only reads from the buffer and returns the scan index, preserving the full CharArray resource unchanged. The empty string case is allowed when n = 0, so the first read sees the terminator and the loop exits immediately.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "while_loop",
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "count_iterations",
+      "preserve_input"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

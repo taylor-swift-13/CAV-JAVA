@@ -1,0 +1,34 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_085356_array_sum_even_indices",
+  "stage": "verify",
+  "input_c": "input/array_sum_even_indices.c",
+  "input_v": "input/array_sum_even_indices.v",
+  "original_c": "output/verify_20260422_085356_array_sum_even_indices/original/array_sum_even_indices.c",
+  "original_v": "output/verify_20260422_085356_array_sum_even_indices/original/array_sum_even_indices.v",
+  "annotated_c": "annotated/verify_20260422_085356_array_sum_even_indices.c",
+  "function_name": "array_sum_even_indices",
+  "program_sha256": "9fb32e108127e5d334729384026b014b76584fc4eee366ed3b335891e65027a6",
+  "semantic_description": "The function scans an input integer array of length n with a single for loop and accumulates the elements whose indices are even. The result must equal array_sum_even_indices_spec(l), a Coq recursive specification over the input list that adds positions 0, 2, 4, and so on. The loop may execute zero times when n is 0. The function reads but does not modify the array, so IntArray::full(a, n, l) must be preserved.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "sum_even_series",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "overflow_guard",
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

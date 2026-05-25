@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_023444_array_clamp_nonnegative",
+  "stage": "verify",
+  "input_c": "input/array_clamp_nonnegative.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_023444_array_clamp_nonnegative/original/array_clamp_nonnegative.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_023444_array_clamp_nonnegative.c",
+  "function_name": "array_clamp_nonnegative",
+  "program_sha256": "61b12dc4647f4ed879066e1d3d4c6108b2a5350f6ce86e73fca42650c0a763b4",
+  "semantic_description": "In-place array update over indices 0..n-1. The function scans the input integer array with a single for loop; if an element is negative it writes 0 at the same index, and if an element is nonnegative it leaves that element unchanged. The empty-array case n == 0 skips the loop and preserves the empty full-array predicate. The function mutates the memory owned by IntArray::full(a, n, l) and returns no scalar value.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

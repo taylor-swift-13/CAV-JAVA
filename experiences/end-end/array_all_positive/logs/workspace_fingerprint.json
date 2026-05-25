@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_021145_array_all_positive",
+  "stage": "verify",
+  "input_c": "input/array_all_positive.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_021145_array_all_positive/original/array_all_positive.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_021145_array_all_positive.c",
+  "function_name": "array_all_positive",
+  "program_sha256": "df902e3a0a16a115f2d4a2de604cd1a3f3c462e2e998f38dac29741c684a2f9c",
+  "semantic_description": "array_all_positive scans the input integer array a[0..n) from left to right without modifying memory. It returns 0 immediately when it finds an element l[i] <= 0, and returns 1 after the loop only if every element in the full range 0 <= i < n is positive. The loop may be empty when n == 0; in that case the universal postcondition is vacuous and the function returns 1. The IntArray::full heap predicate is preserved throughout because the function only reads a[i].",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

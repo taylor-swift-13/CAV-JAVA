@@ -1,3 +1,0 @@
-Demo.java:6: verify: JML shift amount is out of expected range
-    return 1 << i;
-             ^

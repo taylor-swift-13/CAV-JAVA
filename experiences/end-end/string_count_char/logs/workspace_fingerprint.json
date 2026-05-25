@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_002212_string_count_char",
+  "stage": "verify",
+  "input_c": "input/string_count_char.c",
+  "input_v": "input/string_count_char.v",
+  "original_c": "output/verify_20260423_002212_string_count_char/original/string_count_char.c",
+  "original_v": "output/verify_20260423_002212_string_count_char/original/string_count_char.v",
+  "annotated_c": "annotated/verify_20260423_002212_string_count_char.c",
+  "function_name": "string_count_char",
+  "program_sha256": "e02b13c2461dac53485956b3d0224021e4ba0d84782915df2bfae7b4be35c1e5",
+  "semantic_description": "The function scans a caller-owned null-terminated character array from index 0 until the first 0 byte, counts how many elements in the nonzero prefix equal the input character c, returns that count, and preserves the full input buffer including the terminator. The loop is an unbounded while loop with an explicit break on the terminator; the empty prefix case returns 0 without modifying memory.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "while_loop",
+    "data_shape": ["string", "array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "termination_by_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

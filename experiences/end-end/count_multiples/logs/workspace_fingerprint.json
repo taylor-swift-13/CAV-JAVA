@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_152433_count_multiples",
+  "stage": "verify",
+  "input_c": "input/count_multiples.c",
+  "input_v": "input/count_multiples.v",
+  "original_c": "output/verify_20260422_152433_count_multiples/original/count_multiples.c",
+  "original_v": "output/verify_20260422_152433_count_multiples/original/count_multiples.v",
+  "annotated_c": "annotated/verify_20260422_152433_count_multiples.c",
+  "function_name": "count_multiples",
+  "program_sha256": "1910ba8d7916bda6d354496373a752587fa09e1704fad74bcf7658261685d15c",
+  "semantic_description": "The target function count_multiples is a scalar-only counting loop. Under preconditions 1 <= n < INT_MAX and 1 <= k, it initializes cnt to 0, iterates i from 1 through n inclusive, increments cnt exactly when i % k == 0, and returns the Coq specification count_multiples_spec n k. The loop may execute at least once because n is positive; it does not read or modify heap memory.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": "scalar_only",
+    "semantic_intent": "count_iterations",
+    "proof_pattern": ["loop_invariant", "pure_arithmetic", "case_split", "termination_by_bound"],
+    "numeric_properties": ["nonnegative_input", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "defined_for_nonnegative_only",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

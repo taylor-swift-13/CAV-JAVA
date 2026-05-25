@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_222028_set_zero",
+  "stage": "verify",
+  "input_c": "input/set_zero.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_222028_set_zero/original/set_zero.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_222028_set_zero.c",
+  "function_name": "set_zero",
+  "program_sha256": "32a1ca074275c738a7f98354485a5801df528899f389e94ef555f9b9f3224751",
+  "semantic_description": "The function set_zero takes a nonnegative length n and an integer array a owning n elements. It runs a for loop from i = 0 up to i < n and writes 0 into each array cell in place. The postcondition states that the resulting array still has length n and every index in [0, n) contains 0. If n is 0, the loop body is skipped and the empty array postcondition is required.",
+  "keywords": {
+    "algorithm_family": "simulation",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

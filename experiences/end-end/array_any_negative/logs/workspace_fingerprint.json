@@ -1,0 +1,39 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_022938_array_any_negative",
+  "stage": "verify",
+  "input_c": "input/array_any_negative.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_022938_array_any_negative/original/array_any_negative.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_022938_array_any_negative.c",
+  "function_name": "array_any_negative",
+  "program_sha256": "27a0357d8c98b82f101e95a5942085984f800b0af082cb771de393ab768cef17",
+  "semantic_description": "Read-only array scan over indices 0 <= i < n. The function returns 1 from inside the loop if it finds an element l[i] < 0; if the loop completes, it returns 0 and must establish that every element in the whole array segment is nonnegative. The loop may execute zero iterations when n == 0 and the function does not modify memory.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "for_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "termination_by_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

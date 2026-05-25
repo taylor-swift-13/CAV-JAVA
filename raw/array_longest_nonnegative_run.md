@@ -2,42 +2,33 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，返回数组中最长连续非负元素段的长度。
+实现一个函数，返回数组中最长连续非负元素段的长度。
 
 约定：
 - `n` 表示数组长度，`n >= 0`。
-- `a` 表示长度至少为 `n` 的整数数组。
+- `a` 指向长度至少为 `n` 的整数数组。
 - 非负元素指 `a[i] >= 0`。
 - 如果数组中没有非负元素，返回 `0`。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `ArrayLongestNonnegativeRun`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
-
-## Java 参考实现
-
-```java
-class ArrayLongestNonnegativeRun {
-    public static int array_longest_nonnegative_run(int n, int[] a) {
-        int best = 0;
-        int current = 0;
-        int i = 0;
-        while (i < n) {
-            if (a[i] >= 0) {
-                current++;
-                if (current > best) {
-                    best = current;
-                }
-            } else {
-                current = 0;
+```c
+int array_longest_nonnegative_run(int n, int *a) {
+    int best = 0;
+    int current = 0;
+    int i = 0;
+    while (i < n) {
+        if (a[i] >= 0) {
+            current++;
+            if (current > best) {
+                best = current;
             }
-            i++;
+        } else {
+            current = 0;
         }
-        return best;
+        i++;
     }
+    return best;
 }
 ```
 

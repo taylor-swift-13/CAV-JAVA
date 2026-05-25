@@ -1,0 +1,38 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_080741_array_scale",
+  "stage": "verify",
+  "input_c": "input/array_scale.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_080741_array_scale/original/array_scale.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_080741_array_scale.c",
+  "function_name": "array_scale",
+  "program_sha256": "483346ec2a336fc5ce7672cc9a27eda53a9931c585c03eee7f6a52c1a4530360",
+  "semantic_description": "array_scale verifies a single for-loop that preserves the input integer array a and writes every output element out[i] to la[i] * k. The contract requires n >= 0, matching input/output list lengths, and an overflow guard for every product. The loop may execute zero times when n == 0; otherwise it updates the output array prefix while leaving the suffix from the original output list until later iterations.",
+  "keywords": {
+    "control_flow": "for_loop",
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "overflow_guard",
+      "int_range",
+      "nonnegative_input"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

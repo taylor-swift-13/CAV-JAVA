@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_030819_string_is_empty",
+  "stage": "verify",
+  "input_c": "input/string_is_empty.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_030819_string_is_empty/original/string_is_empty.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_030819_string_is_empty.c",
+  "function_name": "string_is_empty",
+  "program_sha256": "4caa673b072de5441e06d46a115597056930f9b1061a797b22ee088d2cd8edb0",
+  "semantic_description": "Checks whether the first character of a null-terminated character array is the terminating zero. The contract models the input as a list l of length n followed by a zero terminator, where all characters in l are nonzero. The function performs a single if branch on s[0], returns 1 exactly when n is 0, returns 0 when n is positive, and preserves the character array without modifying memory.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "if",
+    "data_shape": ["string", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["case_split", "heap_reasoning"],
+    "edge_case_behavior": "branch_on_order",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "manual_witness_needed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

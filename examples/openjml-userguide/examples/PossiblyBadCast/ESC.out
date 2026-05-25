@@ -1,4 +1,0 @@
-Demo.java:4: verify: The prover cannot establish an assertion (PossiblyBadCast) in method main: a Object cannot be proved to be a Integer
-    Integer i = (Integer)o;
-                ^
-1 verification failure

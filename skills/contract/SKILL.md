@@ -1,118 +1,55 @@
 ---
-name: java-openjml-contract
-description: Produce Java source with JML contracts from raw task text.
+name: contract
+description: Contract skill，生成验证友好的 `input/<name>.c` / `input/<name>.v`。
 ---
 
-Use this workflow for the Java/OpenJML contract stage.
+Contract 的目标只有一个：把原始题意、原始代码和自然语言描述整理成 Verify 可直接消费的规格输入。
 
-## Pipeline Position
+开始当前任务前，先阅读：
 
-This is stage 1 of the Java/OpenJML workflow.
+- `doc/SCOPE.md`
+- `doc/PERMISSIONS.md`
+- `experiences/general/README.md`
+- `experiences/general/CONTRACT.md`
 
-Input:
+其他文档只在遇到具体阻塞时按需读取。
 
-- `raw/<name>.md`
+## 1. 输入
 
-Output:
+- 原始 C 实现
+- 原始题意或自然语言描述
+- 约束、边界条件、示例
+- 可选的辅助定义草稿
 
-- `input/<name>.java`
+## 2. 输出
+
+- `input/<name>.c`
+- `input/<name>.v`，仅当确实需要额外 Coq 定义
 - `output/contract_<timestamp>_<name>/logs/reasoning.md`
 - `output/contract_<timestamp>_<name>/logs/issues.md`
 - `output/contract_<timestamp>_<name>/logs/metrics.md`
 
-Command shape:
+## 3. 硬规则
 
-```bash
-python3 scripts/run_contract.py raw/<name>.md --function-name <method_or_class>
-```
+- 先写 `logs/reasoning.md`，再写 `input/<name>.c`
+- `input/<name>.c` 只包含目标函数和完整 contract
+- 不要提前写 `Inv`、`Assert`、`which implies`、bridge assert、loop-exit assertion
+- `input/<name>.v` 只放题目专用 Coq 定义；能不用就不用
+- 保持原程序语义不变；若必须改接口，只做验证友好改写
+- 日志必须写在当前 `output/contract_<timestamp>_<name>/logs/`
+- 如果本次任务更新了任何经验文档，`logs/metrics.md` 必须显式列出更新了哪些经验文件；如果没有更新，也要明确写 `Experience updates: none`
 
-The next normal stage is verify. In the pipeline entrypoints, the default flow
-is `contract -> verify`; pass `--eval` to enable the eval critic between them,
-and pass `--audit` later if you also want the verify critic.
+## 4. 最短流程
 
-## Read First
+1. 读原始题意和代码。
+2. 写 `logs/reasoning.md`，说明语义、边界、内存与 Coq 依赖判断。
+3. 生成 `input/<name>.c`。
+4. 判断是否真的需要 `input/<name>.v`。
+5. 写 `logs/issues.md` 和 `logs/metrics.md`。
 
-- `experiences/general/README.md` (experience entry; jump by symptom)
-- `experiences/general/CONTRACT.md`
-- `experiences/general/AUDIT.md`
+## 5. 完成标准
 
-## Search Prior Examples
-
-Before writing the Java file, search completed examples under
-`/home/yangfp/CAV-JAVA/experiences/end-end`.
-
-Use the existing examples as concrete patterns for class layout, JML clause
-style, anti-cheating-safe specifications, and workspace log expectations. Do
-not copy an unrelated example blindly; cite the closest example path in
-`logs/reasoning.md` when one influenced the contract.
-
-Useful commands:
-
-```bash
-find /home/yangfp/CAV-JAVA/experiences/end-end -maxdepth 3 -type f | sort
-rg -n "requires|ensures|assignable|loop_invariant|assert|pure" /home/yangfp/CAV-JAVA/experiences/end-end
-```
-
-## Inputs
-
-- Raw markdown path.
-- Target function or class name.
-- Output Java path.
-- Workspace path.
-
-## Rules
-
-- Write `logs/reasoning.md` before creating or changing the output Java file.
-- Generate a single Java file with Java implementation and JML contract.
-- Include `requires`, `ensures`, and `assignable`.
-- Do not add loop invariants, assertions, assumptions, axioms, suppressions, or
-  unchecked helpers in the contract stage.
-- If a helper is necessary, make it pure, executable, and specified.
-- The spec must be **well-formed under OpenJML**: it must parse and type-check,
-  and it must use only verifier-supported features. Do **not** use the
-  aggregate quantifiers `\num_of`, `\sum`, or `\product`, or any feature OpenJML
-  reports as `NOT IMPLEMENTED` — these compile but make the contract unprovable
-  downstream. Express count/sum results with a `pure` recursive helper instead
-  (see `CONTRACT.md`). The contract stage runs
-  `scripts/check_spec_wellformed.py` and **fails** on parse/type errors or
-  unsupported features. It does **not** require every verification condition to
-  discharge — undischarged `Postcondition`/`Invariant`/`Assert`/loop obligations
-  are expected here and are the verify stage's job.
-- Self-check before finishing:
-  `python3 scripts/check_spec_wellformed.py input/<name>.java`. Exit 0 means
-  well-formed (VCs may remain open); exit 1 means a fatal spec problem you must
-  fix now, not defer to verify.
-- Do **not** record experience yourself. Experience is consolidated once at the
-  very end of the flow by a dedicated unit (`scripts/experience_consolidate.py`).
-  Just write clear `logs/reasoning.md`, `logs/issues.md`, `logs/continue.md`, and
-  `logs/summary.md` — the consolidation unit reads them.
-
-## Iteration / Restart / Resume
-
-The contract runner (`run_contract.py`) drives this stage in a
-budget-driven loop (`scripts/agent_loop.py`):
-
-- Keep iterating in the **same workspace** until the spec passes the
-  anti-cheating scan and the well-formedness gate, or the time budget is
-  exhausted. The loop restarts a fresh round only if you exit early without
-  passing; a round that hits its timeout is a failure and is **not** restarted.
-- On every round before editing, append a fresh section to `logs/continue.md`
-  (never overwrite): why the previous round did not finish, the current blocker,
-  the next step and plan, citing concrete evidence (file:line, the
-  well-formedness / OpenJML message, the spec snippet).
-- At the end of each round write `logs/summary.md`: what you did, the current
-  spec state, where you are stuck — this is what the next round resumes from.
-- When re-entered after the eval critic overturned the spec, the findings are in
-  the `## overturn` section of `logs/continue.md`; read it and fix exactly that.
-
-## Completion
-
-- `input/<name>.java` exists.
-- `logs/reasoning.md`, `logs/issues.md`, and `logs/metrics.md` exist.
-- `scripts/check_jml_cheating.py input/<name>.java` passes.
-- `scripts/check_spec_wellformed.py input/<name>.java` exits 0 (spec parses,
-  type-checks, and uses only verifier-supported features; undischarged VCs are
-  allowed).
-- `logs/metrics.md` ends with `Final Result: Success` only when the generated
-  Java file exists, the anti-cheating scan passes, and the well-formedness gate
-  passes. (Experience is consolidated separately at the end of the flow.)
+- `input/<name>.c` 前后条件完整
+- 没有混入 Verify 阶段注释
+- `.v` 只包含额外逻辑定义
+- `reasoning.md`、`issues.md`、`metrics.md` 已写完

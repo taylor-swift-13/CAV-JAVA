@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入两个非负整数 `a` 和 `b`，返回它们的最大公约数。
+实现一个函数，输入两个非负整数 `a` 和 `b`，返回它们的最大公约数。
 
 约定：
 
@@ -11,27 +11,19 @@
 - `a` 和 `b` 不同时为 `0`
 - 使用 Euclid 算法
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `GcdIterative`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int gcd_iterative(int a, int b) {
+    int r;
 
-## Java 参考实现
-
-```java
-class GcdIterative {
-    public static int gcd_iterative(int a, int b) {
-        int r;
-
-        while (b != 0) {
-            r = a % b;
-            a = b;
-            b = r;
-        }
-
-        return a;
+    while (b != 0) {
+        r = a % b;
+        a = b;
+        b = r;
     }
+
+    return a;
 }
 ```
 

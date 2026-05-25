@@ -1,0 +1,32 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_041209_array_first",
+  "stage": "verify",
+  "input_c": "input/array_first.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_041209_array_first/original/array_first.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_041209_array_first.c",
+  "function_name": "array_first",
+  "program_sha256": "bb2ca0f5c9940a4e7057319e07b7d5488151a6efcf5e4f7de3360b528f9be746",
+  "semantic_description": "The function reads and returns the first element of an input integer array. The precondition requires n >= 1, the logical list length equals n, and the caller retains full ownership of the array. The implementation is straight-line code with no branches or loops, does not modify memory, and preserves the input array unchanged while returning l[0].",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "straight_line",
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "heap_reasoning",
+      "pure_arithmetic"
+    ],
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

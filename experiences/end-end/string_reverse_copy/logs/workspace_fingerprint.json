@@ -1,0 +1,42 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_041041_string_reverse_copy",
+  "stage": "verify",
+  "input_c": "input/string_reverse_copy.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_041041_string_reverse_copy/original/string_reverse_copy.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_041041_string_reverse_copy.c",
+  "function_name": "string_reverse_copy",
+  "program_sha256": "ee7311bf342ff6edcf472171182427bf3079d33d0f8ddb5924f4ff2f0e705251",
+  "semantic_description": "Copies a caller-provided source string payload of length n into a destination buffer in reverse order, then writes a terminating zero at dst[n]. The source buffer contains l followed by zero and must be preserved; the destination buffer initially has length n+1 and is fully overwritten to rev(l) followed by zero. The key control structure is a for loop over i from 0 to n-1 that writes dst[i] from src[n-1-i], with an empty loop possible when n is zero.",
+  "keywords": {
+    "algorithm_family": "two_pointers",
+    "control_flow": "for_loop",
+    "data_shape": [
+      "string",
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "preserve_input",
+      "in_place_update"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

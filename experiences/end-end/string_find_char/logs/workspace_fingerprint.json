@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_024227_string_find_char",
+  "stage": "verify",
+  "input_c": "input/string_find_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_024227_string_find_char/original/string_find_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_024227_string_find_char.c",
+  "function_name": "string_find_char",
+  "program_sha256": "35c7ddd5de10d8ae0af45fcdaf3d64d6d77e1f37e129c3b37cedb7ed234f374c",
+  "semantic_description": "Read-only string scan over a CharArray-backed null-terminated buffer. The function increments i from 0 until it either sees the terminator 0, in which case it returns -1 and must prove no character in the logical prefix l equals c, or sees s[i] == c, in which case it returns the first matching index and must prove all earlier logical characters differ from c. The function preserves the input character array and has an empty-loop/zero-length string edge case.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": "while_loop",
+    "data_shape": ["string", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "termination_by_bound", "range_bound", "heap_reasoning"],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

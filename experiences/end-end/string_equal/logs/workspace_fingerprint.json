@@ -1,0 +1,43 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_021759_string_equal",
+  "stage": "verify",
+  "input_c": "input/string_equal.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_021759_string_equal/original/string_equal.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_021759_string_equal.c",
+  "function_name": "string_equal",
+  "program_sha256": "415754e4631d8ff9d48ff3544118d30e85ead557a4d0be703e3371eab4b502dc",
+  "semantic_description": "string_equal scans two null-terminated character arrays from index 0, stops when either string terminator is seen or a mismatching character is found, returns 1 exactly when both strings terminate at the same index after all previous characters matched, and returns 0 when lengths differ or some shared index has different characters. The function only reads the two input buffers and preserves both CharArray resources unchanged. The key control structure is an unbounded while loop with early breaks and an early mismatch return; the empty-string case is handled by entering the loop once and breaking immediately on a[0] == 0.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "string",
+      "pointer",
+      "array"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

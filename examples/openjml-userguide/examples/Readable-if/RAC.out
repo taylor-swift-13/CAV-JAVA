@@ -1,6 +1,0 @@
-Demo.java:6: verify: JML readable clause is false for variable Demo.i
-    return i;
-           ^
-Demo.java:4: verify: Associated declaration: Demo.java:6:
-  //@ readable i if j > 0;
-      ^

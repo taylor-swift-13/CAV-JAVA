@@ -1,0 +1,32 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_014304_array_add",
+  "stage": "verify",
+  "input_c": "input/array_add.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_014304_array_add/original/array_add.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_014304_array_add.c",
+  "function_name": "array_add",
+  "program_sha256": "c2d2006ae177defd7aebe80f4af3971f64835d528bf2fbaf9ebd002cf2e59562",
+  "semantic_description": "The function array_add takes length n and three integer arrays a, b, and out. It runs one for_loop from i = 0 to i < n, reads a[i] and b[i], and writes out[i] = a[i] + b[i]. The contract requires n >= 0, all three logical lists have length n, and each elementwise sum fits in signed int range. On return, a and b are unchanged, while out contains a length-n list whose every index equals the corresponding sum. If n is 0, the loop body is skipped and the postcondition is satisfied by the original empty out list.",
+  "keywords": {
+    "algorithm_family": "prefix_sum",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "overflow_guard",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

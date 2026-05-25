@@ -1,0 +1,42 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_062136_array_negate",
+  "stage": "verify",
+  "input_c": "input/array_negate.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_062136_array_negate/original/array_negate.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_062136_array_negate.c",
+  "function_name": "array_negate",
+  "program_sha256": "286ac85d61028a96286ce8a01c56c8d0338f7dc43d40863aba1b76a6941fa24d",
+  "semantic_description": "array_negate iterates i from 0 to n-1 over an input IntArray a and an output IntArray out. It preserves the input array contents la, writes each output element to the pointwise integer negation -la[i], allows the loop to execute zero times when n == 0, and relies on the contract overflow guard that every negated input element is within signed 32-bit int range.",
+  "keywords": {
+    "algorithm_family": "identity",
+    "control_flow": "for_loop",
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "preserve_input",
+      "in_place_update"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "overflow_guard",
+      "int_range",
+      "nonnegative_input"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

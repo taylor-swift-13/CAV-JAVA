@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_045045_array_has_adjacent_equal",
+  "stage": "verify",
+  "input_c": "input/array_has_adjacent_equal.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_045045_array_has_adjacent_equal/original/array_has_adjacent_equal.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_045045_array_has_adjacent_equal.c",
+  "function_name": "array_has_adjacent_equal",
+  "program_sha256": "9c75fd1eb05763ea2cd8d8b975a0c8a3b6ccae581490d30cc449e2501dcad6e1",
+  "semantic_description": "The function scans an integer array from index 1 upward and returns 1 as soon as it finds adjacent equal elements a[i] == a[i - 1]. If the loop finishes, it returns 0 and establishes that every adjacent pair in the valid range 1 <= i < n is unequal. The function only reads the input array and preserves IntArray::full(a, n, l). For n <= 1 the loop body is skipped and the universal no-adjacent-equal postcondition is vacuous.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

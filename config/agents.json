@@ -1,5 +1,5 @@
 {
-  "_comment": "Agent/model config for the Java/OpenJML pipeline. CLI flags override these; these override built-in defaults. Edit model names here instead of passing --model/--agent/--gen-model every run. Frequently-changed things (target, --only, budgets, --dry-run) stay as CLI flags.",
+  "_comment": "Agent/model config for the C verification pipeline. CLI flags override these; these override built-in defaults. Edit model names here instead of passing --model/--agent every run. Frequently-changed things (target, --only, budgets, --dry-run) stay as CLI flags.",
   "agent": "claude",
   "reasoning_effort": "medium",
   "bins": {

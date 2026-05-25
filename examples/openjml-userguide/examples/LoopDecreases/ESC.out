@@ -1,4 +1,0 @@
-Demo.java:4: verify: The prover cannot establish an assertion (LoopDecreases) in method m
-    //@ loop_decreases i; // Does not decrease
-        ^
-1 verification failure

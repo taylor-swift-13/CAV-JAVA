@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compatibility wrapper for the renamed pipeline runner."""
+"""Compatibility wrapper for the renamed C pipeline runner."""
 from run_pipeline import main
 
 

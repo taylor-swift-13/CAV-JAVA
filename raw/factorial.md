@@ -13,26 +13,18 @@
 -  0 <= `n` <= 10。
 - 参考实现假设结果不会超出 `int` 的表示范围。
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `Factorial`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int fac(int n) {
+    int i;
+    int res = 1;
 
-## Java 参考实现
-
-```java
-class Factorial {
-    public static int fac(int n) {
-        int i;
-        int res = 1;
-
-        for (i = 1; i <= n; ++i) {
-            res = res * i;
-        }
-
-        return res;
+    for (i = 1; i <= n; ++i) {
+        res = res * i;
     }
+
+    return res;
 }
 ```
 

@@ -1,0 +1,42 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_212943_reverse_copy",
+  "stage": "verify",
+  "input_c": "input/reverse_copy.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_212943_reverse_copy/original/reverse_copy.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_212943_reverse_copy.c",
+  "function_name": "reverse_copy",
+  "program_sha256": "13f273b3c01da9dc1e0b7fda10ada663f6362234f8d5c5f981f6bcee7aeca710",
+  "semantic_description": "reverse_copy iterates i from 0 to n - 1 and copies src[n - 1 - i] into dst[i]. The contract requires nonnegative n and full integer arrays src and dst of length n; src must remain unchanged and dst must contain rev(ls) after the loop. The loop may execute zero times when n is 0, and the function mutates only the caller-provided dst array.",
+  "keywords": {
+    "algorithm_family": "two_pointers",
+    "control_flow": "for_loop",
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "preserve_input",
+      "in_place_update"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "manual_witness_needed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_052427_two_sum_sorted",
+  "stage": "verify",
+  "input_c": "input/two_sum_sorted.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_052427_two_sum_sorted/original/two_sum_sorted.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_052427_two_sum_sorted.c",
+  "function_name": "two_sum_sorted",
+  "program_sha256": "ac09bd70f45e47b2bff04a24fe5194ec28233c300d146dcdc2d6a5f888b09226",
+  "semantic_description": "Verifies a read-only two-pointer search over a sorted integer array. The function keeps left and right indices, compares a[left] + a[right] with target, returns 1 when an in-range pair summing to target is found, and returns 0 only after the search interval is exhausted. The contract requires sorted input, integer-range safety for all pair sums, and preservation of the input array memory.",
+  "keywords": {
+    "algorithm_family": ["search", "two_pointers"],
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "monotonicity", "heap_reasoning"],
+    "numeric_properties": ["int_range", "overflow_guard"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

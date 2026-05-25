@@ -1,0 +1,33 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_145616_count_divisors",
+  "stage": "verify",
+  "input_c": "input/count_divisors.c",
+  "input_v": "input/count_divisors.v",
+  "original_c": "output/verify_20260422_145616_count_divisors/original/count_divisors.c",
+  "original_v": "output/verify_20260422_145616_count_divisors/original/count_divisors.v",
+  "annotated_c": "annotated/verify_20260422_145616_count_divisors.c",
+  "function_name": "count_divisors",
+  "program_sha256": "3160d09154fbfcb3217d871ec44ada334af22ce998e6dd3ffba61bbaca384912",
+  "semantic_description": "The function count_divisors takes a positive scalar integer n, initializes cnt to zero, then runs a for loop over d from 1 through n. On each iteration it increments cnt exactly when n % d == 0, and returns the number of divisors of n as defined by count_divisors_spec in the companion Coq file. The function uses only scalar local variables, performs no heap allocation or memory writes, and the loop is skipped only if the positive-input precondition were violated, which the contract excludes.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "for_loop",
+    "data_shape": "scalar_only",
+    "semantic_intent": "count_iterations",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "case_split",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "defined_for_nonnegative_only"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

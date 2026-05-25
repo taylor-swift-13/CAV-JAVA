@@ -1,0 +1,42 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_093407_binary_search_last",
+  "stage": "verify",
+  "input_c": "input/binary_search_last.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_093407_binary_search_last/original/binary_search_last.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_093407_binary_search_last.c",
+  "function_name": "binary_search_last",
+  "program_sha256": "612590f985299cf7fad8f3724d208603d538bd9dbc9f614ebd4674e2f9a7d82a",
+  "semantic_description": "Verifies binary_search_last: an upper-bound style while-loop binary search over a nondecreasing IntArray. The loop advances left when a[mid] <= target and lowers right otherwise; after convergence it checks left > 0 and a[left - 1] == target to return the last index whose value equals target, or returns -1 when the sorted array contains no target. The function only reads the input array and preserves IntArray::full(a, n, l). Boundary behavior includes n == 0, skipped final successful branch when left == 0, and returning -1 when all elements differ from target.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "monotonicity",
+      "range_bound"
+    ],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": [
+      "branch_on_order",
+      "empty_loop_possible"
+    ],
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

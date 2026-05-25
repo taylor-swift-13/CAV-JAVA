@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_020645_array_all_less_than_k",
+  "stage": "verify",
+  "input_c": "input/array_all_less_than_k.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_020645_array_all_less_than_k/original/array_all_less_than_k.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_020645_array_all_less_than_k.c",
+  "function_name": "array_all_less_than_k",
+  "program_sha256": "5c7e6b4c5c1c799882c136a85e17cba361507f75ff0395c7ecdb5bb2f946af3d",
+  "semantic_description": "Read-only linear scan over an integer array of length n. The function returns 0 immediately if it finds an index i with a[i] >= k; otherwise the for loop completes and returns 1, establishing that every element of the input list is less than k. The loop may be empty when n is 0. The array memory is preserved and no element is modified.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,38 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_170350_gcd_iterative",
+  "stage": "verify",
+  "input_c": "input/gcd_iterative.c",
+  "input_v": "input/gcd_iterative.v",
+  "original_c": "output/verify_20260422_170350_gcd_iterative/original/gcd_iterative.c",
+  "original_v": "output/verify_20260422_170350_gcd_iterative/original/gcd_iterative.v",
+  "annotated_c": "annotated/verify_20260422_170350_gcd_iterative.c",
+  "function_name": "gcd_iterative",
+  "program_sha256": "7a0ff9ec4943239d58eeb58d6c5525b79b21163e53f0f6143bee47c7dc691a05",
+  "semantic_description": "Verifies an iterative Euclidean algorithm over scalar integers. The function receives nonnegative a and b with a + b strictly positive, repeatedly replaces (a, b) by (b, a mod b) while b is nonzero, and returns the final a. The expected relation is that the return value equals Z.gcd of the original inputs. The loop is a while loop, the empty-loop case is possible when the original b is zero, and the function does not read or modify heap memory.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "while_loop",
+    "data_shape": "scalar_only",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "case_split"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": [
+      "defined_for_nonnegative_only",
+      "empty_loop_possible"
+    ],
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed",
+      "manual_witness_needed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_071205_array_remove_value_to_output",
+  "stage": "verify",
+  "input_c": "input/array_remove_value_to_output.c",
+  "input_v": "input/array_remove_value_to_output.v",
+  "original_c": "output/verify_20260422_071205_array_remove_value_to_output/original/array_remove_value_to_output.c",
+  "original_v": "output/verify_20260422_071205_array_remove_value_to_output/original/array_remove_value_to_output.v",
+  "annotated_c": "annotated/verify_20260422_071205_array_remove_value_to_output.c",
+  "function_name": "array_remove_value_to_output",
+  "program_sha256": "a9e115dee526adc6cadd64b2a66a2cf8bf77cd1650702d3b3c1a8ebf3225246f",
+  "semantic_description": "Scans input array a[0..n) with a while loop, copies each element not equal to k into the caller-provided out buffer at the next write position, preserves the input array, and returns the number of copied elements. For n = 0 the loop is skipped, the returned length is 0, and the output array remains owned with an arbitrary tail of length n. The function writes only to the out array prefix corresponding to array_remove_value_to_output_spec(la, k).",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "while_loop",
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": ["preserve_input", "in_place_update"],
+    "proof_pattern": ["loop_invariant", "case_split", "heap_reasoning", "range_bound"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

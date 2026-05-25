@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-from __future__ import annotations
-
 import argparse
 import datetime as dt
-import json
 import os
 from pathlib import Path
 import shutil
@@ -12,9 +9,9 @@ import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import agent_loop
 import agent_config
 import agent_metrics
+import check_spec_wellformed
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -44,126 +41,122 @@ def ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def emit(message: str) -> None:
+def emit_log(message: str) -> None:
     print(f"[contract] {message}", flush=True)
 
 
 def build_codex_env(logs_dir: Path) -> dict[str, str]:
     env = os.environ.copy()
-    for name, dirname in {
-        "XDG_CACHE_HOME": ".codex_cache",
-        "XDG_STATE_HOME": ".state",
-        "XDG_DATA_HOME": ".data",
-        "XDG_CONFIG_HOME": ".config",
-        "TMPDIR": ".tmp",
-        "TMP": ".tmp",
-        "TEMP": ".tmp",
-    }.items():
-        path = logs_dir / dirname
-        path.mkdir(parents=True, exist_ok=True)
-        env[name] = str(path)
+    cache_dir = logs_dir / ".codex_cache"
+    state_dir = logs_dir / ".state"
+    data_dir = logs_dir / ".data"
+    config_dir = logs_dir / ".config"
+    tmp_dir = logs_dir / ".tmp"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
+    config_dir.mkdir(parents=True, exist_ok=True)
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    env["XDG_CACHE_HOME"] = str(cache_dir)
+    env["XDG_STATE_HOME"] = str(state_dir)
+    env["XDG_DATA_HOME"] = str(data_dir)
+    env["XDG_CONFIG_HOME"] = str(config_dir)
+    env["TMPDIR"] = str(tmp_dir)
+    env["TMP"] = str(tmp_dir)
+    env["TEMP"] = str(tmp_dir)
     return env
 
 
-def codex_supports_reasoning_effort(codex_bin: str, env: dict[str, str]) -> bool:
+def codex_supports_reasoning_effort(codex_bin: str, cwd: Path, env: dict[str, str]) -> bool:
     try:
         proc = subprocess.run(
             [codex_bin, "exec", "--help"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            cwd=REPO_ROOT,
+            cwd=cwd,
             env=env,
             timeout=10,
         )
-    except (OSError, subprocess.SubprocessError):
+    except (subprocess.SubprocessError, OSError):
         return False
     return "--reasoning-effort" in proc.stdout
 
 
-def filter_stderr(path: Path) -> None:
-    if not path.exists():
+def filter_stderr_in_place(stderr_log: Path) -> None:
+    if not stderr_log.exists():
         return
-    kept = []
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-        if any(pattern in line for pattern in NOISE_PATTERNS):
+    clean_lines = []
+    for raw_line in stderr_log.read_text(encoding="utf-8", errors="replace").splitlines():
+        if any(pattern in raw_line for pattern in NOISE_PATTERNS):
             continue
-        kept.append(line)
-    path.write_text("\n".join(kept) + ("\n" if kept else ""), encoding="utf-8")
+        clean_lines.append(raw_line)
+    stderr_log.write_text("\n".join(clean_lines) + ("\n" if clean_lines else ""), encoding="utf-8")
+
+
+def metrics_path(workspace_path: Path) -> Path:
+    return workspace_path / "logs" / "metrics.md"
+
+
+def issues_path(workspace_path: Path) -> Path:
+    return workspace_path / "logs" / "issues.md"
+
+
+def reasoning_path(workspace_path: Path) -> Path:
+    return workspace_path / "logs" / "reasoning.md"
+
+
+def bootstrap_workspace(workspace_path: Path, raw_path: Path) -> dict[str, Path]:
+    logs_dir = workspace_path / "logs"
+    raw_dir = workspace_path / "raw"
+    workspace_input_dir = workspace_path / "input"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    workspace_input_dir.mkdir(parents=True, exist_ok=True)
+
+    raw_copy = raw_dir / raw_path.name
+    shutil.copy2(raw_path, raw_copy)
+    return {
+        "logs_dir": logs_dir,
+        "raw_dir": raw_dir,
+        "workspace_input_dir": workspace_input_dir,
+        "raw_copy": raw_copy,
+    }
 
 
 def build_prompt(
-    skill: Path,
-    raw: Path,
+    skill_path: Path,
+    raw_path: Path,
+    workspace_path: Path,
+    target_c_path: Path,
+    target_v_path: Path,
     function_name: str,
-    workspace: Path,
-    target_java: Path,
-    attempt: int,
-    restart_context: str | None,
+    restart_context: str | None = None,
 ) -> str:
-    logs = workspace / "logs"
-    if attempt <= 1 and not restart_context:
-        intro = "Start the normal Java/OpenJML contract workflow for this task."
-    elif restart_context:
-        intro = (
-            "Re-entry: a downstream check overturned a previous result. Read the "
-            f"overturn section in `{logs / 'continue.md'}` and the cited findings "
-            "first, then fix exactly that problem."
-        )
-    else:
-        intro = (
-            "Retry in the same workspace. Do not restart from scratch. Read the "
-            f"existing logs (`{logs / 'issues.md'}`, `{logs / 'reasoning.md'}`, "
-            f"`{logs / 'wellformed_classification.md'}`, latest `codex_last_message_*`) "
-            "and continue from the current blocker."
+    restart = ""
+    if restart_context:
+        restart = (
+            "\nThis is a RE-RUN: a downstream eval critic rejected the previous "
+            "contract. Address its findings before re-emitting the contract.\n\n"
+            "Critic findings:\n" + restart_context.rstrip() + "\n"
         )
     return f"""Use this skill as the complete workflow:
-{skill}
-
-{intro}
+{skill_path}
 
 Inputs:
-- Raw markdown: `{raw}`
-- Target function or class: `{function_name}`
-- Workspace: `{workspace}`
-- Output Java: `{target_java}`
-
-Iteration rules:
-- Keep iterating in this same workspace until the spec passes the
-  well-formedness gate and anti-cheating scan, or the time budget is exhausted.
-- On every round, before editing, append a fresh section to `{logs / 'continue.md'}`
-  (never overwrite): why the previous round did not finish, the concrete blocker
-  now, the next step, and the plan, citing concrete evidence (file:line, the
-  OpenJML / well-formedness message, the spec snippet).
-- At the end of each round, write `{logs / 'summary.md'}`: what you did, the
-  current spec state, and where you are stuck (used to resume on restart).
-- Preserve correct work; only change what the current blocker needs.
-
-Repository rules:
-- This is Java/OpenJML, not C/Coq Verify.
-- Before writing output, search `/home/yangfp/CAV-JAVA/experiences/end-end` for completed examples and reuse relevant patterns.
-- Record any relevant completed example path in `{logs / 'reasoning.md'}`.
-- The spec must be well-formed: no `\\num_of`/`\\sum`/`\\product` or any
-  `NOT IMPLEMENTED` feature. Use a `pure` recursive helper for count/sum results.
-- Write only Java/JML contract output in the contract stage.
-- Do not use assume, axiom, skipesc, nowarn, native, or unchecked helpers.
-- Do not record experience yourself; experience is consolidated once at the end
-  of the flow by a dedicated unit.
-- Write logs under `{logs}`.
-"""
-
-
-def write_placeholder_logs(logs_dir: Path, stage: str, detail: str) -> None:
-    (logs_dir / "reasoning.md").write_text(f"# {stage.title()} Reasoning\n\n{detail}\n", encoding="utf-8")
-    (logs_dir / "issues.md").write_text(f"# {stage.title()} Issues\n\nNo issues recorded yet.\n", encoding="utf-8")
+- Raw markdown: `{raw_path}`
+- Target function: `{function_name}`
+- Workspace: `{workspace_path}`
+- Output C: `{target_c_path}`
+- Optional output V: `{target_v_path}`
+{restart}"""
 
 
 def write_metrics(
     path: Path,
     *,
     status: str,
-    attempts: int,
-    last_codex_exit: int,
+    exit_code: int,
     start_iso: str,
     end_iso: str,
     wall_seconds: float,
@@ -173,71 +166,116 @@ def write_metrics(
     stdout_jsonl: Path,
     stderr_log: Path,
     last_message_path: Path,
-    target_java: Path,
+    target_c: Path,
+    target_v: Path,
     usage: dict[str, int] | None,
-    scanner_exit: int | None,
-    wellformed_exit: int | None,
     dry_run: bool,
+    wellformed: str = "not_run",
+    wellformed_exit: int | None = None,
 ) -> None:
     lines = [
         "# Contract Metrics",
         "",
-        f"- Stage: `contract`",
+        "- Stage: `contract`",
         f"- Status: `{status}`",
         f"- Dry run: `{str(dry_run).lower()}`",
-        f"- Attempts: `{attempts}`",
-        f"- Last Codex exit code: `{last_codex_exit}`",
+        f"- Exit code: `{exit_code}`",
         f"- Start time: `{start_iso}`",
         f"- End time: `{end_iso}`",
         f"- Wall-clock time (seconds): `{wall_seconds:.2f}`",
         f"- Model: `{model}`",
         f"- Reasoning effort: `{reasoning_effort}`",
-        f"- Output Java: `{target_java}`",
-        f"- Anti-cheating scanner exit code: `{scanner_exit if scanner_exit is not None else 'not_run'}`",
-        f"- Spec well-formedness gate exit code: `{wellformed_exit if wellformed_exit is not None else 'not_run'}`",
+        f"- Output C: `{target_c}`",
+        f"- Output V: `{target_v if target_v.exists() else '<not created>'}`",
+        f"- Spec well-formedness gate: `{wellformed}` (symexec exit `{wellformed_exit if wellformed_exit is not None else 'n/a'}`)",
         f"- Prompt file: `{prompt_path}`",
-        f"- Codex stdout JSONL: `{stdout_jsonl}`",
-        f"- Codex stderr log: `{stderr_log}`",
-        f"- Codex last message: `{last_message_path}`",
+        f"- Agent stdout: `{stdout_jsonl}`",
+        f"- Agent stderr: `{stderr_log}`",
+        f"- Agent last message: `{last_message_path}`",
     ]
     lines.extend(agent_metrics.usage_lines(
         usage, prompt_path=prompt_path, last_message_path=last_message_path))
-    lines.extend(["- Experience: consolidated at end of flow", f"Final Result: {status}"])
+    lines.extend(["- Experience updates: none", f"Final Result: {status}"])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def update_issues_on_failure(issues_md: Path, stage: str, exit_code: int, stderr_log: Path, detail: str | None = None) -> None:
+    issues_md.parent.mkdir(parents=True, exist_ok=True)
+    if issues_md.exists():
+        existing = issues_md.read_text(encoding="utf-8").rstrip() + "\n\n"
+    else:
+        existing = "# Contract Issues\n\n"
+    block = (
+        "## External Codex Failure\n\n"
+        f"- Stage: `{stage}`\n"
+        f"- Exit code: `{exit_code}`\n"
+        f"- Stderr log: `{stderr_log}`\n"
+    )
+    if detail:
+        block += f"- Detail: `{detail}`\n"
+    issues_md.write_text(existing + block, encoding="utf-8")
+
+
+def ensure_reasoning_placeholder(reasoning_md: Path, stage: str, detail: str | None = None) -> None:
+    if reasoning_md.exists():
+        return
+    lines = [
+        "# Contract Reasoning",
+        "",
+        "## Unavailable",
+        "",
+        f"- This file was not produced by the contract run because stage `{stage}` failed before reasoning was written.",
+    ]
+    if detail:
+        lines.append(f"- Failure detail: `{detail}`")
+    reasoning_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def snapshot_generated_inputs(workspace_path: Path, input_c: Path, input_v: Path) -> None:
+    generated_input_dir = workspace_path / "input"
+    generated_input_dir.mkdir(parents=True, exist_ok=True)
+    if input_c.exists():
+        shutil.copy2(input_c, generated_input_dir / input_c.name)
+    if input_v.exists():
+        shutil.copy2(input_v, generated_input_dir / input_v.name)
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run Codex for Java/OpenJML contract generation.")
-    parser.add_argument("raw_md", help="Path to raw markdown task.")
-    parser.add_argument("--function-name", required=True, help="Target method or class name.")
-    parser.add_argument("--skill", default=str(DEFAULT_SKILL), help="Path to contract skill.")
-    parser.add_argument("--workspace-name", help="Workspace/output stem. Defaults to raw filename stem.")
-    parser.add_argument("--timestamp", help="Explicit timestamp. Defaults to current local time.")
+    parser = argparse.ArgumentParser(description="Run Codex externally to produce contract-stage inputs from raw markdown.")
+    parser.add_argument("input_md", help="Path to raw markdown input, relative to repo root or absolute.")
+    parser.add_argument("function_name_positional", nargs="?", help="Optional target function name. Kept for CLI compatibility.")
+    parser.add_argument("--function-name", help="Explicit target function name. Defaults to markdown stem.")
+    parser.add_argument("--skill", default=str(DEFAULT_SKILL), help="Path to contract skill markdown.")
+    parser.add_argument("--workspace-name", help="Explicit workspace stem; defaults to markdown stem.")
+    parser.add_argument("--timestamp", help="Explicit contract timestamp; defaults to current local time.")
     parser.add_argument("--config", default=None, help="Path to agents.json config.")
     parser.add_argument("--agent", choices=["codex", "claude"], default=None)
-    parser.add_argument("--model", default=None,
-                        help="Model. Defaults to gpt-5.4 (codex) or sonnet (claude).")
-    parser.add_argument("--reasoning-effort", default=None)
-    parser.add_argument("--codex-bin", default=None)
-    parser.add_argument("--claude-bin", default=None)
-    parser.add_argument("--timeout-seconds", type=int, default=1800,
-                        help="Total wall-clock budget for this contract invocation.")
-    parser.add_argument("--restart-from", help="Path to a critic findings file injected as restart context.")
-    parser.add_argument("--resume-workspace", help="Reuse an existing contract workspace instead of creating one.")
-    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--model", default=None, help="Agent model.")
+    parser.add_argument("--reasoning-effort", default=None, help="Agent reasoning effort.")
+    parser.add_argument("--dry-run", action="store_true", help="Prepare workspace and prompt, but do not invoke Codex.")
+    parser.add_argument("--codex-bin", default=None, help="Codex CLI binary.")
+    parser.add_argument("--claude-bin", default=None, help="Claude CLI binary.")
+    parser.add_argument("--timeout-seconds", type=int, default=300, help="Kill the external agent run if it exceeds this wall-clock timeout.")
+    parser.add_argument("--restart-context-file", default=None, help="File whose content (e.g. eval critic findings) is injected into the prompt on a re-run.")
     return parser
 
 
 def main() -> int:
-    args = build_parser().parse_args()
-    raw_path = Path(args.raw_md)
+    parser = build_parser()
+    args = parser.parse_args()
+
+    raw_path = Path(args.input_md)
     if not raw_path.is_absolute():
         raw_path = (REPO_ROOT / raw_path).resolve()
     skill_path = Path(args.skill)
     if not skill_path.is_absolute():
         skill_path = (REPO_ROOT / skill_path).resolve()
+
     if not raw_path.exists():
-        print(f"raw markdown not found: {raw_path}", file=sys.stderr)
+        print(f"input markdown not found: {raw_path}", file=sys.stderr)
+        return 2
+    if raw_path.suffix != ".md":
+        print(f"input markdown must be a .md file: {raw_path}", file=sys.stderr)
         return 2
     if not skill_path.exists():
         print(f"skill file not found: {skill_path}", file=sys.stderr)
@@ -245,161 +283,213 @@ def main() -> int:
 
     cfg = agent_config.load(args.config)
     agent = args.agent or cfg.agent("codex")
-    model = args.model or cfg.solver_model(agent, DEFAULT_CLAUDE_MODEL if agent == "claude" else DEFAULT_MODEL)
+    model = args.model or cfg.default_model(agent, DEFAULT_CLAUDE_MODEL if agent == "claude" else DEFAULT_MODEL)
     reasoning_effort = args.reasoning_effort or cfg.reasoning_effort(DEFAULT_REASONING_EFFORT)
     codex_bin = args.codex_bin or cfg.bin("codex", "codex")
     claude_bin = args.claude_bin or cfg.bin("claude", "claude")
 
-    stem = args.workspace_name or raw_path.stem
-    timestamp = args.timestamp or timestamp_now()
-    if args.resume_workspace:
-        workspace = Path(args.resume_workspace).resolve()
-    else:
-        workspace = OUTPUT_ROOT / f"contract_{timestamp}_{stem}"
-    logs_dir = workspace / "logs"
-    raw_dir = workspace / "raw"
-    INPUT_ROOT.mkdir(parents=True, exist_ok=True)
-    logs_dir.mkdir(parents=True, exist_ok=True)
-    raw_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(raw_path, raw_dir / raw_path.name)
+    workspace_stem = args.workspace_name or raw_path.stem
+    workspace_timestamp = args.timestamp or timestamp_now()
+    workspace_path = OUTPUT_ROOT / f"contract_{workspace_timestamp}_{workspace_stem}"
+    bootstrap_workspace(workspace_path, raw_path)
+    emit_log(f"workspace={workspace_path}")
 
-    target_java = INPUT_ROOT / f"{stem}.java"
+    function_name = args.function_name or args.function_name_positional or raw_path.stem
+    target_c_path = INPUT_ROOT / f"{raw_path.stem}.c"
+    target_v_path = INPUT_ROOT / f"{raw_path.stem}.v"
+    emit_log(f"input_md={raw_path}")
+    emit_log(f"function_name={function_name}")
+    emit_log(f"target_c={target_c_path}")
+    emit_log(f"target_v={target_v_path}")
+
+    logs_dir = workspace_path / "logs"
+    codex_env = build_codex_env(logs_dir)
+    reasoning_effort_supported = codex_supports_reasoning_effort(codex_bin, REPO_ROOT, codex_env)
+    emit_log(f"agent={agent}")
+    emit_log(f"model={model}")
+    emit_log(f"reasoning_effort={reasoning_effort}")
+    emit_log(f"reasoning_effort_supported={reasoning_effort_supported}")
+    run_label = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
+    prompt_path = logs_dir / f"codex_prompt_{run_label}.txt"
+    stdout_jsonl = logs_dir / f"codex_stdout_{run_label}.jsonl"
+    stderr_log = logs_dir / f"codex_stderr_{run_label}.log"
+    last_message_path = logs_dir / f"codex_last_message_{run_label}.txt"
+
     restart_context = None
-    if args.restart_from:
-        rf = Path(args.restart_from)
-        if rf.exists():
-            restart_context = (
-                f"Findings injected from `{rf}`:\n\n"
-                + rf.read_text(encoding="utf-8", errors="replace")
-            )
-
-    emit(f"workspace={workspace}")
-    emit(f"target_java={target_java}")
-
-    start = time.time()
-    start_iso = iso_now()
-
-    # Track per-round artifacts so write_metrics points at the last round.
-    state: dict[str, object] = {
-        "scanner_exit": None,
-        "wellformed_exit": None,
-        "last_codex_exit": 0,
-        "prompt_path": None,
-        "stdout_jsonl": None,
-        "stderr_log": None,
-        "last_message_path": None,
-        "usage": None,  # accumulated across all rounds
-    }
+    if args.restart_context_file:
+        rc_path = Path(args.restart_context_file)
+        if rc_path.exists():
+            restart_context = rc_path.read_text(encoding="utf-8", errors="replace")
+    prompt = build_prompt(
+        skill_path,
+        raw_path,
+        workspace_path,
+        target_c_path,
+        target_v_path,
+        function_name,
+        restart_context,
+    )
+    ensure_parent(prompt_path)
+    prompt_path.write_text(prompt, encoding="utf-8")
 
     if args.dry_run:
-        run_label = timestamp_now()
-        state["prompt_path"] = logs_dir / f"codex_prompt_{run_label}.txt"
-        state["stdout_jsonl"] = logs_dir / f"codex_stdout_{run_label}.jsonl"
-        state["stderr_log"] = logs_dir / f"codex_stderr_{run_label}.log"
-        state["last_message_path"] = logs_dir / f"codex_last_message_{run_label}.txt"
-        state["prompt_path"].write_text(
-            build_prompt(skill_path, raw_path, args.function_name, workspace, target_java, 1, restart_context),
-            encoding="utf-8",
+        write_metrics(
+            metrics_path(workspace_path),
+            status="Success",
+            exit_code=0,
+            start_iso=iso_now(),
+            end_iso=iso_now(),
+            wall_seconds=0.0,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            prompt_path=prompt_path,
+            stdout_jsonl=stdout_jsonl,
+            stderr_log=stderr_log,
+            last_message_path=last_message_path,
+            target_c=target_c_path,
+            target_v=target_v_path,
+            usage=None,
+            dry_run=True,
         )
-        write_placeholder_logs(logs_dir, "contract", "Dry run prepared the workspace and prompt; Codex was not invoked.")
-        state["last_message_path"].write_text("Dry run: Codex was not invoked.\n", encoding="utf-8")
-        state["stdout_jsonl"].write_text("", encoding="utf-8")
-        state["stderr_log"].write_text("", encoding="utf-8")
-        status, attempts = "Success", 0
-    else:
-        codex_env = build_codex_env(logs_dir)
+        emit_log("dry_run=true")
+        print(str(workspace_path))
+        return 0
 
-        def attempt_fn(attempt: int, rc: str | None, round_timeout: int) -> tuple[str, str]:
-            run_label = timestamp_now()
-            prompt_path = logs_dir / f"codex_prompt_{run_label}.txt"
-            stdout_jsonl = logs_dir / f"codex_stdout_{run_label}.jsonl"
-            stderr_log = logs_dir / f"codex_stderr_{run_label}.log"
-            last_message_path = logs_dir / f"codex_last_message_{run_label}.txt"
-            state.update(prompt_path=prompt_path, stdout_jsonl=stdout_jsonl,
-                         stderr_log=stderr_log, last_message_path=last_message_path)
-            prompt = build_prompt(skill_path, raw_path, args.function_name, workspace, target_java, attempt, rc)
-            prompt_path.write_text(prompt, encoding="utf-8")
+    start_wall = time.time()
+    start_iso = iso_now()
+    emit_log(f"agent_exec_start timeout_seconds={args.timeout_seconds}")
 
-            exit_code, timed_out = agent_loop.run_agent_round(
-                agent=agent, codex_bin=codex_bin, claude_bin=claude_bin,
-                model=model, reasoning_effort=reasoning_effort, prompt=prompt,
-                stdout_jsonl=stdout_jsonl, stderr_log=stderr_log,
-                last_message_path=last_message_path, env=codex_env,
-                timeout_seconds=round_timeout,
-            )
-            state["last_codex_exit"] = exit_code
-            state["usage"] = agent_metrics.add_usage(
-                state["usage"], agent_metrics.parse_usage(agent, stdout_jsonl))
-            if timed_out:
-                return agent_loop.STATUS_TIMEOUT, "codex round timed out"
-
-            scanner_exit = wellformed_exit = None
-            if target_java.exists():
-                scanner = subprocess.run(
-                    [sys.executable, str(REPO_ROOT / "scripts" / "check_jml_cheating.py"), str(target_java)],
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, cwd=REPO_ROOT,
+    proc_returncode = 0
+    status = "Fail"
+    failure_detail = None
+    try:
+        if agent == "claude":
+            cmd = [
+                claude_bin,
+                "--print",
+                "--dangerously-skip-permissions",
+                "--add-dir",
+                str(REPO_ROOT),
+                "--output-format",
+                "stream-json",
+                "--verbose",
+            ]
+            if model:
+                cmd.extend(["--model", model])
+            with stdout_jsonl.open("w", encoding="utf-8") as out_f, stderr_log.open("w", encoding="utf-8") as err_f:
+                proc = subprocess.run(
+                    cmd,
+                    input=prompt,
+                    text=True,
+                    stdout=out_f,
+                    stderr=err_f,
+                    cwd=REPO_ROOT,
+                    timeout=args.timeout_seconds,
+                    env=codex_env,
                 )
-                scanner_exit = scanner.returncode
-                (logs_dir / "cheating_scan_stdout.log").write_text(scanner.stdout, encoding="utf-8")
-                (logs_dir / "cheating_scan_stderr.log").write_text(scanner.stderr, encoding="utf-8")
-                # Well-formedness gate: spec must parse/type-check and use only
-                # verifier-supported features. Undischarged VCs are tolerated
-                # (that is verify's job); NOT IMPLEMENTED / \num_of / \sum /
-                # \product and parse/type errors are fatal here.
-                if scanner_exit == 0:
-                    wf = subprocess.run(
-                        [sys.executable, str(REPO_ROOT / "scripts" / "check_spec_wellformed.py"),
-                         str(target_java), "--log-dir", str(logs_dir)],
-                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, cwd=REPO_ROOT,
-                    )
-                    wellformed_exit = wf.returncode
-            state["scanner_exit"], state["wellformed_exit"] = scanner_exit, wellformed_exit
-
-            if exit_code == 0 and target_java.exists() and scanner_exit == 0 and wellformed_exit == 0:
-                return agent_loop.STATUS_SUCCESS, "contract well-formed and clean"
-            reason = (
-                f"codex_exit={exit_code} java_exists={target_java.exists()} "
-                f"scanner_exit={scanner_exit} wellformed_exit={wellformed_exit}"
-            )
-            return agent_loop.STATUS_FAIL, reason
-
-        result = agent_loop.run(
-            logs_dir=logs_dir, attempt_fn=attempt_fn,
-            budget_seconds=args.timeout_seconds, restart_context=restart_context,
-            emit=lambda m: emit(f"loop {m}"),
-        )
-        status, attempts = result.status, result.attempts
-        if not (logs_dir / "issues.md").exists():
-            detail = "No issues recorded by Codex." if status == "Success" else "Contract did not complete successfully."
-            (logs_dir / "issues.md").write_text(f"# Contract Issues\n\n{detail}\n", encoding="utf-8")
-        if not (logs_dir / "reasoning.md").exists():
-            (logs_dir / "reasoning.md").write_text("# Contract Reasoning\n\nNo reasoning log was produced.\n", encoding="utf-8")
-
+            proc_returncode = proc.returncode
+            last_message = agent_metrics.extract_claude_last_message(stdout_jsonl)
+            if last_message is not None:
+                last_message_path.write_text(last_message, encoding="utf-8")
+            elif stdout_jsonl.exists():
+                last_message_path.write_text(stdout_jsonl.read_text(encoding="utf-8", errors="replace"), encoding="utf-8")
+        else:
+            cmd = [
+                codex_bin,
+                "--dangerously-bypass-approvals-and-sandbox",
+                "exec",
+                "--json",
+                "--skip-git-repo-check",
+                "-C",
+                str(REPO_ROOT),
+                "-o",
+                str(last_message_path),
+            ]
+            if model:
+                cmd.extend(["--model", model])
+            if reasoning_effort and reasoning_effort_supported:
+                cmd.extend(["--reasoning-effort", reasoning_effort])
+            cmd.append("-")
+            with stdout_jsonl.open("w", encoding="utf-8") as out_f, stderr_log.open("w", encoding="utf-8") as err_f:
+                proc = subprocess.run(
+                    cmd,
+                    input=prompt,
+                    text=True,
+                    stdout=out_f,
+                    stderr=err_f,
+                    cwd=REPO_ROOT,
+                    timeout=args.timeout_seconds,
+                    env=codex_env,
+                )
+            proc_returncode = proc.returncode
+    except subprocess.TimeoutExpired:
+        proc_returncode = 124
+        failure_detail = f"external agent run exceeded timeout of {args.timeout_seconds} seconds"
+        emit_log(f"agent_exec_timeout detail={failure_detail}")
+    end_wall = time.time()
     end_iso = iso_now()
-    usage = state["usage"]
+    filter_stderr_in_place(stderr_log)
+
+    snapshot_generated_inputs(workspace_path, target_c_path, target_v_path)
+
+    usage = agent_metrics.parse_usage(agent, stdout_jsonl)
+    if proc_returncode == 0:
+        status = "Success"
+
+    # Contract well-formedness gate: tolerant, recorded only (never blocks).
+    wellformed, wellformed_exit = "not_run", None
+    if target_c_path.exists():
+        try:
+            wellformed, wellformed_exit, wf_detail = check_spec_wellformed.check(target_c_path)
+            emit_log(f"wellformed={wellformed} symexec_exit={wellformed_exit} detail={wf_detail}")
+        except Exception as exc:  # noqa: BLE001 - gate is best-effort
+            emit_log(f"wellformed_check_failed: {exc}")
+
     write_metrics(
-        logs_dir / "metrics.md",
+        metrics_path(workspace_path),
         status=status,
-        attempts=attempts,
-        last_codex_exit=int(state["last_codex_exit"]),
+        exit_code=proc_returncode,
         start_iso=start_iso,
         end_iso=end_iso,
-        wall_seconds=time.time() - start,
+        wall_seconds=end_wall - start_wall,
         model=model,
         reasoning_effort=reasoning_effort,
-        prompt_path=state["prompt_path"],
-        stdout_jsonl=state["stdout_jsonl"],
-        stderr_log=state["stderr_log"],
-        last_message_path=state["last_message_path"],
-        target_java=target_java,
+        prompt_path=prompt_path,
+        stdout_jsonl=stdout_jsonl,
+        stderr_log=stderr_log,
+        last_message_path=last_message_path,
+        target_c=target_c_path,
+        target_v=target_v_path,
         usage=usage,
-        scanner_exit=state["scanner_exit"],
-        wellformed_exit=state["wellformed_exit"],
-        dry_run=args.dry_run,
+        dry_run=False,
+        wellformed=wellformed,
+        wellformed_exit=wellformed_exit,
     )
-    print(str(workspace))
-    return 0 if status == "Success" else 1
+
+    if proc_returncode != 0:
+        ensure_reasoning_placeholder(
+            reasoning_path(workspace_path),
+            "external-codex-run",
+            failure_detail,
+        )
+        update_issues_on_failure(
+            issues_path(workspace_path),
+            "external-codex-run",
+            proc_returncode,
+            stderr_log,
+            failure_detail,
+        )
+        emit_log(f"agent_exec_failed exit_code={proc_returncode}")
+    else:
+        emit_log("agent_exec_completed exit_code=0")
+
+    emit_log(f"stdout_jsonl={stdout_jsonl}")
+    emit_log(f"stderr_log={stderr_log}")
+    emit_log(f"last_message={last_message_path}")
+
+    print(str(workspace_path))
+    return proc_returncode
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_023416_string_fill_char",
+  "stage": "verify",
+  "input_c": "input/string_fill_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_023416_string_fill_char/original/string_fill_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_023416_string_fill_char.c",
+  "function_name": "string_fill_char",
+  "program_sha256": "ed5f3487e4cdf075d8e7a5c92888a9f143a65c7c0404d79345bb462321f8d4a1",
+  "semantic_description": "The function string_fill_char updates a caller-provided char buffer of length n + 1. A for loop writes the character c into each position 0 <= i < n, then the function writes 0 at index n as the terminator. The contract requires n to be nonnegative and within int range, preserves ownership of the full CharArray resource, and ensures the resulting list has length n + 1, every prefix element before n equals c, and the final element equals 0. The empty-loop case n = 0 skips the loop and only writes the terminator.",
+  "keywords": {
+    "algorithm_family": "simulation",
+    "control_flow": "for_loop",
+    "data_shape": ["string", "array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "heap_reasoning", "range_bound"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

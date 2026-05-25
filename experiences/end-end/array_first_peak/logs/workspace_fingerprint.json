@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_042345_array_first_peak",
+  "stage": "verify",
+  "input_c": "input/array_first_peak.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_042345_array_first_peak/original/array_first_peak.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_042345_array_first_peak.c",
+  "function_name": "array_first_peak",
+  "program_sha256": "fe588947efd71b7d09835af3f34916975450b2474b083252724219cfde6c8123",
+  "semantic_description": "Scans an integer array from index 1 while i + 1 < n and returns the first interior index whose value is greater than or equal to both immediate neighbors. If no such interior peak exists, returns -1. The function preserves the input array memory and has an empty-loop boundary for n <= 2 because no interior index can satisfy 0 < i and i + 1 < n.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

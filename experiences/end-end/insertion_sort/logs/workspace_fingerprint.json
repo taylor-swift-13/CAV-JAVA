@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_174132_insertion_sort",
+  "stage": "verify",
+  "input_c": "input/insertion_sort.c",
+  "input_v": "input/insertion_sort.v",
+  "original_c": "output/verify_20260422_174132_insertion_sort/original/insertion_sort.c",
+  "original_v": "output/verify_20260422_174132_insertion_sort/original/insertion_sort.v",
+  "annotated_c": "annotated/verify_20260422_174132_insertion_sort.c",
+  "function_name": "insertion_sort",
+  "program_sha256": "ae04e46ba67bd7deccaa79d2d11036112b06b1d91579f9aedac88078410f5244",
+  "semantic_description": "The target function performs in-place insertion sort over an integer array a of length n. It preserves the array length and mutates the caller-owned IntArray so that the final list lr is sorted according to insertion_sort_spec and is a permutation of the original input list l. The implementation has an outer for loop from i = 1 while i < n and an inner while loop that shifts larger prefix elements right until the insertion point for key is found. The loop may be skipped for n <= 1 or when the current key is already in order; memory is modified only through writes to a[j + 1].",
+  "keywords": {
+    "algorithm_family": "greedy",
+    "control_flow": ["for_loop", "while_loop", "nested_loop"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "heap_reasoning", "case_split", "range_bound"],
+    "numeric_properties": ["int_range", "overflow_guard"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "manual_witness_needed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,40 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_133747_copy_array",
+  "stage": "verify",
+  "input_c": "input/copy_array.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_133747_copy_array/original/copy_array.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_133747_copy_array.c",
+  "function_name": "copy_array",
+  "program_sha256": "cab667e6dd3579b93e9a450939769c52342b4d06679dcd556615c0b3af3a95eb",
+  "semantic_description": "copy_array copies n integer elements from src to dst using a single for loop. The contract preserves the full source array ls and requires the destination array to contain exactly ls after the loop. The loop may execute zero times when n is zero, and the function mutates only the caller-provided destination array while keeping source memory unchanged.",
+  "keywords": {
+    "algorithm_family": "identity",
+    "control_flow": "for_loop",
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": [
+      "preserve_input",
+      "in_place_update"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

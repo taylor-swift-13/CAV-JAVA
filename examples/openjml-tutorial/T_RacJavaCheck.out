@@ -1,2 +1,0 @@
-Exception in thread "main" java.lang.NegativeArraySizeException: -1
-	at T_RacJavaCheck.main(T_RacJavaCheck.java:4)

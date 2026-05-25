@@ -1,7 +1,0 @@
-Demo.java:5: verify: The prover cannot establish an assertion (PossiblyNullValue) in method main
-    throw e;
-          ^
-Demo.java:4: verify: The prover cannot establish an assertion (PossiblyNullValue) in method main
-    if (args.length == 0) synchronized (e) {}
-                                       ^
-2 verification failures

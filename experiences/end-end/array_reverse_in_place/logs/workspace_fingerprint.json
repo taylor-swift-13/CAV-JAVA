@@ -1,0 +1,33 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_074343_array_reverse_in_place",
+  "stage": "verify",
+  "input_c": "input/array_reverse_in_place.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_074343_array_reverse_in_place/original/array_reverse_in_place.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_074343_array_reverse_in_place.c",
+  "function_name": "array_reverse_in_place",
+  "program_sha256": "eadbad484002f337c436acb28ab4c1b4b49697d83c3bf7630183bad783c72e9c",
+  "semantic_description": "Verifies an in-place reversal of an integer array segment a[0..n). The function keeps two scalar indices left and right, swaps symmetric elements while left < right, and terminates when the pointers meet or cross. The input/output relation is that the same array memory is preserved as a full IntArray of length n whose final logical contents equal rev(l). Edge cases n = 0 and n = 1 execute no loop body; the function still preserves the array footprint and establishes rev(l).",
+  "keywords": {
+    "algorithm_family": "two_pointers",
+    "control_flow": "while_loop",
+    "data_shape": "array",
+    "semantic_intent": "in_place_update",
+    "proof_pattern": [
+      "loop_invariant",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible"
+    ,
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,40 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_180530_is_prime_simple",
+  "stage": "verify",
+  "input_c": "input/is_prime_simple.c",
+  "input_v": "input/is_prime_simple.v",
+  "original_c": "output/verify_20260422_180530_is_prime_simple/original/is_prime_simple.c",
+  "original_v": "output/verify_20260422_180530_is_prime_simple/original/is_prime_simple.v",
+  "annotated_c": "annotated/verify_20260422_180530_is_prime_simple.c",
+  "function_name": "is_prime_simple",
+  "program_sha256": "1c51faeeaccf487f1a48c604d1b27c608731150bdd099faab91c74075282e78d",
+  "semantic_description": "Scalar primality decision for nonnegative n. The function returns 0 immediately when n < 2, otherwise scans divisors d from 2 up to n - 1 in a for loop. If any divisor has n % d == 0 it returns 0; if the loop finishes without finding a divisor it returns 1. The function uses only scalar locals and does not modify memory.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "if",
+      "for_loop"
+    ],
+    "data_shape": "scalar_only",
+    "proof_pattern": [
+      "pure_arithmetic",
+      "loop_invariant",
+      "case_split",
+      "termination_by_bound",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible"
+    ,
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

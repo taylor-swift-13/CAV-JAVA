@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_182720_lcm_simple",
+  "stage": "verify",
+  "input_c": "input/lcm_simple.c",
+  "input_v": "input/lcm_simple.v",
+  "original_c": "output/verify_20260422_182720_lcm_simple/original/lcm_simple.c",
+  "original_v": "output/verify_20260422_182720_lcm_simple/original/lcm_simple.v",
+  "annotated_c": "annotated/verify_20260422_182720_lcm_simple.c",
+  "function_name": "lcm_simple",
+  "program_sha256": "0ac5c3a609adbc07a96df5ed59017bc444852d3f6279351389b7bfd008a88462",
+  "semantic_description": "Verifies lcm_simple, a scalar-only arithmetic loop. The function takes positive integers a and b, initializes x to a, repeatedly adds a while x is not divisible by b, and returns x. The contract states that the result equals the Coq definition lcm_simple_value a b, which is Z.lcm a b, with an INT_MAX guard on the mathematical result. The control flow is a single while loop; there is no heap or memory mutation beyond local scalar variables. The loop may execute zero times when a is already divisible by b.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "while_loop",
+    "data_shape": "scalar_only",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "termination_by_bound",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

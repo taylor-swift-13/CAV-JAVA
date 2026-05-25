@@ -2,41 +2,32 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入两个以 `'\0'` 结尾的字符串 `a` 和 `b`，判断它们是否相等。
+实现一个函数，输入两个以 `'\0'` 结尾的字符串 `a` 和 `b`，判断它们是否相等。
 
 约定：
 
 - 两个输入都是合法的 C 风格字符串
-- 方法不修改字符串
+- 函数不修改字符串
 - 如果两个字符串长度相同且每个位置字符都相同，返回 `1`
 - 否则返回 `0`
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `StringEqual`。
-- 目标方法应为 `public static`。
-- 原版中的字符指针按 Java `char[]` 表示，以 `'\0'` 作为字符串结束符。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int string_equal(char *a, char *b) {
+    int i = 0;
 
-## Java 参考实现
-
-```java
-class StringEqual {
-    public static int string_equal(char[] a, char[] b) {
-        int i = 0;
-
-        while (a[i] != '\0' && b[i] != '\0') {
-            if (a[i] != b[i]) {
-                return 0;
-            }
-            i++;
+    while (a[i] != '\0' && b[i] != '\0') {
+        if (a[i] != b[i]) {
+            return 0;
         }
-
-        if (a[i] == '\0' && b[i] == '\0') {
-            return 1;
-        }
-        return 0;
+        i++;
     }
+
+    if (a[i] == '\0' && b[i] == '\0') {
+        return 1;
+    }
+    return 0;
 }
 ```
 

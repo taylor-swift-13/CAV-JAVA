@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_083344_array_sign",
+  "stage": "verify",
+  "input_c": "input/array_sign.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_083344_array_sign/original/array_sign.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_083344_array_sign.c",
+  "function_name": "array_sign",
+  "program_sha256": "6e1532bf9d030569eab6d90d9dc6c40a92705d5876043a5132fd85c64e310021",
+  "semantic_description": "array_sign scans an integer array a of length n with a single for loop. For each index i, it writes out[i] to 1 when a[i] is positive, -1 when a[i] is negative, and 0 when a[i] is zero. The input array a is preserved, the output array out is fully overwritten with the sign-coded result, and the loop may execute zero iterations when n is 0.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": ["preserve_input", "in_place_update"],
+    "proof_pattern": ["loop_invariant", "case_split", "heap_reasoning"],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

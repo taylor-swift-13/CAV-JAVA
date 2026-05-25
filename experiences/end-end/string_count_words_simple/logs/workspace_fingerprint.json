@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_014132_string_count_words_simple",
+  "stage": "verify",
+  "input_c": "input/string_count_words_simple.c",
+  "input_v": "input/string_count_words_simple.v",
+  "original_c": "output/verify_20260423_014132_string_count_words_simple/original/string_count_words_simple.c",
+  "original_v": "output/verify_20260423_014132_string_count_words_simple/original/string_count_words_simple.v",
+  "annotated_c": "annotated/verify_20260423_014132_string_count_words_simple.c",
+  "function_name": "string_count_words_simple",
+  "program_sha256": "899097d4f8b6d037e920ff3bbfb5f6a0171e37febc2364cb076c9d1885e1a06d",
+  "semantic_description": "Scans a caller-owned null-terminated character array whose logical content is list l followed by a 0 terminator. The function counts maximal non-space word segments, where character code 32 resets the in_word flag and any other nonzero character starts or continues a word. The loop is an unbounded while(1) with an explicit break at the terminator; n may be 0, so the loop body can exit immediately. The function only reads the string and preserves the CharArray::full resource unchanged.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["string", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "termination_by_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入整数 `n`，返回第 `n` 个 Tribonacci 数。
+实现一个函数，输入整数 `n`，返回第 `n` 个 Tribonacci 数。
 
 约定：
 
@@ -12,39 +12,31 @@
 - `tri(2) = 1`
 - 对 `n >= 3`，`tri(n) = tri(n - 1) + tri(n - 2) + tri(n - 3)`
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `Tribonacci`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int tribonacci(int n) {
+    int i;
+    int a = 0;
+    int b = 1;
+    int c = 1;
+    int d;
 
-## Java 参考实现
-
-```java
-class Tribonacci {
-    public static int tribonacci(int n) {
-        int i;
-        int a = 0;
-        int b = 1;
-        int c = 1;
-        int d;
-
-        if (n == 0) {
-            return 0;
-        }
-        if (n == 1) {
-            return 1;
-        }
-
-        for (i = 3; i <= n; ++i) {
-            d = a + b + c;
-            a = b;
-            b = c;
-            c = d;
-        }
-
-        return c;
+    if (n == 0) {
+        return 0;
     }
+    if (n == 1) {
+        return 1;
+    }
+
+    for (i = 3; i <= n; ++i) {
+        d = a + b + c;
+        a = b;
+        b = c;
+        c = d;
+    }
+
+    return c;
 }
 ```
 

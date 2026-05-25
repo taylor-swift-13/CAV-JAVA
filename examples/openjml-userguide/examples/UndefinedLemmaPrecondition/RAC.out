@@ -1,7 +1,0 @@
-LABEL JMLSHOW_1 = -1
-Demo.java:12: verify: JML the precondition of a lemma is false
-  //@ use mod2lemma( (k+1) );
-      ^
-Demo.java:14: verify: JML assertion is false
-  //@ assert b;
-      ^

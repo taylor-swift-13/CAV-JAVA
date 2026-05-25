@@ -1,0 +1,28 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_043145_string_starts_with_char",
+  "stage": "verify",
+  "input_c": "input/string_starts_with_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_043145_string_starts_with_char/original/string_starts_with_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_043145_string_starts_with_char.c",
+  "function_name": "string_starts_with_char",
+  "program_sha256": "0c55bdc38f5916125e6aa4c60266ddedad4a3e7d4568724fa0c026bbd09c9c75",
+  "semantic_description": "Checks whether a non-null character array modeled by CharArray::full starts with a given character. The function reads s[0], returns 0 for the empty string, returns 1 when the first nonzero character equals c, and otherwise returns 0. Control flow is two nested-free if statements with early returns; the function preserves the input memory and does not write to the character array.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": "if",
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "case_split",
+      "heap_reasoning"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

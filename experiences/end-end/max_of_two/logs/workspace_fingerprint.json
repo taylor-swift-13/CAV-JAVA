@@ -1,32 +1,26 @@
 {
   "fingerprint_version": 2,
-  "workspace": "verify_20260423_043757_max_of_two",
+  "workspace": "verify_20260422_191732_max_of_two",
   "stage": "verify",
-  "input_java": "/home/yangfp/CAV-JAVA/input/max_of_two.java",
-  "original_java": "/home/yangfp/CAV-JAVA/output/verify_20260423_043757_max_of_two/original/max_of_two.java",
-  "verified_java": "/home/yangfp/CAV-JAVA/output/verify_20260423_043757_max_of_two/verified/max_of_two.java",
-  "class_name": "MaxOfTwo",
-  "program_sha256": "9cc4df5f872a43e90dfff9b8bd1adc5de35c0f04716c3f0106cc94db4226ab40",
-  "semantic_description": "Computes the maximum of two int inputs without modifying memory. The method is read-only, uses a single if branch on the input order, returns a when a is greater than or equal to b and returns b otherwise, including equality choosing a. The JML proof is a scalar case split over the branch condition with pure arithmetic/order reasoning and no heap mutation.",
+  "input_c": "input/max_of_two.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_191732_max_of_two/original/max_of_two.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_191732_max_of_two.c",
+  "function_name": "max_of_two",
+  "program_sha256": "9f700f36debc7e7a2ee43695562d75d0ea7f9a60203b08ca2cc78ec2894bdc53",
+  "semantic_description": "Scalar max-of-two function. It takes two integer parameters, performs a single order-based if branch, and returns either the first input or the second input. The postcondition states that the return value is one of the pre-state inputs and is greater than or equal to both inputs. The function has no loops and does not read or modify heap memory.",
   "keywords": {
     "algorithm_family": "selection",
     "control_flow": "if",
     "data_shape": "scalar_only",
     "semantic_intent": "return_max",
     "proof_pattern": [
-      "case_split",
       "pure_arithmetic",
-      "range_bound"
+      "case_split"
     ],
-    "numeric_properties": "int_range",
-    "edge_case_behavior": "branch_on_order",
-    "verification_status": [
-      "goal_check_passed",
-      "proof_check_passed"
-    ]
+    "edge_case_behavior": "branch_on_order"
   },
   "assume_contract_is_correct": true,
-  "contract_source": "contract_input_java",
-  "anti_cheating_required": true,
-  "openjml_required": true
+  "contract_source": "contract_input_c"
 }

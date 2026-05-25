@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_051342_array_intersection_count_sorted",
+  "stage": "verify",
+  "input_c": "input/array_intersection_count_sorted.c",
+  "input_v": "input/array_intersection_count_sorted.v",
+  "original_c": "output/verify_20260422_051342_array_intersection_count_sorted/original/array_intersection_count_sorted.c",
+  "original_v": "output/verify_20260422_051342_array_intersection_count_sorted/original/array_intersection_count_sorted.v",
+  "annotated_c": "annotated/verify_20260422_051342_array_intersection_count_sorted.c",
+  "function_name": "array_intersection_count_sorted",
+  "program_sha256": "e8eae38b9f0cc3b649b6977ea3dc331058a95e26ecbe6a2ef76c31984648c8fb",
+  "semantic_description": "Counts the intersection size of two sorted integer arrays using a two-pointer while loop. The function preserves both input arrays, advances i and j according to the order of a[i] and b[j], increments count only when equal elements are matched, returns zero when either input list is empty, and does not modify memory.",
+  "keywords": {
+    "algorithm_family": ["counting", "two_pointers"],
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": ["preserve_input"],
+    "proof_pattern": ["loop_invariant", "case_split", "monotonicity", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": ["branch_on_order", "empty_loop_possible"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

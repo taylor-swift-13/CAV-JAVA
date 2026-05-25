@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_081724_array_second_largest",
+  "stage": "verify",
+  "input_c": "input/array_second_largest.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_081724_array_second_largest/original/array_second_largest.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_081724_array_second_largest.c",
+  "function_name": "array_second_largest",
+  "program_sha256": "e5132ac819b6697251211cf13021adc2d750b70a5972d9b8224a81104098a2f5",
+  "semantic_description": "Scans an integer array of length n with pairwise distinct elements, initializes max1 and max2 from the first two entries, swaps them if needed, then runs a for loop from index 2 to n - 1 maintaining the largest and second largest values seen so far. The function returns the second largest array value, preserves the input IntArray memory unchanged, and requires n >= 2 so the initialization reads are in bounds.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": ["if", "for_loop"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": ["return_max", "preserve_input"],
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": "int_range",
+    "edge_case_behavior": "branch_on_order",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

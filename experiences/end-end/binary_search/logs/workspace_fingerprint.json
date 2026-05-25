@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_091409_binary_search",
+  "stage": "verify",
+  "input_c": "input/binary_search.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_091409_binary_search/original/binary_search.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_091409_binary_search.c",
+  "function_name": "binary_search",
+  "program_sha256": "b298e14327e1930178bb6e3bdd499ec159ac6cd0a3984706d4b74770cf726ac8",
+  "semantic_description": "Verifies an iterative binary search over a sorted integer array. The function keeps left and right bounds, checks the middle element, returns an index whose array value equals target when found, and returns -1 only when every valid array element is different from target. The loop is a while loop over an input array and does not modify memory; it must preserve IntArray::full(a, n, l). Edge cases include an empty search interval such as n == 0, where right starts at -1 and the loop is skipped.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "monotonicity", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "overflow_guard", "int_range"],
+    "edge_case_behavior": ["branch_on_order", "empty_loop_possible"],
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

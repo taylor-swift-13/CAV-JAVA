@@ -1,3 +1,0 @@
-#! /usr/bin/env bash
-
-"$INSTALL/openjml" --esc --check-feasibility=reachable Demo.java 2>&1 | diff - ESC.out

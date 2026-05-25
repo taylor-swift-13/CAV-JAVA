@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_215602_rotate_left_by_one",
+  "stage": "verify",
+  "input_c": "input/rotate_left_by_one.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_215602_rotate_left_by_one/original/rotate_left_by_one.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_215602_rotate_left_by_one.c",
+  "function_name": "rotate_left_by_one",
+  "program_sha256": "75646d630b413314aefe772a722cc005a86862db575185f1e82681981631bc77",
+  "semantic_description": "In-place left rotation of an integer array by one position. The function requires n >= 1 and full ownership of an array a containing logical list l of length n. It saves l[0], shifts each element l[i+1] into position i using a for loop over 0 <= i < n - 1, then writes the saved first value into a[n-1]. The output array has the same length n and contains lr where lr[i] = l[i+1] for i < n-1 and lr[n-1] = l[0]. The function mutates the input array and does not allocate memory.",
+  "keywords": {
+    "algorithm_family": "simulation",
+    "control_flow": "for_loop",
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["int_range", "overflow_guard"],
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

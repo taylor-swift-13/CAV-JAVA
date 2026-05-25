@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared time/token accounting for the Java/OpenJML stage runners.
+"""Shared time/token accounting for stage runners.
 
 Every stage runner (contract, verify, eval, audit) records the same two things
 in its workspace ``logs/metrics.md``:
@@ -71,7 +71,53 @@ def parse_codex_usage(stdout_jsonl: Path | None) -> dict[str, int] | None:
 
 
 def parse_claude_usage(stdout_path: Path | None) -> dict[str, int] | None:
-    """Top-level ``usage`` of a claude ``--output-format json`` result."""
+    """Token usage from a claude ``--print`` result.
+
+    Handles both output formats:
+
+      * ``--output-format json`` — one object with a top-level ``usage``;
+      * ``--output-format stream-json`` — a JSONL event stream whose final
+        ``{"type": "result", ...}`` event carries the cumulative ``usage``.
+    """
+    if stdout_path is None or not stdout_path.exists():
+        return None
+    text = stdout_path.read_text(encoding="utf-8", errors="replace").strip()
+    if not text:
+        return None
+    # --output-format json: the whole file is one object.
+    try:
+        obj = json.loads(text)
+    except json.JSONDecodeError:
+        obj = None
+    if isinstance(obj, dict):
+        usage = obj.get("usage")
+        if isinstance(usage, dict):
+            return {k: v for k, v in usage.items() if isinstance(v, int)}
+        return None
+    # --output-format stream-json: scan for the last `result` event's usage.
+    usage = None
+    for raw in text.splitlines():
+        raw = raw.strip()
+        if not raw.startswith("{"):
+            continue
+        try:
+            ev = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(ev, dict) and ev.get("type") == "result" and isinstance(ev.get("usage"), dict):
+            usage = ev["usage"]
+    if usage is None:
+        return None
+    return {k: v for k, v in usage.items() if isinstance(v, int)}
+
+
+def extract_claude_last_message(stdout_path: Path | None) -> str | None:
+    """Final assistant text from a claude ``--print`` result file.
+
+    For ``--output-format json`` it is the object's ``result``; for
+    ``--output-format stream-json`` it is the ``result`` event's ``result``.
+    Returns None when no result text is present (caller falls back to raw stdout).
+    """
     if stdout_path is None or not stdout_path.exists():
         return None
     text = stdout_path.read_text(encoding="utf-8", errors="replace").strip()
@@ -80,11 +126,22 @@ def parse_claude_usage(stdout_path: Path | None) -> dict[str, int] | None:
     try:
         obj = json.loads(text)
     except json.JSONDecodeError:
-        return None
-    usage = obj.get("usage") if isinstance(obj, dict) else None
-    if isinstance(usage, dict):
-        return {k: v for k, v in usage.items() if isinstance(v, int)}
-    return None
+        obj = None
+    if isinstance(obj, dict):
+        result = obj.get("result")
+        return result if isinstance(result, str) else None
+    last = None
+    for raw in text.splitlines():
+        raw = raw.strip()
+        if not raw.startswith("{"):
+            continue
+        try:
+            ev = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(ev, dict) and ev.get("type") == "result" and isinstance(ev.get("result"), str):
+            last = ev["result"]
+    return last
 
 
 def parse_usage(agent: str, stdout_path: Path | None) -> dict[str, int] | None:

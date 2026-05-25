@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_214114_reverse_digits",
+  "stage": "verify",
+  "input_c": "input/reverse_digits.c",
+  "input_v": "input/reverse_digits.v",
+  "original_c": "output/verify_20260422_214114_reverse_digits/original/reverse_digits.c",
+  "original_v": "output/verify_20260422_214114_reverse_digits/original/reverse_digits.v",
+  "annotated_c": "annotated/verify_20260422_214114_reverse_digits.c",
+  "function_name": "reverse_digits",
+  "program_sha256": "bf089ff2fa2420912538026a0d0682af2d5d81844f11937732e573d263637b3e",
+  "semantic_description": "Pure scalar integer computation that returns the decimal digit reversal of nonnegative input n as specified by reverse_digits_z. The implementation initializes ans to 0, then uses a while loop while n > 0, updating ans to ans * 10 + n % 10 and shrinking n by n / 10. For n <= 0 the loop is skipped and the result is 0; the contract constrains n >= 0 and the mathematical result to fit INT_MAX. The function does not read or modify heap memory.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "while_loop",
+    "data_shape": "scalar_only",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "termination_by_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

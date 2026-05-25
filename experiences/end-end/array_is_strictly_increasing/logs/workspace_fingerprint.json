@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_052907_array_is_strictly_increasing",
+  "stage": "verify",
+  "input_c": "input/array_is_strictly_increasing.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_052907_array_is_strictly_increasing/original/array_is_strictly_increasing.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_052907_array_is_strictly_increasing.c",
+  "function_name": "array_is_strictly_increasing",
+  "program_sha256": "cc500d2a720ca3c855ef77bbb819c58a765d2c922ad50cf754eb9c84f4ecf593",
+  "semantic_description": "The function scans a read-only integer array and returns 0 as soon as it finds an adjacent non-increasing pair a[i-1] >= a[i]. If no such adjacent pair exists, including the empty and single-element cases where the loop is skipped, it returns 1 and preserves the input array unchanged. The only control structure is a for loop initialized at i = 1, so the loop invariant must describe the already checked adjacent-prefix property while allowing n == 0.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "termination_by_bound"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

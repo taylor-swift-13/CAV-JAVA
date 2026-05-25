@@ -2,39 +2,30 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，判断一个以 `'\0'` 结尾的字符串是否全部由 ASCII 数字字符组成。
+实现一个函数，判断一个以 `'\0'` 结尾的字符串是否全部由 ASCII 数字字符组成。
 
 约定：
 
 - 字符串是合法的 C 风格字符串
-- 方法不修改字符串
+- 函数不修改字符串
 - 空字符串返回 `1`
 - 如果每个终止符前的字符都在 `'0'` 到 `'9'` 之间，返回 `1`
 - 否则返回 `0`
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `StringAllDigits`。
-- 目标方法应为 `public static`。
-- 原版中的字符指针按 Java `char[]` 表示，以 `'\0'` 作为字符串结束符。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int string_all_digits(char *s) {
+    int i = 0;
 
-## Java 参考实现
-
-```java
-class StringAllDigits {
-    public static int string_all_digits(char[] s) {
-        int i = 0;
-
-        while (s[i] != '\0') {
-            if (s[i] < '0' || s[i] > '9') {
-                return 0;
-            }
-            i++;
+    while (s[i] != '\0') {
+        if (s[i] < '0' || s[i] > '9') {
+            return 0;
         }
-
-        return 1;
+        i++;
     }
+
+    return 1;
 }
 ```
 

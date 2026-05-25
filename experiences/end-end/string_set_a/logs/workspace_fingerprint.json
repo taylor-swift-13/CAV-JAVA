@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_041814_string_set_a",
+  "stage": "verify",
+  "input_c": "input/string_set_a.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_041814_string_set_a/original/string_set_a.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_041814_string_set_a.c",
+  "function_name": "string_set_a",
+  "program_sha256": "26e77ed07162b24360f8a9d2f3eb5a93a55bec72a9c0049d65eea13dfff84963",
+  "semantic_description": "The function string_set_a updates a caller-owned character array of length n + 1 in place. It uses a for loop from i = 0 up to i < n to write 97 into each prefix position s[i], then writes 0 at index n as the terminator. The loop may execute zero times when n = 0. The function does not allocate or free memory and returns through the modified CharArray resource.",
+  "keywords": {
+    "algorithm_family": "simulation",
+    "control_flow": "for_loop",
+    "data_shape": ["string", "array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

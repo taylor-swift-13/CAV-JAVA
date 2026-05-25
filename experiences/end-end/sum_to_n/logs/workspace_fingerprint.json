@@ -1,0 +1,40 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_050130_sum_to_n",
+  "stage": "verify",
+  "input_c": "input/sum_to_n.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_050130_sum_to_n/original/sum_to_n.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_050130_sum_to_n.c",
+  "function_name": "sum_to_n",
+  "program_sha256": "56324ff225986c9d8b96f61901f3622ab5cc5439650e252a375f43accd2c3168",
+  "semantic_description": "Computes the arithmetic series 1 + ... + n for a nonnegative scalar input n using a for loop. The accumulator ret starts at 0, i ranges from 1 through n, and the function returns n * (n + 1) / 2. For n == 0 the loop body is skipped and the return value is 0. The function does not read or modify heap memory.",
+  "keywords": {
+    "algorithm_family": [
+      "accumulation",
+      "arithmetic_series"
+    ],
+    "control_flow": "for_loop",
+    "data_shape": "scalar_only",
+    "semantic_intent": "sum_1_to_n",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic",
+      "closed_form"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "monotone_accumulator",
+      "exact_closed_form"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "proof_check_passed",
+      "goal_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

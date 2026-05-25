@@ -1,0 +1,46 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_031617_string_is_palindrome",
+  "stage": "verify",
+  "input_c": "input/string_is_palindrome.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_031617_string_is_palindrome/original/string_is_palindrome.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_031617_string_is_palindrome.c",
+  "function_name": "string_is_palindrome",
+  "program_sha256": "52a3e68938ba884ebb555f7767e1b78129ddc7060b4c55f0b0fabad2d9b614e4",
+  "semantic_description": "Checks whether a length-n character array is a palindrome without modifying memory. The function initializes left to 0 and right to n - 1, then uses a while loop that compares symmetric positions s[left] and s[right]. It returns 0 immediately when a mismatching pair is found, otherwise advances the two pointers toward the middle and returns 1 when all compared pairs match. For n <= 1 the loop is skipped and the function returns 1 while preserving CharArray::full(s, n, l).",
+  "keywords": {
+    "algorithm_family": [
+      "search",
+      "two_pointers"
+    ],
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "string",
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

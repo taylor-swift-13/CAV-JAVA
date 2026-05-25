@@ -2,50 +2,41 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入长度为 `n` 的整数数组 `a`，返回最长连续严格递增段的长度。
+实现一个函数，输入长度为 `n` 的整数数组 `a`，返回最长连续严格递增段的长度。
 
 约定：
 
 - `n >= 0`
 - `a` 的长度恰好是 `n`
 - 空数组的结果为 `0`
-- 方法不修改数组
+- 函数不修改数组
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `LongestIncreasingRun`。
-- 目标方法应为 `public static`。
-- 原版中的整数指针按 Java `int[]` 表示。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int longest_increasing_run(int n, int *a) {
+    int i;
+    int cur;
+    int best;
 
-## Java 参考实现
-
-```java
-class LongestIncreasingRun {
-    public static int longest_increasing_run(int n, int[] a) {
-        int i;
-        int cur;
-        int best;
-
-        if (n == 0) {
-            return 0;
-        }
-
-        cur = 1;
-        best = 1;
-        for (i = 1; i < n; ++i) {
-            if (a[i - 1] < a[i]) {
-                cur++;
-            } else {
-                cur = 1;
-            }
-            if (best < cur) {
-                best = cur;
-            }
-        }
-
-        return best;
+    if (n == 0) {
+        return 0;
     }
+
+    cur = 1;
+    best = 1;
+    for (i = 1; i < n; ++i) {
+        if (a[i - 1] < a[i]) {
+            cur++;
+        } else {
+            cur = 1;
+        }
+        if (best < cur) {
+            best = cur;
+        }
+    }
+
+    return best;
 }
 ```
 

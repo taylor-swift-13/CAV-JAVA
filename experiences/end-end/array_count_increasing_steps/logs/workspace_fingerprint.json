@@ -1,0 +1,36 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_032621_array_count_increasing_steps",
+  "stage": "verify",
+  "input_c": "input/array_count_increasing_steps.c",
+  "input_v": "input/array_count_increasing_steps.v",
+  "original_c": "output/verify_20260422_032621_array_count_increasing_steps/original/array_count_increasing_steps.c",
+  "original_v": "output/verify_20260422_032621_array_count_increasing_steps/original/array_count_increasing_steps.v",
+  "annotated_c": "annotated/verify_20260422_032621_array_count_increasing_steps.c",
+  "function_name": "array_count_increasing_steps",
+  "program_sha256": "97816a8682de47d47876c125ffaca28fa3837f60b500993d912aac766253285b",
+  "semantic_description": "Read-only array scan that counts adjacent increasing steps. The function receives nonnegative n and an IntArray-backed list l of length n, initializes cnt to 0, then runs a for loop over indices i with guard i + 1 < n. On each iteration it compares a[i] and a[i + 1], increments cnt exactly when the adjacent pair is strictly increasing, preserves the input array unchanged, and returns the Coq recursive specification array_count_increasing_steps_spec(l). For n <= 1 the loop is skipped and the result is 0.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": [
+      "count_iterations",
+      "preserve_input"
+    ],
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "monotone_accumulator",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

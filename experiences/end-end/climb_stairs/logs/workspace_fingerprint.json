@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_131939_climb_stairs",
+  "stage": "verify",
+  "input_c": "input/climb_stairs.c",
+  "input_v": "input/climb_stairs.v",
+  "original_c": "output/verify_20260422_131939_climb_stairs/original/climb_stairs.c",
+  "original_v": "output/verify_20260422_131939_climb_stairs/original/climb_stairs.v",
+  "annotated_c": "annotated/verify_20260422_131939_climb_stairs.c",
+  "function_name": "climb_stairs",
+  "program_sha256": "ad124cde90876cab8e8edd068d71757e9b43b4be11022de7685fed6290ac7cf0",
+  "semantic_description": "Verifies scalar climb_stairs(n) for 0 <= n <= 45. The function returns 1 for n <= 1, otherwise runs a for loop from i = 2 through n maintaining two previous Fibonacci-style stair counts and returning the count defined by climb_stairs_z(n@pre). It uses only local integer variables, does not access or modify heap memory, and the bounded input serves as an overflow guard for int arithmetic.",
+  "keywords": {
+    "algorithm_family": "dynamic_programming",
+    "control_flow": [
+      "if",
+      "for_loop"
+    ],
+    "data_shape": "scalar_only",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "pure_arithmetic"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "int_range"
+    ],
+    "edge_case_behavior": "defined_for_nonnegative_only",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

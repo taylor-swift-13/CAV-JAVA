@@ -1,7 +1,0 @@
-package org.junit.rules;
-
-public class Timeout implements org.junit.rules.TestRule {
-    //@ public normal_behavior
-    //@ pure
-    public static Timeout seconds(long seconds);
-}

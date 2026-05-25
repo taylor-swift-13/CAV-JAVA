@@ -1,0 +1,44 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_005835_string_count_not_char",
+  "stage": "verify",
+  "input_c": "input/string_count_not_char.c",
+  "input_v": "input/string_count_not_char.v",
+  "original_c": "output/verify_20260423_005835_string_count_not_char/original/string_count_not_char.c",
+  "original_v": "output/verify_20260423_005835_string_count_not_char/original/string_count_not_char.v",
+  "annotated_c": "annotated/verify_20260423_005835_string_count_not_char.c",
+  "function_name": "string_count_not_char",
+  "program_sha256": "920d0ed7e2a6a078dff85febb26c32d2b5a5ba56dd5ea43dceef9e984f831e4f",
+  "semantic_description": "The function scans a null-terminated character array represented by a prefix list l followed by 0, keeps an index i and accumulator count, increments count exactly for prefix characters not equal to c, stops when it reaches the terminating 0, returns the number of non-c characters in l, and preserves the input string memory unchanged. The loop is a while(1) scan with an internal break on s[i] == 0; the empty string case exits immediately and returns 0.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": "while_loop",
+    "data_shape": [
+      "string",
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "termination_by_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range",
+      "monotone_accumulator"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "manual_witness_needed",
+      "goal_check_passed",
+      "proof_check_passed",
+      "auto_proof_contains_admitted",
+      "generated_goal_contains_axioms"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

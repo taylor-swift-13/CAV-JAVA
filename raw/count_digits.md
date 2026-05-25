@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入非负整数 `n`，返回它的十进制位数。
+实现一个函数，输入非负整数 `n`，返回它的十进制位数。
 
 约定：
 
@@ -10,30 +10,22 @@
 - `count_digits(0) = 1`
 - 对正数使用 `/ 10` 循环计数
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `CountDigits`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int count_digits(int n) {
+    int cnt = 0;
 
-## Java 参考实现
-
-```java
-class CountDigits {
-    public static int count_digits(int n) {
-        int cnt = 0;
-
-        if (n == 0) {
-            return 1;
-        }
-
-        while (n > 0) {
-            cnt++;
-            n = n / 10;
-        }
-
-        return cnt;
+    if (n == 0) {
+        return 1;
     }
+
+    while (n > 0) {
+        cnt++;
+        n = n / 10;
+    }
+
+    return cnt;
 }
 ```
 

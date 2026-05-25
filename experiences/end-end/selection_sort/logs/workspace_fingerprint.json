@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_220436_selection_sort",
+  "stage": "verify",
+  "input_c": "input/selection_sort.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_220436_selection_sort/original/selection_sort.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_220436_selection_sort.c",
+  "function_name": "selection_sort",
+  "program_sha256": "e944a7466e5de3490bf6759018adc397e5dc4710eacab810f4217dd3d23cb3c3",
+  "semantic_description": "In-place selection sort over an integer array a of length n. The function uses an outer for loop over prefix positions and an inner for loop to scan the remaining suffix for a minimum index, then swaps a[i] with a[min_idx]. The required output array has the same length as the input, is sorted in nondecreasing order, is a Permutation of the original logical list, and occupies the same IntArray heap resource. Boundary behavior includes n = 0, where both loops may be skipped and the empty array is returned unchanged.",
+  "keywords": {
+    "algorithm_family": "selection",
+    "control_flow": ["for_loop", "nested_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "manual_witness_needed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

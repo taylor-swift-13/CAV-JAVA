@@ -21,6 +21,7 @@ import os
 from pathlib import Path
 
 
+# This module lives at <repo>/scripts/, so the repo root is one level up.
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = REPO_ROOT / "config" / "agents.json"
 

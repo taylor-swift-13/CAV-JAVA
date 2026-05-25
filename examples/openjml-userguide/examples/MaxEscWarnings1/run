@@ -1,8 +1,0 @@
-#! /usr/bin/env bash
-
-X=0
-( "$INSTALL/openjml" --esc MaxEscWarnings.java > actual; (diff actual ESC.out > diffs 2>&1 || diff actual ESC1.out >> diffs )) || X=1
-( "$INSTALL/openjml" --esc --esc-warnings-path MaxEscWarnings.java > actual 2>&1 ; (diff actual ESCP.out >> diffs || diff actual ESCP1.out >> diffs )) || X=1
-if [ $X -eq 1 ]; then cat diffs ; fi
-
-exit $X

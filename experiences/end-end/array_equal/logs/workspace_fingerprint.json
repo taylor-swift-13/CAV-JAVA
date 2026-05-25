@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_035531_array_equal",
+  "stage": "verify",
+  "input_c": "input/array_equal.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_035531_array_equal/original/array_equal.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_035531_array_equal.c",
+  "function_name": "array_equal",
+  "program_sha256": "ccc6a013d3db2ef8491a41677b0d9b45d1cca032ee3b8bf3d9def7f88d15c83d",
+  "semantic_description": "array_equal scans two integer arrays a and b of equal nonnegative length n from left to right. It returns 0 immediately when it finds an index i with la[i] != lb[i], and returns 1 after the loop only when every index in 0 <= i < n has equal elements. The loop may be empty when n == 0. The function only reads both arrays and preserves their full contents.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

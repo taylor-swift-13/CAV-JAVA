@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_033114_string_replace_char",
+  "stage": "verify",
+  "input_c": "input/string_replace_char.c",
+  "input_v": "",
+  "original_c": "output/verify_20260423_033114_string_replace_char/original/string_replace_char.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260423_033114_string_replace_char.c",
+  "function_name": "string_replace_char",
+  "program_sha256": "36dc43fe3c7b11431acdd238590b83d932e0f4fce100f624e297a197e86c8d68",
+  "semantic_description": "In-place string character replacement over a caller-owned char array. The function scans s from index 0 with a while (1) loop until it reaches the terminating 0 byte; for each nonzero character before the terminator, it writes new_c when the original character equals old_c and otherwise preserves the original character. The contract requires a nonzero payload of length n followed by a zero terminator, requires new_c != 0, preserves the zero terminator, and returns ownership of the same buffer containing the transformed payload.",
+  "keywords": {
+    "algorithm_family": "simulation",
+    "control_flow": ["while_loop", "if"],
+    "data_shape": ["string", "array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "case_split", "heap_reasoning", "range_bound"],
+    "numeric_properties": ["int_range", "overflow_guard"],
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

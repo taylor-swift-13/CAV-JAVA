@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_053910_array_last_positive",
+  "stage": "verify",
+  "input_c": "input/array_last_positive.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_053910_array_last_positive/original/array_last_positive.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_053910_array_last_positive.c",
+  "function_name": "array_last_positive",
+  "program_sha256": "2b9559db4c26a7433c7614d4d0bbaa2281078bd77f552230faa6c1dd51d0a2f9",
+  "semantic_description": "Scans an integer array from left to right, preserving the input memory, and returns the last index whose element is positive. If the array is empty or every element is nonpositive, it returns -1. The implementation uses a single for loop with an if branch that updates ans to the current index when a[i] > 0.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -2,34 +2,26 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入正整数 `n`，返回 `1 + 2 + ... + n` 的结果。
+实现一个函数，输入正整数 `n`，返回 `1 + 2 + ... + n` 的结果。
 
 约定：
 
 - `n >= 0`
-- 结果保证在 Java int 范围内
-- 方法不读写额外状态
+- 结果保证在 32 位有符号整数范围内
+- 函数不读写任何额外内存
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `SumToN`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
+```c
+int sum_to_n(int n) {
+    int i;
+    int ret = 0;
 
-## Java 参考实现
-
-```java
-class SumToN {
-    public static int sum_to_n(int n) {
-        int i;
-        int ret = 0;
-
-        for (i = 1; i <= n; ++i) {
-            ret += i;
-        }
-
-        return ret;
+    for (i = 1; i <= n; ++i) {
+        ret += i;
     }
+
+    return ret;
 }
 ```
 

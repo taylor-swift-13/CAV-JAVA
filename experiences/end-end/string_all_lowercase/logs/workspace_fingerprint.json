@@ -1,0 +1,35 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_223908_string_all_lowercase",
+  "stage": "verify",
+  "input_c": "input/string_all_lowercase.c",
+  "input_v": "input/string_all_lowercase.v",
+  "original_c": "output/verify_20260422_223908_string_all_lowercase/original/string_all_lowercase.c",
+  "original_v": "output/verify_20260422_223908_string_all_lowercase/original/string_all_lowercase.v",
+  "annotated_c": "annotated/verify_20260422_223908_string_all_lowercase.c",
+  "function_name": "string_all_lowercase",
+  "program_sha256": "49f5a8b953a98271103543900a27a8982990f24b48929c487f8372c90a8acb56",
+  "semantic_description": "The function scans a null-terminated char array from index 0 using an unbounded while loop. It returns 0 immediately if it finds a character outside the lowercase ASCII range 97..122; if it reaches the terminating 0 after scanning all elements of l, it returns 1. The contract requires all positions 0 <= k < n in l to be nonzero and the heap resource CharArray::full(s, n + 1, app(l, cons(0, nil))). The function does not modify memory and must preserve the same char array resource.",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "while_loop",
+      "if"
+    ],
+    "data_shape": [
+      "string",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "heap_reasoning",
+      "range_bound"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "goal_check_passed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

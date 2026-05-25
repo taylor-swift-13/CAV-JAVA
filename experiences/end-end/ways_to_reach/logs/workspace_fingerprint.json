@@ -1,0 +1,38 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260423_054104_ways_to_reach",
+  "stage": "verify",
+  "input_c": "input/ways_to_reach.c",
+  "input_v": "input/ways_to_reach.v",
+  "original_c": "output/verify_20260423_054104_ways_to_reach/original/ways_to_reach.c",
+  "original_v": "output/verify_20260423_054104_ways_to_reach/original/ways_to_reach.v",
+  "annotated_c": "annotated/verify_20260423_054104_ways_to_reach.c",
+  "function_name": "ways_to_reach",
+  "program_sha256": "70124782866ca799c572e53c46938d7d644da50d78e08a4d3e5c10290e667b2a",
+  "semantic_description": "Scalar-only Fibonacci-style dynamic programming function. For nonnegative n up to 45, it returns ways_to_reach_z(n), where the Coq model iterates a pair (previous,current) from (1,1). The C implementation has an early if branch returning 1 for n == 0, then a for loop from i = 2 through n that updates scalar accumulators a, b, and c without modifying heap memory. The loop may be skipped for n == 1, and all behavior is pure arithmetic over local integers under the input overflow guard.",
+  "keywords": {
+    "algorithm_family": "dynamic_programming",
+    "control_flow": [
+      "if",
+      "for_loop"
+    ],
+    "data_shape": "scalar_only",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "range_bound",
+      "pure_arithmetic"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "overflow_guard",
+      "int_range"
+    ],
+    "edge_case_behavior": [
+      "defined_for_nonnegative_only",
+      "empty_loop_possible"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

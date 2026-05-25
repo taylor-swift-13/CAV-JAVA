@@ -2,30 +2,22 @@
 
 ## 问题描述
 
-实现一个 Java 静态方法，输入一个整数 `x`，返回它的绝对值。
+实现一个函数，输入一个整数 `x`，返回它的绝对值。
 
 约定：
 
-- 输入满足 `x != Integer.MIN_VALUE`
-- 这样 `-x` 仍然在 Java int 范围内
-- 方法不读写额外状态
+- 输入满足 `x != INT_MIN`
+- 这样 `-x` 仍然在 32 位有符号整数范围内
+- 函数不读写任何额外内存
 
-## Java 要求
+## 正确代码
 
-- 生成的 Java 类名应为 `AbsValue`。
-- 目标方法应为 `public static`。
-- 方法只依赖参数和数组内容，不使用全局状态。
-
-## Java 参考实现
-
-```java
-class AbsValue {
-    public static int abs_value(int x) {
-        if (x >= 0) {
-            return x;
-        } else {
-            return -x;
-        }
+```c
+int abs_value(int x) {
+    if (x >= 0) {
+        return x;
+    } else {
+        return -x;
     }
 }
 ```
@@ -36,5 +28,5 @@ class AbsValue {
 
 - 没有循环
 - 没有数组
-- 需要在规格中显式排除 `Integer.MIN_VALUE`
+- 需要在 contract 中显式排除 `INT_MIN`
 - 后置条件适合写成“返回值非负，且等于 `x` 或 `-x`”

@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_031257_array_count_even",
+  "stage": "verify",
+  "input_c": "input/array_count_even.c",
+  "input_v": "input/array_count_even.v",
+  "original_c": "output/verify_20260422_031257_array_count_even/original/array_count_even.c",
+  "original_v": "output/verify_20260422_031257_array_count_even/original/array_count_even.v",
+  "annotated_c": "annotated/verify_20260422_031257_array_count_even.c",
+  "function_name": "array_count_even",
+  "program_sha256": "54dea50f9e9c6d4e3f0d0e11896111ddb744347dbf7b4a00f417433bffcaee94",
+  "semantic_description": "Function array_count_even scans an input integer array a[0..n) with a for loop, increments a scalar counter for each element whose remainder modulo 2 is zero, returns the count for the whole list, and preserves the input array memory unchanged. The loop may execute zero times when n is 0, in which case the returned count is 0.",
+  "keywords": {
+    "algorithm_family": "counting",
+    "control_flow": ["for_loop", "if"],
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "monotone_accumulator", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": ["goal_check_passed", "proof_check_passed", "auto_proof_contains_admitted", "generated_goal_contains_axioms"]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,25 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_194235_merge_sorted_arrays",
+  "stage": "verify",
+  "input_c": "input/merge_sorted_arrays.c",
+  "input_v": "input/merge_sorted_arrays.v",
+  "original_c": "output/verify_20260422_194235_merge_sorted_arrays/original/merge_sorted_arrays.c",
+  "original_v": "output/verify_20260422_194235_merge_sorted_arrays/original/merge_sorted_arrays.v",
+  "annotated_c": "annotated/verify_20260422_194235_merge_sorted_arrays.c",
+  "function_name": "merge_sorted_arrays",
+  "program_sha256": "a2b28fac4d270b57a06f9cc84bdf8ae8f2454373f5c8b5c2708ed0b676dee0e0",
+  "semantic_description": "Merges two sorted integer input arrays a[0..n) and b[0..m) into caller-provided output array out[0..n+m). The function uses a main while loop with two pointers i and j to copy the smaller current element into out[k], then two tail while loops to copy the remaining suffix of either input array. Inputs a and b are read-only and must be preserved; out is overwritten with merge_sorted_arrays_spec(la, lb). Boundary behavior includes empty input arrays and early exhaustion of either side.",
+  "keywords": {
+    "algorithm_family": "two_pointers",
+    "control_flow": "while_loop",
+    "data_shape": ["array", "pointer"],
+    "semantic_intent": "in_place_update",
+    "proof_pattern": ["loop_invariant", "case_split", "range_bound", "heap_reasoning"],
+    "numeric_properties": ["nonnegative_input", "int_range"],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": "manual_witness_needed"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

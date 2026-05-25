@@ -1,0 +1,42 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_024651_array_contains",
+  "stage": "verify",
+  "input_c": "input/array_contains.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_024651_array_contains/original/array_contains.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_024651_array_contains.c",
+  "function_name": "array_contains",
+  "program_sha256": "43a476ad556520761c9a90ec31e0e7f6ad6c8831a6cdae5f474597fc9df98ed3",
+  "semantic_description": "array_contains scans the input integer array a[0..n) with a for loop, does not modify memory, returns 1 immediately when some element equals k, and returns 0 only after the loop has established that every index in the range is not equal to k. The empty-loop case n == 0 is allowed and returns 0 while preserving IntArray::full(a, n, l).",
+  "keywords": {
+    "algorithm_family": "search",
+    "control_flow": [
+      "for_loop",
+      "if"
+    ],
+    "data_shape": [
+      "array",
+      "pointer"
+    ],
+    "semantic_intent": "preserve_input",
+    "proof_pattern": [
+      "loop_invariant",
+      "case_split",
+      "termination_by_bound",
+      "heap_reasoning"
+    ],
+    "numeric_properties": [
+      "nonnegative_input",
+      "int_range"
+    ],
+    "edge_case_behavior": "empty_loop_possible",
+    "verification_status": [
+      "goal_check_passed",
+      "proof_check_passed"
+    ]
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

@@ -1,0 +1,24 @@
+{
+  "fingerprint_version": 2,
+  "workspace": "verify_20260422_084036_array_sum",
+  "stage": "verify",
+  "input_c": "input/array_sum.c",
+  "input_v": "",
+  "original_c": "output/verify_20260422_084036_array_sum/original/array_sum.c",
+  "original_v": "",
+  "annotated_c": "annotated/verify_20260422_084036_array_sum.c",
+  "function_name": "array_sum",
+  "program_sha256": "d4e467393aaf2fc06b0e8773d073fb533a391531e69c20373d47f9dfac81888c",
+  "semantic_description": "array_sum scans an integer array a of length n with a single for loop, accumulates ret from 0 by adding a[i] for each index 0 <= i < n, does not modify the input array, allows the empty-loop case n == 0, and returns sum(l) while preserving IntArray::full(a, n, l). The contract also assumes every element is in a bounded integer range and the mathematical sum fits in signed 32-bit int.",
+  "keywords": {
+    "algorithm_family": "accumulation",
+    "control_flow": "for_loop",
+    "data_shape": "array",
+    "semantic_intent": "preserve_input",
+    "proof_pattern": ["loop_invariant", "heap_reasoning", "range_bound"],
+    "numeric_properties": ["overflow_guard", "int_range", "monotone_accumulator"],
+    "edge_case_behavior": "empty_loop_possible"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}
