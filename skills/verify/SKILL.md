@@ -93,6 +93,7 @@ Verify 只消费 Contract 已经准备好的验证输入，不再负责设计前
 - `logs/metrics.md` 必须记录整个 verify 流程的真实开始时间、结束时间和总 wall-clock 时间；不能只记录某一个子步骤的时间
 - `symexec_*`、proof compile、cleanup 等只能作为子阶段时间或子阶段状态补充，不能替代 verify 总耗时
 - `logs/metrics.md` 的最后必须显式写一行 `Final Result: Success` 或 `Final Result: Fail`
+- 这一行必须是**独立成行的纯文本**，整行就是 `Final Result: Success`（或 `Final Result: Fail`）：不要加 markdown 加粗 `**`、反引号、前后缀文字（如 `(confirmed in round N)`）、也不要并进其它句子。外部判据按整行识别这个标记；任何装饰都会被判为"未完成"从而触发无谓的重试。
 - 如果本次任务更新了任何经验文档，`logs/metrics.md` 必须显式列出更新了哪些经验文件；如果没有更新，也要明确写 `Experience updates: none`
 - `Final Result: Success` 只能在以下条件同时满足时写：
   - `symexec` 成功并基于当前最新 annotated 文件生成了最新 `goal/proof_auto/proof_manual/goal_check`

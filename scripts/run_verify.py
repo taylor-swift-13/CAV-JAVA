@@ -246,10 +246,13 @@ def verify_workspace_completed(workspace_path: Path) -> tuple[bool, str]:
     saw_success = False
     saw_fail = False
     for raw_line in lines:
-        line = raw_line.strip()
-        if line == "Final Result: Success":
+        # Tolerate markdown decoration the agent sometimes adds, e.g.
+        # `**Final Result: Success (confirmed in round 7)**` — strip `*`/backticks
+        # and match the marker as a substring rather than the whole line.
+        cleaned = raw_line.replace("*", "").replace("`", "").strip()
+        if "Final Result: Success" in cleaned:
             saw_success = True
-        elif line == "Final Result: Fail":
+        elif "Final Result: Fail" in cleaned:
             saw_fail = True
 
     if saw_success:
