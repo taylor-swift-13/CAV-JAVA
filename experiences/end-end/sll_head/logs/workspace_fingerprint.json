@@ -1,0 +1,18 @@
+{
+  "workspace": "verify_20260528_202044_sll_head",
+  "stage": "verify",
+  "input_c": "/home/yangfp/CAV-JAVA/input/sll_head.c",
+  "input_v": "",
+  "original_c": "/home/yangfp/CAV-JAVA/output/verify_20260528_202044_sll_head/original/sll_head.c",
+  "original_v": "",
+  "annotated_c": "/home/yangfp/CAV-JAVA/annotated/verify_20260528_202044_sll_head.c",
+  "function_name": "sll_head",
+  "semantic_description": "Loop-free function `sll_head` returning `p->data`.",
+  "keywords": {
+    "problem_kind": "math",
+    "data": "linked_list",
+    "pattern": "straight_line"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

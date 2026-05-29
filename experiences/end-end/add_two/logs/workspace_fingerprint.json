@@ -1,0 +1,18 @@
+{
+  "workspace": "verify_20260527_193100v1_add_two",
+  "stage": "verify",
+  "input_c": "/home/yangfp/CAV-JAVA/input/add_two.c",
+  "input_v": "",
+  "original_c": "/home/yangfp/CAV-JAVA/output/verify_20260527_193100v1_add_two/original/add_two.c",
+  "original_v": "",
+  "annotated_c": "/home/yangfp/CAV-JAVA/annotated/verify_20260527_193100v1_add_two.c",
+  "function_name": "add_two",
+  "semantic_description": "Adds two integers a and b and returns their sum. Contract requires the sum is within 32-bit signed integer range. No loops, no arrays, no memory side effects. Output equals a+b exactly.",
+  "keywords": {
+    "problem_kind": "math",
+    "data": "scalar",
+    "pattern": "straight_line"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}

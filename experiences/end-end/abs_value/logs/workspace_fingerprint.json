@@ -1,0 +1,18 @@
+{
+  "workspace": "verify_20260527_absfastv_abs_value",
+  "stage": "verify",
+  "input_c": "/home/yangfp/CAV-JAVA/input/abs_value.c",
+  "input_v": "",
+  "original_c": "/home/yangfp/CAV-JAVA/output/verify_20260527_absfastv_abs_value/original/abs_value.c",
+  "original_v": "",
+  "annotated_c": "/home/yangfp/CAV-JAVA/annotated/verify_20260527_absfastv_abs_value.c",
+  "function_name": "abs_value",
+  "semantic_description": "Loop-free scalar function `abs_value` returning `x`, `-x`. No loops, arrays, pointers, or memory writes.",
+  "keywords": {
+    "problem_kind": "math",
+    "data": "scalar",
+    "pattern": "branch"
+  },
+  "assume_contract_is_correct": true,
+  "contract_source": "contract_input_c"
+}
