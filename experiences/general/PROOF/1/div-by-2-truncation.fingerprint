@@ -1,0 +1,8 @@
+{
+  "semantic_description": "整数除以 2 的截断商需要局部 helper lemma：x/2 + x mod 2 = (x+1)/2 这类等式不在自动 simpl 里",
+  "keywords": {
+    "problem_kind": "math",
+    "data": "scalar",
+    "pattern": "single_loop"
+  }
+}

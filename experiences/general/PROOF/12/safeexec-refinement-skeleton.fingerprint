@@ -1,0 +1,8 @@
+{
+  "semantic_description": "safeExec / refinement VC 的处理骨架：先分离空间侧、再规范化执行侧",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

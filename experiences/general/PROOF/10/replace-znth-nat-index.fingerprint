@@ -1,0 +1,8 @@
+{
+  "semantic_description": "replace_Znth 最后一步经常卡在 nat 索引没有化简：使用 Z.to_nat 显式化简和 Nat.eqb_refl 引理收尾",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

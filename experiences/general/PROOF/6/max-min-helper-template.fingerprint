@@ -1,0 +1,8 @@
+{
+  "semantic_description": "max/min 扫描类 helper lemma 模板：把 result 和已处理前缀的 prefix_max/min 绑定，避免 return witness 走完整结构展开",
+  "keywords": {
+    "problem_kind": "min_max",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "semantic_description": "排序前缀 invariant 用相邻有序关系替代完整 sorted_z，每轮保持性按受影响相邻边分类，退出时由 helper 推出整体有序",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

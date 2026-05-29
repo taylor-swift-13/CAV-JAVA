@@ -33,7 +33,7 @@ _STARTED_RE = re.compile(r"Symbolic Execution into function")
 
 
 def prepare_input(src_c: Path, dst_c: Path) -> None:
-    """Copy the contract C into a symexec-parseable form (SYMEXEC.md §18).
+    """Copy the contract C into a symexec-parseable form (experiences/general/SYMEXEC/1/int-array-def-header.md).
 
     Drops the ``int_array_def.h`` include (a built-in symexec predicate, not a
     header) and rewrites ``../../verification_*.h`` to bare names symexec finds

@@ -1,0 +1,8 @@
+{
+  "semantic_description": "多个相似逻辑列表同场时 helper lemma 参数必须显式钉住，避免 Coq 选错 list 导致 unification 失败",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

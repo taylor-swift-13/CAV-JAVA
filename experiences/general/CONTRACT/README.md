@@ -7,9 +7,25 @@
 职责边界：
 
 - 只记录 `Require` / `Ensure` / `With` 的写法
-- 不记录 invariant/assert/symbolic（见 `INV.md`、`ASSERTION.md`、`SYMEXEC.md`）
-- 不记录 manual.v 证明（见 `PROOF.md`）
-- 不记录最终 Coq 编译（见 `COMPILE.md`）
+- 不记录 invariant/assert/symbolic（见 `../INV/README.md`、`../ASSERTION/README.md`、`../SYMEXEC/README.md`）
+- 不记录 manual.v 证明（见 `../PROOF/README.md`）
+- 不记录最终 Coq 编译（见 `../COMPILE/README.md`）
+
+常见入口：
+
+- 阅读方式：看 1
+- 合同写作重点：看 2
+- 方式一：直接 `Extern Coq`：看 3
+- 方式二：题目专用 `.v` 桥接：看 4
+- 选择规则：看 5
+- 先定数学语义，再定前后条件：看 6
+- 前置条件优先约束最终结果，而不是穷举中间状态：看 7
+- 有抽象语义和具体表示时，优先分两层规格：看 8
+- 能用 shape-only 时，不要强行把值语义写满：看 9
+- 缺 `.v` 的判断标准：看 10
+- 避免在函数级 `Require` 中用顶层析取表达简单数值域：看 11
+- QCP 前端不处理 C 预处理器——INT_MIN / INT_MAX 等常量必须改为字面量：看 12
+- 后条件能写蕴含就别写析取——析取强迫证明手动选边：看 13
 
 ## 1. 阅读方式
 
@@ -159,69 +175,7 @@ Definition problem_139_spec_z (n r : Z) : Prop := ...
 - `QualifiedCProgramming/QCP_examples/humaneval/IntClaude/C_139.c`
 - `QualifiedCProgramming/QCP_examples/humaneval/IntClaude/coins_139.v`
 
-## 11. C 字符串 contract 不能只写“末尾有一个 0”
-
-如果函数语义依赖 C 风格字符串终止规则，例如：
-
-- `strlen`
-- `string_copy`
-- 扫描到 `'\0'` 为止的匹配或计数
-
-那么 contract 不能只写：
-
-- `CharArray::full(s, n + 1, app(l, cons(0, nil)))`
-
-这只说明“最后还接了一个 `0`”，并不排除 `l` 内部提前出现 `0`。
-
-对这类函数，如果后置条件需要把 `l ++ [0]` 当成完整字符串语义，就必须在前置条件里显式加入：
-
-```c
-(forall (k: Z), (0 <= k && k < n) => l[k] != 0)
-```
-
-否则 Verify 阶段通常只能证明：
-
-- 程序会在遇到某个 `0` 时停下
-
-却不能证明：
-
-- 它停下的位置就是最后一个 terminator
-- 整个目标缓冲区最终等于 `app(l, cons(0, nil))`
-
-判断标准：
-
-- 如果程序行为是“遇到第一个 `0` 就停止”，而后置条件又要求完整复制/处理整个 `l ++ [0]`
-- 那么 contract 必须补“前缀无内部 `0`”
-
-不要把这个问题留到 Verify 或 manual proof 阶段；这是 Contract 层就该固定的语义前提。
-
-## 12. 字符串扫描类题如果后条件要恢复整个字符串，前置条件必须能推出退出位置是最终 terminator
-
-对这类程序：
-
-- `strlen`
-- `string_copy`
-- 扫描到 `'\0'` 后返回、复制、计数、判断
-
-Verify 阶段的 return witness 往往都会走到同一个桥接点：
-
-- 先证明退出位置 `i` 就是最终 terminator 位置
-- 再把“已处理前缀”恢复成完整字符串
-
-如果 contract 不能推出这一点，proof 常见表现是：
-
-- `symexec` 成功
-- loop invariant 也能写出来
-- 但 `return_wit` 最后只剩一条 `replace_Znth` / `CharArray.full` 的纯 list 目标，始终收不掉
-
-因此，contract 设计时要先问：
-
-1. 当前前置条件能否推出“遇到的第一个 `0` 就是最后一个 terminator”？
-2. 如果后置条件要求完整恢复 `l ++ [0]`，是否已经显式排除了内部 `0`？
-
-如果答案是否定的，就先改 contract，不要把这个缺口留给 Verify 阶段。
-
-## 13. 避免在函数级 `Require` 中用顶层析取表达简单数值域
+## 11. 避免在函数级 `Require` 中用顶层析取表达简单数值域
 
 如果 `Ensure` 或后续 loop invariant 需要使用 `x@pre`，函数级 `Require` 中的顶层析取可能触发 QCP frontend 的 old-value 绑定问题。
 
@@ -266,3 +220,73 @@ GCD 的推荐写法：
 ```
 
 不要把这个问题留给 Verify 阶段；这是 contract 编码形状导致的 frontend 问题，不是 loop invariant 或 manual proof 能修复的 Coq 目标。
+
+**后置条件（`Ensure`）中的析取不受此限制**：`(__return == x@pre || __return == -x@pre)` 这类后条件析取可以正常工作，symexec 能正确生成 VC。只有 `Require` 中的顶层析取才会触发 old-value 绑定问题。
+
+## 12. QCP 前端不处理 C 预处理器——INT_MIN / INT_MAX 等常量必须改为字面量（2026-05-26）
+
+QCP 的 `symexec` 前端不运行 C 预处理器，`<limits.h>` 中定义的 `INT_MIN`、`INT_MAX`、`LLONG_MIN` 等符号在 QCP 注释里不可用，会被视为未定义符号。
+
+在 `Require` / `Ensure` / `Inv` 中必须直接使用字面量：
+
+| 常量 | 字面量 |
+|------|--------|
+| `INT_MIN` | `-2147483648` |
+| `INT_MAX` | `2147483647` |
+| `UINT_MAX` | `4294967295` |
+| `LLONG_MIN` | `-9223372036854775808` |
+| `LLONG_MAX` | `9223372036854775807` |
+
+例如，溢出守卫 `x != INT_MIN` 写成 `x >= -2147483647`（等价且 lia 友好）；上界检查 `x <= INT_MAX` 写成 `x <= 2147483647`。
+
+不要把这类符号替换留到 Verify 阶段；这是 Contract 层就该固定的形式。
+
+## 13. 后条件能写蕴含就别写析取——析取强迫证明手动选边（2026-05-28）
+
+contract 在**逻辑上正确**和**对下游证明友好**是两件事。`Ensure` 里的顶层析取 `||` 即便语义紧、eval 能放过，也会**强迫 verify 阶段在每个 `return_wit` 里手动用 `Left` / `Right` 选边**——标量 fast path 的 `pre_process; entailer!; try lia.` 不会自动挑分支，coqc 立刻报 "remaining open goals"，整个用例必须回退到 agent。
+
+### 反例：abs_value 的析取写法（这次踩坑）
+
+```c
+int abs_value(int x)
+/*@ Require x >= -2147483647 && emp
+    Ensure  0 <= __return &&
+            (__return == x@pre || __return == -x@pre) && emp
+*/
+```
+
+- 逻辑上紧：`0 <= return` + 「return ∈ {x, -x}」对每个 x 只允许唯一值，等价于 `abs(x)`，eval 通过；
+- 但有两个 return wit（C 有两条 return 路径），每条都要选对应的析取分支；
+- agent 还易踩坑：QCP 的 SL 析取 introduction 是**大写** `Left` / `Right`（`derivable1_orp_intros1/2`），不是 Coq builtin 的 `left` / `right`，agent 摸索这个就要烧几分钟；
+- 实际结果：标量 fast path 失败 → 回退 agent → 262s 才收敛。
+
+### 推荐：用蕴含按前提分情况
+
+```c
+/*@ Require x >= -2147483647 && emp
+    Ensure  (x@pre >= 0 -> __return == x@pre) &&
+            (x@pre <  0 -> __return == -x@pre) && emp
+*/
+```
+
+每条蕴含对应 C 的一个分支：`pre_process` 自动按 `x >= 0` / `x < 0` 把 context 切两份，每个 return wit 用 `pre_process; entailer!; try lia.` 直接收尾。**整道题在标量 fast path 上零 agent 跑过**，不再走 4 分钟 sonnet。
+
+### 还更干净：把语义函数 Extern 出来
+
+如果 `.v` 里桥得起 `abs : Z -> Z`，最直白的写法是：
+
+```
+/*@ Extern Coq (abs : Z -> Z) */
+...
+/*@ Ensure __return == abs(x@pre) && emp */
+```
+
+contract 一目了然，verify 端无需任何选边逻辑——前提是要在 §3 或 §4 的方式里把这个 Coq 函数 import 进来。
+
+### 通用规则
+
+- 后条件首选**蕴含**（按前提分情况）或**直接等式**（语义函数 Extern）；
+- 仅当**真存在多种合法实现可选**（非确定性 spec、refinement 接口）时才用析取；
+- 写析取前先问自己：这道题是「数学上有多个合法答案」还是「只是不想 Extern 函数所以用析取拼出来」？后者就是踩坑前兆。
+
+这条规则跟 §13（`Require` 顶层析取触发 old-value 绑定问题）正好成对：**`Require` 顶层析取触发前端问题，`Ensure` 顶层析取触发证明问题，两边都尽量避免**。

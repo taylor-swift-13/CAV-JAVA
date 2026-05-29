@@ -4,30 +4,40 @@
 
 不记录：
 
-- `Assert` / `which implies` 的写法（见 `ASSERTION.md`）
-- 循环 invariant 的设计（见 `INV.md`）
-- manual proof（见 `PROOF.md`）
-- Coq 编译与 load-path（见 `COMPILE.md`）
+- `Assert` / `which implies` 的写法（见 `../ASSERTION/README.md`）
+- 循环 invariant 的设计（见 `../INV/README.md`）
+- manual proof（见 `../PROOF/README.md`）
+- Coq 编译与 load-path（见 `../COMPILE/README.md`）
 
 常见入口：
 
-- 标准 symexec 命令行（外部 workspace，先看这条）：看 0
-- 自动 verify 进程卡住：看 1
-- annotation 改动后重新 `symexec`：看 2
-- `symexec` 失败先查控制点：看 3
-- `symexec` 成功后分流到 proof 还是 annotation：看 4、13
-- annotated 工作副本路径：看 5
-- 公共 strategy / `coq/deps`：看 6
-- witness 形状脏，怀疑 annotation 信息组织错：看 7
-- `goal_check` 没过不能算完成：看 8
-- metrics / issues 记录要求：看 9、10
-- invariant 很强导致前端变慢：看 12
-- `Extern Coq` 名称和 C 函数名重名：看 14
-- 重新生成 VC 后不能盲用旧 proof：看 15
-- manual / auto witness 分流：看 16
-- loop invariant 中直接使用的 Coq 类型须 `Extern Coq` 声明：看 19
+- Canonical symexec 命令行（外部 workspace 的固定调用）：看 1
+- 自动 verify 进程卡住时，不要继续空等：看 2
+- 每次注释改动后都必须重新 `symexec`：看 3
+- `symexec` 失败时，先检查注释与控制点是否对齐：看 4
+- `symexec` 成功后先分流，不要机械回注释层：看 5
+- 顶层 `annotated/` 目录就是为避免头文件路径报错：看 6
+- 公共 strategy 预编译后，不要再为每题重复 staging `coq/deps/`：看 7
+- witness 形状脏，通常是注释层信息组织不对：看 8
+- 当前 `goal_check` 没过时，不能把任务算完成：看 9
+- `metrics.md` 里要单独记 `symexec`：看 10
+- `issues.md` 里要保留 symbolic 过程问题：看 11
+- 新增题目本地 Coq helper 不是 verify 阶段的首选修复：看 12
+- 复杂 invariant 让 `symexec` 变慢时，先简化前端表达形状，不要先删语义：看 13
+- `Extern Coq` 数学符号不能和 C 函数符号重名：看 14
+- 重新 `symexec` 后必须重新检查 VC 主体：看 15
+- auto-solved VC 不进入 manual proof：看 16
+- `With` ghost 变量不要写成 `@pre`：看 17
+- loop invariant 中直接使用的 Coq 类型必须显式 `Extern Coq` 声明：看 18
 
-## 0. Canonical symexec 命令行（外部 workspace 的固定调用）
+题型/数据结构特定的 symexec 经验在 `<N>/<slug>.md` 累积。**不要手工浏览编号目录**，按 fingerprint 检索：
+
+```bash
+python3 scripts/search_fingerprint.py --scope general --problem-kind ... --data ... --pattern ...
+```
+
+详见 `doc/retrieval/INDEX.md`。
+## 1. Canonical symexec 命令行（外部 workspace 的固定调用）
 
 **先看这条，不要现场逆向工具用法。** `symexec` 没有可用的 `--help`（执行它只会打印 `goal file not specified` 然后退出）；也不要 `cat run-example-linux.sh`、`chmod +x` 反复试、或翻 `QCP_examples/` 的样例去反推参数。本项目所有 verify 任务——标量、数组、链表——都用下面这一条固定命令，参数形状完全相同。
 
@@ -54,7 +64,7 @@ linux-binary/symexec \
 
 参数固定含义：
 
-- `--coq-logic-path=SimpleC.EE.CAV.verify_<timestamp>_<name>`：generated 文件的逻辑前缀，必须和 `COMPILE.md §5` 的 `LP` 完全一致。
+- `--coq-logic-path=SimpleC.EE.CAV.verify_<timestamp>_<name>`：generated 文件的逻辑前缀，必须和 `../COMPILE/README.md §5` 的 `LP` 完全一致。
 - `-slp <annotated 目录> SimpleC.EE.CAV`：把顶层 `annotated/` 目录挂到逻辑前缀 `SimpleC.EE.CAV`；`-slp` 接两个位置参数（目录、前缀）。
 - `--input-file=<annotated 工作副本>`：用顶层 `annotated/verify_<timestamp>_<name>.c`，**不是** `input/<name>.c`，也不是旧 workspace 里的历史副本。
 - `--no-exec-info`：关掉冗长执行信息。
@@ -62,7 +72,7 @@ linux-binary/symexec \
 
 成功标志是 stdout 出现 `Successfully finished symbolic execution.`，并生成 `goal/proof_auto/proof_manual/goal_check` 四个文件。重新跑前必须按 §2 先清理旧 generated 文件。
 
-## 1. 自动 verify 进程卡住时，不要继续空等
+## 2. 自动 verify 进程卡住时，不要继续空等
 
 典型现象：
 
@@ -80,7 +90,7 @@ linux-binary/symexec \
   - `coq/generated/<name>_proof_manual.v`
 - 已生成的产物优先复用，不要重复开新 workspace
 
-## 2. 每次注释改动后都必须重新 `symexec`
+## 3. 每次注释改动后都必须重新 `symexec`
 
 只要你改了下面任一内容，就必须重新跑 `symexec`：
 
@@ -102,7 +112,7 @@ linux-binary/symexec \
 
 否则工具可能因为旧的 `proof_manual.v` 已存在而拒绝更新，导致新的注释和旧的 witness 混在一起。
 
-## 3. `symexec` 失败时，先检查注释与控制点是否对齐
+## 4. `symexec` 失败时，先检查注释与控制点是否对齐
 
 先检查：
 
@@ -113,7 +123,7 @@ linux-binary/symexec \
 
 很多 symbolic 失败不是 proof 问题，而是注释没有贴住程序控制点。
 
-## 4. `symexec` 成功后先分流，不要机械回注释层
+## 5. `symexec` 成功后先分流，不要机械回注释层
 
 `symexec` 成功后，先判断剩余问题属于哪一层。
 
@@ -138,7 +148,7 @@ linux-binary/symexec \
 - 缺程序语义，回注释层
 - 缺纯命题桥接，不回注释层
 
-## 5. 顶层 `annotated/` 目录就是为避免头文件路径报错
+## 6. 顶层 `annotated/` 目录就是为避免头文件路径报错
 
 verify 的实际工作副本固定放在：
 
@@ -153,7 +163,7 @@ verify 的实际工作副本固定放在：
 
 不要把这类问题回退成修改 `input/<name>.c`。
 
-## 6. 公共 strategy 预编译后，不要再为每题重复 staging `coq/deps/`
+## 7. 公共 strategy 预编译后，不要再为每题重复 staging `coq/deps/`
 
 如果下面这些公共产物已经存在：
 
@@ -170,7 +180,7 @@ verify 的实际工作副本固定放在：
 
 只有公共编译产物缺失，或当前环境读不到它们时，才回退到 workspace-local `coq/deps/`。
 
-## 7. witness 形状脏，通常是注释层信息组织不对
+## 8. witness 形状脏，通常是注释层信息组织不对
 
 如果生成的 witness 很绕、重复、纯命题很乱，优先怀疑：
 
@@ -181,7 +191,7 @@ verify 的实际工作副本固定放在：
 
 先回去整理当前任务的 `annotated/*.c`，通常比在 `proof_manual.v` 里硬扛更便宜。
 
-## 8. 当前 `goal_check` 没过时，不能把任务算完成
+## 9. 当前 `goal_check` 没过时，不能把任务算完成
 
 即使已经有：
 
@@ -197,7 +207,7 @@ verify 的实际工作副本固定放在：
 - `proof_manual.v` 无 `Admitted.`
 - `proof_manual.v` 无新增 `Axiom`
 
-## 9. `metrics.md` 里要单独记 `symexec`
+## 10. `metrics.md` 里要单独记 `symexec`
 
 verify 阶段的 `metrics.md` 至少要单列：
 
@@ -205,7 +215,7 @@ verify 阶段的 `metrics.md` 至少要单列：
 - `symexec_end`
 - `symexec_elapsed`
 
-## 10. `issues.md` 里要保留 symbolic 过程问题
+## 11. `issues.md` 里要保留 symbolic 过程问题
 
 即使最后修好了，也要记：
 
@@ -214,7 +224,7 @@ verify 阶段的 `metrics.md` 至少要单列：
 - 处理
 - 结果
 
-## 11. 新增题目本地 Coq helper 不是 verify 阶段的首选修复
+## 12. 新增题目本地 Coq helper 不是 verify 阶段的首选修复
 
 如果当前 `input/<name>.v` 不存在，而 verify 阶段为了绕开复杂断言临时在 annotated 文件中新增 `Extern Coq` / `Import Coq`，要谨慎。
 
@@ -230,7 +240,7 @@ verify 阶段的 `metrics.md` 至少要单列：
 2. 只有输入阶段已经提供题目 `.v`，或已有相同模式的稳定样例时，才优先走 helper import。
 3. 如果新增 helper 后 `symexec` 立即 segfault，应回退到无 helper 的 annotation 形状，并把 helper 尝试记录到当前 workspace 的 `issues.md`。
 
-## 12. 复杂 invariant 让 `symexec` 变慢时，先简化前端表达形状，不要先删语义
+## 13. 复杂 invariant 让 `symexec` 变慢时，先简化前端表达形状，不要先删语义
 
 `merge_sorted_arrays` 暴露了一个典型问题：正确语义需要较强 invariant，但强 invariant 如果写成前端不擅长的形状，会让 `symexec` 长时间 CPU-bound 或在 VC 生成前失败。
 
@@ -253,27 +263,6 @@ verify 阶段的 `metrics.md` 至少要单列：
 
 - 删除后会丢失后条件所需语义的内容不能删
 - 只影响前端解析和 VC 生成复杂度的表达形式应改写
-
-## 13. `symexec` 成功后如果 witness 是 merge/list 语义，不要误判为 annotation 失败
-
-双指针归并类题在 `symexec` 成功后，常见剩余目标是：
-
-- `replace_Znth` 写入输出前缀后的 heap list 归一化
-- `merge(spec_prefix_a, spec_prefix_b)` 与 `old_prefix ++ [current]` 的等式
-- `sublist` 追加一个末尾元素的等式
-- 已消费前缀与未消费后缀的顺序关系保持
-
-这些目标通常属于 proof 阶段，不是 symbolic execution 阶段。
-
-只有当 witness 明显缺少下面信息时，才回到 invariant：
-
-- 输出数组的完整 heap shape
-- `lout_done` 与已消费前缀的语义等式
-- 输入数组未修改的长度和值
-- 跨边界顺序历史
-- 阶段切换时的 `i == n` 或 `j == m`
-
-如果这些信息都在 VC 里，剩下的困难基本就是 helper lemma 和 conservative Coq proof，不要反复改 annotation。
 
 ## 14. `Extern Coq` 数学符号不能和 C 函数符号重名
 
@@ -345,7 +334,7 @@ fatal error: Expected C expression ... Now parsing : n with type :2
 2. 在 active annotated 工作副本里把 ghost-state 的 `n@pre` 改成 `n`，保留真实 C 参数的 `old_c@pre`、`new_c@pre`、`s@pre` 等。
 3. 重新运行 `symexec`，因为该修改会改变生成 VC。
 
-## 19. loop invariant 中直接使用的 Coq 类型必须显式 `Extern Coq` 声明（2026-05-26）
+## 18. loop invariant 中直接使用的 Coq 类型必须显式 `Extern Coq` 声明（2026-05-26）
 
 即使一个 Coq 类型已经通过 `/*@ Import Coq Require Import <file> */` 导入，如果它直接出现在循环 invariant 的注释位置（而不仅仅出现在 postcondition），就必须在 annotated C 文件顶部再加一条 `/*@ Extern Coq (...) */` 声明。
 
@@ -363,18 +352,3 @@ QCP 前端在解析 invariant 时需要独立的符号表入口；仅有 `Import
 2. 如果一个 Coq 名字出现在 `Inv`、`Assert` 或 `which implies` 中——无论是否已经 `Import Coq`，都必须有 `Extern Coq` 声明
 3. 两者都写是安全的，不要依赖"Import 一定够"
 
-## 18. `int_array_def.h` 是不应该放进 annotated C 的头文件
-
-如果 `input/<name>.c` 包含 `#include "../../int_array_def.h"`（或其他路径的 `int_array_def.h`），在 `annotated/` 工作副本里必须删掉这行。
-
-原因：
-- `int_array_def.h` 是给 C 编译器用的 C-level 定义（不是标准库头文件）
-- `symexec` 的 include search path 找不到这个文件，无论设置哪个 `-slp` 或 include 路径
-- `IntArray::full`、`IntArray::missing_i` 等 separation logic 谓词是 symexec 内置的，通过 `load_builtin_int_array_strategy_lib` 加载，不需要任何头文件声明
-
-操作：
-1. 在 `annotated/verify_<timestamp>_<name>.c` 里删掉 `#include "../../int_array_def.h"` 这一行
-2. 保留 `verification_stdlib.h` 和 `verification_list.h` 的 include（改成不带 `../../` 的 bare 名字即可）
-3. 重新跑 `symexec`
-
-不要尝试：修改 `-slp` 路径、设置 `INCLUDE_PATH` 环境变量、在 QCP 目录下创建 symlink 等——这些均无效。

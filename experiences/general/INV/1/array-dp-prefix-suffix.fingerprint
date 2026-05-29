@@ -1,0 +1,8 @@
+{
+  "semantic_description": "数组逐步写值的 invariant 分为已写前缀 + 未写后缀两段；先 shape 闭合，再叠加值语义",
+  "keywords": {
+    "problem_kind": "dp",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

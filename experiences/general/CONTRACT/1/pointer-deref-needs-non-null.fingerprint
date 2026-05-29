@@ -1,0 +1,8 @@
+{
+  "semantic_description": "直接 deref 指针入参（p->field / *p / p[i]）且无控制流 guard 时，contract 必须显式带 p != 0 或后条件按 p 分类——QCP 不从 sll cons 自动抽非空",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "linked_list",
+    "pattern": "single_loop"
+  }
+}

@@ -4,10 +4,21 @@
 
 不记录：
 
-- 循环 invariant 的整体设计（见 `INV.md`）
-- symbolic 执行流程（见 `SYMEXEC.md`）
-- manual proof（见 `PROOF.md`）
+- 循环 invariant 的整体设计（见 `../INV/README.md`）
+- symbolic 执行流程（见 `../SYMEXEC/README.md`）
+- manual proof（见 `../PROOF/README.md`）
 
+常见入口：
+
+- `Assert` 用来做阶段切换，不用来补救坏 invariant：看 1
+- `which implies` 只做必要桥接：看 2
+- bridge assertion 要贴着下一条语句写：看 3
+- 循环退出后通常需要一个显式退出断言：看 4
+- 参数不变关系常常要显式桥出来：看 5
+- `which implies` 不要承担“大段证明”：看 6
+- 多分支分类关系优先拆成多条单一 implication：看 7
+- bridge Assert 是语义切点：必须包含后续语句需要的所有上下文：看 8
+- C `int` 形参的范围事实优先用 `by local` 从局部 store 提取：看 9
 
 ## 1. `Assert` 用来做阶段切换，不用来补救坏 invariant
 
@@ -117,7 +128,7 @@
 
 这样通常能避免 disjunction 被拒绝，也能减少单个纯命题里的 clause 爆炸。
 
-## 9. bridge Assert 是语义切点：必须包含后续语句需要的所有上下文（2026-05-25）
+## 8. bridge Assert 是语义切点：必须包含后续语句需要的所有上下文（2026-05-25）
 
 `Assert` 对 `symexec` 相当于一个"重置点"：Assert 之后的一切只能使用 Assert 中明确写出的事实；Assert 之前上下文中未被包含的内容会被截断丢失。
 
@@ -130,7 +141,7 @@
 - 不要把 invariant 中"感觉这里用不到"的部分省略
 - 唯一可以安全省略的是：确定在 Assert 之后到下一个语义切点之前**绝对不再需要**的事实
 
-## 8. C `int` 形参的范围事实优先用 `by local` 从局部 store 提取
+## 9. C `int` 形参的范围事实优先用 `by local` 从局部 store 提取
 
 如果前置条件没有显式写 `x <= INT_MAX`，但当前程序点仍然持有 `x` 的 `Int` 局部变量 store，不要先写普通纯断言：
 

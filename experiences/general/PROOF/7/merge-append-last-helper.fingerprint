@@ -1,0 +1,8 @@
+{
+  "semantic_description": "merge / two-pointer proof 先抽 append-last helper，避免在 witness 里展开 merge 递归硬证",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "two_pointers"
+  }
+}

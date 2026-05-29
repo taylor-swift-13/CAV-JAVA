@@ -1,0 +1,8 @@
+{
+  "semantic_description": "insertion final witness 拆成 shape / permutation / order / length 四类 helper，避免单一 witness 同时承担多种语义",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "nested_loop"
+  }
+}

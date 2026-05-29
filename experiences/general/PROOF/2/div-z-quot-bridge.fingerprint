@@ -1,0 +1,8 @@
+{
+  "semantic_description": "规格用 Z.div、C 生成目标用 Z.quot 时，必须桥接非负除法等式",
+  "keywords": {
+    "problem_kind": "math",
+    "data": "scalar",
+    "pattern": "single_loop"
+  }
+}

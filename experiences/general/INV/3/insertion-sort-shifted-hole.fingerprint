@@ -1,0 +1,8 @@
+{
+  "semantic_description": "插入排序内循环 invariant 显式建模 shifted-hole 状态：l_base / l_cur / key / hole 位置 / 三段 sublist 结构",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "nested_loop"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "semantic_description": "merge/list witness 含 replace_Znth/merge/sublist 末尾等式时是 proof 阶段问题不是 annotation 失败，不要反复改 invariant",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "two_pointers"
+  }
+}

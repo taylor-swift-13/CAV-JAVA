@@ -8,7 +8,7 @@ this as a subprocess (mirroring how the Java pipeline's ``run_audit.py`` invokes
 
 Categories come from ``check_qcp_cheating`` (proof_stub in proof_manual,
 manual_axiom, forbidden_import, contract_weakening). Compile-replay is left to
-the agent per ``experiences/general/COMPILE.md``; this script does not run coqc.
+the agent per ``experiences/general/COMPILE/README.md``; this script does not run coqc.
 """
 from __future__ import annotations
 

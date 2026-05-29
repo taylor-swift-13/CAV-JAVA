@@ -1,0 +1,8 @@
+{
+  "semantic_description": "listlib Section 参数导出后的引理参数顺序常被颠倒：rewrite 前先 Check lemma 确认实际签名",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

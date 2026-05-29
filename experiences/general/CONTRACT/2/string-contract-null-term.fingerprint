@@ -1,0 +1,8 @@
+{
+  "semantic_description": "C 字符串 contract 不能只写「末尾有一个 0」：必须显式排除中间 0，否则字符串扫描类后条件不可证",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "string",
+    "pattern": "single_loop"
+  }
+}

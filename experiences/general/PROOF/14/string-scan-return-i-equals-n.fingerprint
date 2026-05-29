@@ -1,0 +1,8 @@
+{
+  "semantic_description": "字符串扫描类 return witness 桥接点是先证 i = n，让退出条件和后条件长度对齐",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "string",
+    "pattern": "single_loop"
+  }
+}

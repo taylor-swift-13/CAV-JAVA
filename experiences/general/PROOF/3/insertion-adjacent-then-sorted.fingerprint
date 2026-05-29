@@ -1,0 +1,8 @@
+{
+  "semantic_description": "insertion sort 的 sorted proof 优先先证 adjacent order，再在 return 处用 helper 转成 sorted_z",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "nested_loop"
+  }
+}

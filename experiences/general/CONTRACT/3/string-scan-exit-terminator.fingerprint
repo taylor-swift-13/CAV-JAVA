@@ -1,0 +1,8 @@
+{
+  "semantic_description": "字符串扫描类题如果后条件要恢复整个字符串，前置条件必须能推出退出位置就是最终 terminator（中间没有 0）",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "string",
+    "pattern": "single_loop"
+  }
+}

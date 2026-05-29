@@ -2,6 +2,20 @@
 
 本文件只记录 verify 阶段的 Coq 编译经验。
 
+常见入口：
+
+- 编译前先确认目录：看 1
+- 编译参数必须包含两部分：看 2
+- 有题目专用 `.v` 时，必须显式给 `original/` load path：看 3
+- 长编译命令优先用 bash 数组，不要硬拼引号：看 4
+- 当前项目的稳定编译模板：看 5
+- 公共 strategy 缺失时再 fallback 到 `coq/deps/`：看 6
+- 逻辑前缀必须一致：看 7
+- 编译顺序固定：看 8
+- `goal_check` 之前不要算完成：看 9
+- 重新确认轮次跳过完整 recompile 的条件：看 10
+- 编译后必须清理：看 11
+
 ## 1. 编译前先确认目录
 
 - 工作目录必须是 `QualifiedCProgramming/SeparationLogic`
@@ -136,7 +150,7 @@ coqc "${BASE[@]}" "${EXTRA[@]}" "$GEN/${NAME}_goal_check.v"
 - `proof_manual.v` 无 `Admitted.`
 - `proof_manual.v` 无新增 `Axiom`
 
-## 11. 重新确认轮次跳过完整 recompile 的条件（2026-05-26）
+## 10. 重新确认轮次跳过完整 recompile 的条件（2026-05-26）
 
 在 verify 的"precautionary retry"轮次中，如果前一轮**已经确认** Final Result: Success，且进入当前轮次时以下条件全部满足：
 
@@ -151,7 +165,7 @@ coqc "${BASE[@]}" "${EXTRA[@]}" "$GEN/${NAME}_goal_check.v"
 
 唯一例外：如果某轮因 API Overload 或其他故障中途终止（中间产物可能残留），才需要重跑 coqc 以恢复干净状态。
 
-## 10. 编译后必须清理
+## 11. 编译后必须清理
 
 - `coq/` 下删除非 `.v` 的编译中间产物
 - `input/` 下删除非 `.v`、非 `.c` 的编译中间产物

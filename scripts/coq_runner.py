@@ -3,7 +3,7 @@
 
 Compiles a single ``.v`` under the QualifiedCProgramming load-path so callers can
 run Coq's own reduction machinery on closed terms. The load-path mirrors the
-stable compile template in ``experiences/general/COMPILE.md`` §5: coqc runs with
+stable compile template in ``experiences/general/COMPILE/README.md`` §5: coqc runs with
 ``QualifiedCProgramming/SeparationLogic`` as its working directory and the base
 ``-R`` set below resolves every QCP library a generated ``.v`` may ``Require``.
 
@@ -24,7 +24,7 @@ import subprocess
 REPO_ROOT = Path(__file__).resolve().parents[1]
 QCP_SL_DIR = REPO_ROOT / "QualifiedCProgramming" / "SeparationLogic"
 
-# Base load-path, relative to QCP_SL_DIR. Keep in sync with COMPILE.md §5.
+# Base load-path, relative to QCP_SL_DIR. Keep in sync with experiences/general/COMPILE/README.md §5.
 BASE_LOAD_PATH: list[tuple[str, str]] = [
     ("SeparationLogic", "SimpleC.SL"),
     ("unifysl", "Logic"),

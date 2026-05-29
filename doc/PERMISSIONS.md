@@ -34,12 +34,12 @@ Verify 默认只消费这些正式输入，不负责重写它们。
 - `input/<name>.c`
 - `input/<name>.v`，如果存在
 - `skills/verify/SKILL.md`
-- `experiences/general/README.md`
-- `experiences/general/SYMEXEC.md`
-- `experiences/general/ASSERTION.md`
-- `experiences/general/INV.md`
-- `experiences/general/PROOF.md`
-- `experiences/general/COMPILE.md`
+- `experiences/general/README/README.md`
+- `experiences/general/SYMEXEC/README.md`
+- `experiences/general/ASSERTION/README.md`
+- `experiences/general/INV/README.md`
+- `experiences/general/PROOF/README.md`
+- `experiences/general/COMPILE/README.md`
 - `doc/COQ_PROOF_GUIDE.md`
 - `doc/SCOPE.md`
 
@@ -55,7 +55,7 @@ Verify 默认只消费这些正式输入，不负责重写它们。
 这些目录/文件**不在**读取白名单内，读它们只会浪费 turn、拖慢简单任务，一律不要读：
 
 - `scripts/` 下的编排脚本（`run_verify.py`、`run_pipeline.py`、`agent_loop.py`、`coq_runner.py` 等）——它们是调用你的 harness，与单题验证无关。
-- `QualifiedCProgramming/` 下除 `QCP_examples/` 以外的目录（`SeparationLogic/`、`tutorial/`、`linux-binary/` 等库源码与工具）。编译时 cwd 在 `SeparationLogic/`、跑 `symexec` 时 cwd 在 `QualifiedCProgramming/`，那是「运行工具」不是「读源码」；命令模板见 `SYMEXEC.md §0` 与 `COMPILE.md §5`，不要去读这些目录反推用法。
+- `QualifiedCProgramming/` 下除 `QCP_examples/` 以外的目录（`SeparationLogic/`、`tutorial/`、`linux-binary/` 等库源码与工具）。编译时 cwd 在 `SeparationLogic/`、跑 `symexec` 时 cwd 在 `QualifiedCProgramming/`，那是「运行工具」不是「读源码」；命令模板见 `experiences/general/SYMEXEC/README.md §0` 与 `experiences/general/COMPILE/README.md §5`，不要去读这些目录反推用法。
 - 当前 workspace 的完整 harness transcript（`logs/agent_stdout_*.jsonl`、`logs/agent_prompt_*`）。retry 轮只读 `logs/agent_last_message_*`、`logs/agent_stderr_*`、`logs/continue.md` 和 generated/annotated 文件。
 - `git log` / `git show` 历史考古：不要靠翻 git 历史找参考解；参考解只按 `doc/retrieval/INDEX.md` 在 `experiences/end-end/` 或 `QCP_examples/` 里检索。
 

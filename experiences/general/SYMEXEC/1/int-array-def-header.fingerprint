@@ -1,0 +1,8 @@
+{
+  "semantic_description": "annotated 副本必须删除 #include int_array_def.h——它是 C-only 头文件，symexec 找不到；IntArray 谓词由 builtin strategy 加载",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

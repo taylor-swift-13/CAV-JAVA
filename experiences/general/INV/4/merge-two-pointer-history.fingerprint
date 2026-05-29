@@ -1,0 +1,8 @@
+{
+  "semantic_description": "双指针归并 invariant 必须显式记录 consumed 与 future 跨边界顺序关系，否则 merge-prefix append 证明卡死",
+  "keywords": {
+    "problem_kind": "sort",
+    "data": "array",
+    "pattern": "two_pointers"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "semantic_description": "二分查找 left/right 区间收缩 invariant：两条 range-exclusion 严格不等式 + 边界 left<=right+1 允许空区间；退出无需 loop-exit assertion",
+  "keywords": {
+    "problem_kind": "search",
+    "data": "array",
+    "pattern": "binary_search"
+  }
+}

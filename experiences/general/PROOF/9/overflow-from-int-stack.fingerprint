@@ -1,0 +1,8 @@
+{
+  "semantic_description": "溢出 witness 不要只看纯前提，先用 store_int_range 从栈槽取回当前 Int 范围",
+  "keywords": {
+    "problem_kind": "math",
+    "data": "scalar",
+    "pattern": "branch"
+  }
+}

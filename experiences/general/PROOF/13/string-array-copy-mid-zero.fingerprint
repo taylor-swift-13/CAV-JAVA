@@ -1,0 +1,8 @@
+{
+  "semantic_description": "字符串/数组复制题如果只知道当前位置读到 0，contract 必须排除中间 0 才能让 return witness 走通",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "string",
+    "pattern": "single_loop"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "semantic_description": "return witness 优先做 full-prefix 和 empty-suffix 归一化：把 sublist 0 n l 化简为 l、sublist n n l 化简为 nil",
+  "keywords": {
+    "problem_kind": "transform",
+    "data": "array",
+    "pattern": "single_loop"
+  }
+}

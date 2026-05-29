@@ -15,15 +15,17 @@
 
 ## 3. 检索时先看什么
 
-每个 workspace 的最小检索单元是：
+检索单元有两种，schema 共享（都用 `semantic_description` + `keywords`）：
 
-- `logs/workspace_fingerprint.json`
+- **end-end 样例**：每个 `experiences/end-end/<case>/logs/workspace_fingerprint.json`（完整 workspace + 路径）
+- **专题经验**：每个 `experiences/general/<NAME>/<N>/<slug>.fingerprint`（指向同目录 `<slug>.md`，只放 `semantic_description` 和 `keywords` 两字段）
 
 建议顺序：
 
 1. 先看 `keywords`
 2. 再看 `semantic_description`
-3. 最后才读 `annotation_reasoning.md`、`proof_reasoning.md`、`issues.md` 和相关 `.v`
+3. 命中 general：直接读对应 `<N>/<slug>.md`（短）
+4. 命中 end-end：再展开 `annotation_reasoning.md`、`proof_reasoning.md`、`issues.md` 和相关 `.v`
 
 大模型查找相关端到端样例时，只使用四字段 fingerprint：
 
@@ -111,7 +113,7 @@
 - `recursion`
 - `state_machine`
 
-`keywords` 只允许使用以上 key 和 value。一个 key 可以对应单个字符串，或由上述 value 组成的列表。如果当前任务不需要某个维度，就省略该 key。
+`keywords` 只允许使用以上 key 和 value。一个 key 可以对应单个字符串，或由上述 value 组成的列表（用列表表示该经验跨多个题型/数据/模式都适用）。如果当前任务不需要某个维度，就省略该 key。
 
 示例：
 
@@ -141,32 +143,36 @@
 5. 只展开最相关的少数样例，再读取其 `annotation_reasoning.md`、`proof_reasoning.md`、`issues.md` 和 `.v`
 6. 复用 proof 前仍必须比较当前 VC 和旧 VC 主体；fingerprint 只能说明“相关”，不能证明 VC 相同
 
-默认调用：
+默认调用（同时检索 end-end + general 专题经验）：
 
 ```bash
 python3 scripts/search_fingerprint.py --fingerprint output/verify_<timestamp>_<name>/logs/workspace_fingerprint.json
 ```
 
-输出是一行一个相似端到端样例目录路径，例如：
+`--scope` 可限制范围：
+
+- `--scope all`（默认）：同时检索 end-end 完整样例 + general 专题经验
+- `--scope end-end`：只看完整 workspace 样例
+- `--scope general`：只看 general 专题经验
+
+输出（`--format paths`）：每行一个匹配路径。end-end 给 case dir，general 给 `<slug>.md` 路径。例如：
 
 ```text
 experiences/end-end/array_sum
-experiences/end-end/prefix_sum
+experiences/general/INV/1/array-dp-prefix-suffix.md
 ```
 
-如果当前还没有 fingerprint 文件，也可以直接传四字段：
+如果还没有 fingerprint 文件，直接传四字段：
 
 ```bash
 python3 scripts/search_fingerprint.py \
-  --problem-kind sum \
-  --data array \
-  --pattern single_loop \
-  --semantic-description "Sums all elements of a read-only integer array with one accumulator loop."
+  --problem-kind sum --data array --pattern single_loop \
+  --semantic-description "Sums all elements of a read-only integer array."
 ```
 
 ## 9. 允许展开阅读的样例范围
 
 - `experiences/end-end/` 下的样例可以直接展开阅读
-- 如果 `experiences/end-end/` 不够，再去 `QualifiedCProgramming/QCP_examples/` 下读取其他相关例子
+- `experiences/general/<NAME>/<N>/<slug>.md` 是按 fingerprint 检索到的专题经验，命中即读
+- 如果以上仍不够，再去 `QualifiedCProgramming/QCP_examples/` 下读取其他相关例子
 - 仍然优先选择和当前目标最接近的题型、数据结构、witness 结构或 proof pattern
-[text](../../experiences/end-end/array_contains)
